@@ -240,3 +240,28 @@ further improve performance of the product construction algorithms.
     doi       = {10.1007/978-3-031-66149-5\_7}
   }
   ```
+
+
+v2.1
+------------------------
+With [v2.1](https://github.com/SSoelvsten/adiar/releases/tag/v2.1.0), we add
+the *Relational Product* such that Adiar can be used in the context of model
+checking.
+
+- Steffan Christ Sølvsten, Jaco van de Pol.
+  “[*Symbolic Model Checking in External Memory*](https://arxiv.org/abs/2505.11229)”.
+  In: *arXiv preprint*. (2025)
+  ```bibtex
+  @Misc{soelvsten2025:arXiv,
+    title         = {Symbolic Model Checking in External Memory},
+    author        = {S{\o}lvsten, Steffan Christ
+                 and van de Pol, Jaco},
+    year          = {2025},
+    archivePrefix = {arXiv},
+    eprint        = {2505.11229},
+    primaryClass  = {cs.DS},
+    numPages      = {22},
+    howPublished  = {arXiv},
+    url           = {https://arxiv.org/abs/2505.11229},
+  }
+  ```
