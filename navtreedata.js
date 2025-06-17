@@ -74,7 +74,8 @@ var NAVTREE =
           [ "v1.0", "page__cite.html#autotoc_md35", null ],
           [ "v1.1", "page__cite.html#autotoc_md36", null ],
           [ "v1.2", "page__cite.html#autotoc_md37", null ],
-          [ "v2.0", "page__cite.html#autotoc_md38", null ]
+          [ "v2.0", "page__cite.html#autotoc_md38", null ],
+          [ "v2.1", "page__cite.html#autotoc_md39", null ]
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
@@ -120,7 +121,7 @@ var NAVTREEINDEX =
 "adiar_8h_source.html",
 "functions.html",
 "group__module____zdd.html#ga12a288dd6f4888c8148a8a374ff5a9d6",
-"structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html"
+"structadiar_1_1statistics_1_1____alg__base.html#ab769667ff5ecea10ecd9e2589b7e72bf"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

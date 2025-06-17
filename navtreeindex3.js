@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"structadiar_1_1statistics_1_1____alg__base.html#ab769667ff5ecea10ecd9e2589b7e72bf":[4,6,0,0,1],
 "structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html":[4,6,0,0,0],
 "structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a18db66cef68fc1e68532347a86bd3d2b":[4,6,0,0,0,6],
 "structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a3acfce9e75921a6a4fc7e2829845f08f":[4,6,0,0,0,9],

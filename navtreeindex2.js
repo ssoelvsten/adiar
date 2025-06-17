@@ -162,8 +162,8 @@ var NAVTREEINDEX2 =
 "namespacemembers_e.html":[5,1,0,4],
 "namespacemembers_enum.html":[5,1,4],
 "namespacemembers_f.html":[5,1,0,5],
-"namespacemembers_func.html":[5,1,1],
 "namespacemembers_func.html":[5,1,1,0],
+"namespacemembers_func.html":[5,1,1],
 "namespacemembers_func_b.html":[5,1,1,1],
 "namespacemembers_func_d.html":[5,1,1,2],
 "namespacemembers_func_e.html":[5,1,1,3],
@@ -219,6 +219,7 @@ var NAVTREEINDEX2 =
 "page__cite.html#autotoc_md36":[3,0,1,1],
 "page__cite.html#autotoc_md37":[3,0,1,2],
 "page__cite.html#autotoc_md38":[3,0,1,3],
+"page__cite.html#autotoc_md39":[3,0,1,4],
 "page__functional.html":[2,1],
 "page__functional.html#autotoc_md25":[2,1,0],
 "page__functional.html#autotoc_md26":[2,1,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX2 =
 "structadiar_1_1statistics.html#abd960bddf01859439b3bae5a72b6fc82":[4,6,0,23],
 "structadiar_1_1statistics.html#abf6e8f5938dc377805bfe755d612751b":[4,6,0,27],
 "structadiar_1_1statistics.html#aef4c38a2f1741aeaa3ac55f8ef912be7":[4,6,0,18],
-"structadiar_1_1statistics_1_1____alg__base.html":[4,6,0,0],
-"structadiar_1_1statistics_1_1____alg__base.html#ab769667ff5ecea10ecd9e2589b7e72bf":[4,6,0,0,1]
+"structadiar_1_1statistics_1_1____alg__base.html":[4,6,0,0]
 };
