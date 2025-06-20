@@ -265,3 +265,24 @@ checking.
     url           = {https://arxiv.org/abs/2505.11229},
   }
   ```
+
+Future Work
+------------------------
+Next to the papers above, the Sølvsten's PhD thesis also explores (1) how to design *Variable
+Reordering* algorithms for large instances and (2) how to integrate Adiar's I/O algorithms with
+conventional recursive algorithms via a *Unique Node Table*.
+
+- Steffan Christ Sølvsten.
+  “[*I/O-efficient Symbolic Model Checking*](https://soeg.kb.dk/permalink/45KBDK_KGL/1pioq0f/alma99126389524805763)”.
+  In: *Royal Library, Denmark*. (2025)
+  ```bibtex
+  @Thesis{soelvsten2025:arXiv,
+    title         = {I/O-efficient Symbolic Model Checking},
+    author        = {S{\o}lvsten, Steffan Christ},
+    year          = {2025},
+    month         = {05},
+    school        = {Aarhus University}
+    type          = {PhD thesis}
+    url           = {https://soeg.kb.dk/permalink/45KBDK_KGL/1pioq0f/alma99126389524805763},
+  }
+  ```
