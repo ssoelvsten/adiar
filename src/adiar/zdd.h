@@ -1715,7 +1715,7 @@ namespace adiar
   __zdd
   zdd_from(const exec_policy& ep, const bdd& f, ForwardIt begin, ForwardIt end)
   {
-    return bdd_from(ep, f, make_generator(begin, end));
+    return zdd_from(ep, f, make_generator(begin, end));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
