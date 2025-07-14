@@ -6,6 +6,12 @@
 #include <adiar/internal/cut.h>
 #include <adiar/internal/dd.h>
 
+/**
+ * Note: Some functions are provided with additional overloads that accept an
+ * `exec_policy` parameter to allow for customization of execution behavior,
+ * such as parallelism. These overloads are hidden from the documentation
+ * using Doxygen's \cond directive for clarity.
+ */
 namespace adiar
 {
   // Class declarations to be able to reference it
@@ -33,10 +39,13 @@ namespace adiar
     ////////////////////////////////////////////////////////////////////////////////////////////////
     __zdd(const shared_node_file_type& f);
 
+    /// \cond
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Wrapper for an algorithm's unreduced output.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     __zdd(const shared_arc_file_type& f, const exec_policy& ep);
+    /// \endcond
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Conversion constructor from a `bdd` to pass along a prior value.
