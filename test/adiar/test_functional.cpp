@@ -284,6 +284,27 @@ go_bandit([]() {
         AssertThat(xs.find(0), Is().Not().EqualTo(xs.end()));
         AssertThat(xs.find(1), Is().Not().EqualTo(xs.end()));
       });
+
+      it("consumes values 1, 0 into int*", []() {
+        std::array<int,10> xs;
+        consumer<int> c = make_consumer(xs.data());
+
+        c(1);
+
+        AssertThat(xs.at(0), Is().EqualTo(1));
+
+        c(0);
+
+        AssertThat(xs.at(0), Is().EqualTo(1));
+        AssertThat(xs.at(1), Is().EqualTo(0));
+
+
+        c(2);
+
+        AssertThat(xs.at(0), Is().EqualTo(1));
+        AssertThat(xs.at(1), Is().EqualTo(0));
+        AssertThat(xs.at(2), Is().EqualTo(2));
+      });
     });
 
     describe("make_consumer(ForwardIt&, ForwardIt&)", []() {

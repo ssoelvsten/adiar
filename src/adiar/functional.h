@@ -2,9 +2,12 @@
 #define ADIAR_FUNCTIONAL_H
 
 #include <functional>
+#include <iterator>
 #include <limits>
+#include <type_traits>
 
 #include <adiar/exception.h>
+#include <adiar/type_traits.h>
 #include <adiar/types.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,59 +51,48 @@ namespace adiar
   using predicate = function<bool(Args...)>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Consumer function of value(s) of type(s) `Args`.
+  /// \brief  Consumer function of value of type `Arg`.
   ///
   /// \remark Most functions that provide values to a consumer will do so in a specific order; you
   ///         may abuse this to improve the performance of your code.
   ///
-  /// \tparam Args
-  ///    List of the argument's type in the order, they are supposed to be given.
+  /// \tparam Arg
+  ///    List of the argument type, they are supposed to be given. If you need more than one, use a
+  ///    tuple.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Arg>
   using consumer = function<void(Arg)>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Wrap an iterator into a consumer function.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename ValueType, typename OutputIt>
-  inline consumer<ValueType>
-  make_consumer(OutputIt& iter)
-  {
-    return [&iter](const ValueType& x) { *(iter++) = x; };
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Wrap an iterator into a consumer function.
+  /// \brief Wrap an iterator into a consumer function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename ValueType, typename OutputIt>
   inline consumer<ValueType>
   make_consumer(OutputIt&& iter)
   {
-    return [_iter = std::move(iter)](const ValueType& x) mutable { *(_iter++) = x; };
+    return [_iter = std::forward<OutputIt>(iter)](const ValueType& x) mutable { *(_iter++) = x; };
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Wrap an iterator into a consumer function.
+  /// \brief Wrap an iterator into a consumer function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename OutputIt>
-  inline consumer<typename OutputIt::container_type::value_type>
-  make_consumer(OutputIt& iter)
-  {
-    using value_type = typename OutputIt::container_type::value_type;
-
-    return [&iter](const value_type& x) { *(iter++) = x; };
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Wrap an iterator into a consumer function.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename OutputIt>
-  inline consumer<typename OutputIt::container_type::value_type>
+  inline consumer<typename std::iterator_traits<std::remove_reference_t<OutputIt>>::value_type>
   make_consumer(OutputIt&& iter)
   {
-    using value_type = typename OutputIt::container_type::value_type;
+    using value_type = typename std::iterator_traits<std::remove_reference_t<OutputIt>>::value_type;
+    return make_consumer<value_type, OutputIt>(std::forward<OutputIt>(iter));
+  }
 
-    return [_iter = std::move(iter)](const value_type& x) mutable { *(_iter++) = x; };
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Wrap an insertion iterator into a consumer function.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename OutputIt>
+  inline consumer<typename std::remove_reference_t<OutputIt>::container_type::value_type>
+  make_consumer(OutputIt&& iter)
+  {
+    using value_type = typename std::remove_reference_t<OutputIt>::container_type::value_type;
+    return make_consumer<value_type, OutputIt>(std::forward<OutputIt>(iter));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,6 +101,9 @@ namespace adiar
   /// \remark The resulting *consumer* function will throw an `out_of_range` if `end` is reached but
   ///         more values are to be added, i.e. if the given range is not large enough for all
   ///         values to be consumed.
+  ///
+  /// \remark The consumer does not copy `begin` nor `end`. That is, there will be side effects on
+  ///         the `begin` iterator.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename ForwardIt>
   inline consumer<typename ForwardIt::value_type>
@@ -132,12 +127,14 @@ namespace adiar
   ///         values to be consumed.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename ForwardIt>
-  inline consumer<typename ForwardIt::value_type>
+  inline consumer<typename std::iterator_traits<std::remove_reference_t<ForwardIt>>::value_type>
   make_consumer(ForwardIt&& begin, ForwardIt&& end)
   {
-    using value_type = typename ForwardIt::value_type;
+    using value_type =
+      typename std::iterator_traits<std::remove_reference_t<ForwardIt>>::value_type;
 
-    return [_begin = std::move(begin), _end = std::move(end)](const value_type& x) mutable {
+    return [_begin = std::forward<ForwardIt>(begin),
+            _end   = std::forward<ForwardIt>(end)](const value_type& x) mutable {
       if (_begin == _end) {
         throw out_of_range("Iterator range unable to contain all generated values");
       }
@@ -172,27 +169,13 @@ namespace adiar
   /// \brief Wrap a `begin` and `end` iterator pair into a generator function.
   ////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename ForwardIt>
-  inline generator<typename ForwardIt::value_type>
-  make_generator(ForwardIt& begin, ForwardIt& end)
-  {
-    using value_type = typename ForwardIt::value_type;
-
-    return [&begin, &end]() -> optional<value_type> {
-      if (begin == end) { return {}; }
-      return *(begin++);
-    };
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Wrap a `begin` and `end` iterator pair into a generator function.
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename ForwardIt>
-  inline generator<typename ForwardIt::value_type>
+  inline generator<typename std::remove_reference_t<ForwardIt>::value_type>
   make_generator(ForwardIt&& begin, ForwardIt&& end)
   {
-    using value_type = typename ForwardIt::value_type;
+    using value_type = typename std::remove_reference_t<ForwardIt>::value_type;
 
-    return [_begin = std::move(begin), _end = std::move(end)]() mutable -> optional<value_type> {
+    return [_begin = std::forward<ForwardIt>(begin),
+            _end   = std::forward<ForwardIt>(end)]() mutable -> optional<value_type> {
       if (_begin == _end) { return {}; }
       return *(_begin++);
     };

@@ -25,6 +25,9 @@ namespace adiar
 
   template <typename A>
   inline constexpr bool is_integral = std::is_integral<A>::value;
+
+  template <typename A>
+  inline constexpr bool is_void = std::is_void<A>::value;
 }
 
 #endif // ADIAR_TYPE_TRAITS_H
