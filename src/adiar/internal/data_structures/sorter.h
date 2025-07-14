@@ -34,7 +34,7 @@ namespace adiar::internal
     Comp _pred;
     bool _sorted = false;
 
-    size_t _size = 0;
+    size_t _size      = 0;
     size_t _front_idx = 0;
 
   public:
@@ -211,12 +211,14 @@ namespace adiar::internal
     }
 
   public:
-    sorter(size_t memory_bytes, size_t no_elements, size_t number_of_sorters = 1, Comp comp = Comp())
+    sorter(size_t memory_bytes,
+           size_t no_elements,
+           size_t number_of_sorters = 1,
+           Comp comp                = Comp())
       : _sorter(comp)
     {
       // Quickfix: Issue https://github.com/thomasmoelhave/tpie/issues/250
-      constexpr size_t minimum_phase1 =
-        sizeof(value_type) * 128 * 1024 + 5 * 1024 * 1024;
+      constexpr size_t minimum_phase1 = sizeof(value_type) * 128 * 1024 + 5 * 1024 * 1024;
 
       // ===========================================================================================
       // Case 0: No sorters - why are we then instantiating one?
@@ -270,8 +272,7 @@ namespace adiar::internal
       // the same phase or another phase.
       const size_t maximum_phase1 = (memory_bytes >> 4) / (number_of_sorters - 1);
 
-      const size_t phase1 =
-        std::max(minimum_phase1, std::min(maximum_phase1, no_elements_memory));
+      const size_t phase1 = std::max(minimum_phase1, std::min(maximum_phase1, no_elements_memory));
 
       // -------------------------------------------------------------------------------------------
       // Phase 3 : Top-most and final merging of partial lists.
