@@ -76,7 +76,10 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Wrap an iterator into a consumer function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename OutputIt>
+  template <typename OutputIt,
+            typename = enable_if<
+              !is_void<typename std::iterator_traits<std::remove_reference_t<OutputIt>>::value_type>
+              >>
   inline consumer<typename std::iterator_traits<std::remove_reference_t<OutputIt>>::value_type>
   make_consumer(OutputIt&& iter)
   {
@@ -87,7 +90,10 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Wrap an insertion iterator into a consumer function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename OutputIt>
+  template <typename OutputIt,
+            typename = enable_if<
+              is_void<typename std::iterator_traits<std::remove_reference_t<OutputIt>>::value_type>
+            >>
   inline consumer<typename std::remove_reference_t<OutputIt>::container_type::value_type>
   make_consumer(OutputIt&& iter)
   {
