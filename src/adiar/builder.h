@@ -451,24 +451,24 @@ namespace adiar
     inline void
     attach_if_needed() noexcept
     {
-      if (!nf) {
-        adiar_assert(!nw.is_open(),
-                     "`nw`'s attachment should be consistent with existence of `nf`");
+      if (nf) { return; }
 
-        // Initialise file
-        nf = internal::make_shared_levelized_file<node_type>();
-        nw.open(nf);
+      adiar_assert(!nw.is_open(),
+                   "`nw`'s attachment should be consistent with existence of `nf`");
 
-        // Initialise state variables
-        current_label    = Policy::max_label;
-        current_id       = Policy::max_id;
-        created_terminal = false;
-        terminal_val     = false;
-        unref_nodes      = 0;
+      // Initialise file
+      nf = internal::make_shared_levelized_file<node_type>();
+      nw.open(nf);
 
-        // Initialise shared builder reference.
-        builder_ref = make_shared<builder_shared>();
-      }
+      // Initialise state variables
+      current_label    = Policy::max_label;
+      current_id       = Policy::max_id;
+      created_terminal = false;
+      terminal_val     = false;
+      unref_nodes      = 0;
+
+      // Initialise shared builder reference.
+      builder_ref = make_shared<builder_shared>();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
