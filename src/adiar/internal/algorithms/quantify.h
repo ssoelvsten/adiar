@@ -637,8 +637,7 @@ namespace adiar::internal
   ///        sweep with random access.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename NodeRandomAccess,
-            template <size_t, memory_mode>
-            typename PriorityQueueTemplate,
+            template <size_t, memory_mode> typename PriorityQueueTemplate,
             typename In,
             typename Policy>
   typename Policy::__dd_type
@@ -734,8 +733,7 @@ namespace adiar::internal
   ///        sweep.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename NodeStream,
-            template <size_t, memory_mode>
-            typename PriorityQueue_1_Template,
+            template <size_t, memory_mode> typename PriorityQueue_1_Template,
             typename Policy,
             typename In>
   typename Policy::__dd_type

@@ -36,8 +36,8 @@ namespace adiar::internal
 
   private:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief If attached to a shared file, then hook into the reference counting such that the file
-    ///        is not garbage collected while we write to it.
+    /// \brief If attached to a shared file, then hook into the reference counting such that the
+    ///        file is not garbage collected while we write to it.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     shared_ptr<void> _file_ptr;
 

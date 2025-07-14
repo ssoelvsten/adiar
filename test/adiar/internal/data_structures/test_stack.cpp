@@ -56,4 +56,4 @@ go_bandit([]() {
       // TODO: Add tests when implemented.
     });
   });
- });
+});

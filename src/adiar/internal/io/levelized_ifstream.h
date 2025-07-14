@@ -102,8 +102,7 @@ namespace adiar::internal
     {
       if (!f->exists()) f->touch();
 
-      for (size_t s_idx = 0; s_idx < streams; s_idx++)
-        _ifstreams[s_idx].open(f->_files[s_idx], f);
+      for (size_t s_idx = 0; s_idx < streams; s_idx++) _ifstreams[s_idx].open(f->_files[s_idx], f);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,7 +288,7 @@ namespace adiar::internal
     template <typename value_type>
     void
     open(const adiar::shared_ptr<levelized_file<value_type, false>>& lf,
-           level_info::signed_level_type shift = 0)
+         level_info::signed_level_type shift = 0)
     {
       if (!lf->exists()) lf->touch();
       parent_type::open(lf->_level_info_file, lf);

@@ -23,7 +23,7 @@ namespace adiar::internal
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     static size_t
-      memory_usage()
+    memory_usage()
     {
       return tpie::file_stream<value_type>::memory_usage();
     }
@@ -147,7 +147,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void seek(size_t offset)
+    void
+    seek(size_t offset)
     {
       this->_stream.seek(offset);
     }
@@ -157,7 +158,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void seek_begin()
+    void
+    seek_begin()
     {
       this->_stream.seek(0);
     }
@@ -167,18 +169,21 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void seek_end()
+    void
+    seek_end()
     {
       this->_stream.seek(0, tpie::file_stream_base::end);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    size_t offset() const
+    size_t
+    offset() const
     {
       return this->_stream.offset();
     }
 
-    size_t size() const
+    size_t
+    size() const
     {
       return this->_stream.size();
     }
@@ -189,7 +194,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    bool has_next() const
+    bool
+    has_next() const
     {
       return _stream.can_read();
     }
@@ -199,7 +205,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    const value_type& next()
+    const value_type&
+    next()
     {
       return _stream.read();
     }
@@ -209,7 +216,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    bool has_prev() const
+    bool
+    has_prev() const
     {
       return _stream.can_read_back();
     }
@@ -219,7 +227,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    const value_type& prev()
+    const value_type&
+    prev()
     {
       return _stream.read_back();
     }
@@ -230,7 +239,8 @@ namespace adiar::internal
     ///
     /// \pre `is_open() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void write(const value_type &v)
+    void
+    write(const value_type& v)
     {
       this->_stream.write(v);
     }

@@ -69,7 +69,7 @@ go_bandit([]() {
 
       it("can .push() after .reset()", [&s]() {
         AssertThat(s.can_push(), Is().False());
-        s.reset()
+        s.reset();
         AssertThat(s.can_push(), Is().True());
         s.push(2);
         s.push(1);
@@ -215,8 +215,8 @@ go_bandit([]() {
 
       it("can .push() after .reset()", [&s]() {
         AssertThat(s.can_push(), Is().False());
-        s.reset()
-          AssertThat(s.can_push(), Is().True());
+        s.reset();
+        AssertThat(s.can_push(), Is().True());
         s.push(1);
         s.push(2);
         s.sort();
@@ -296,4 +296,4 @@ go_bandit([]() {
       });
     });
   });
- });
+});

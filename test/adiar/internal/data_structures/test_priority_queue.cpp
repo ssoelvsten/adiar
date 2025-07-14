@@ -59,7 +59,6 @@ go_bandit([]() {
         AssertThat(pq.top(), Is().EqualTo(2));
       });
 
-
       it("can pop remaining elements", [&pq]() {
         AssertThat(pq.size(), Is().EqualTo(4u));
 
@@ -139,7 +138,6 @@ go_bandit([]() {
         AssertThat(pq.top(), Is().EqualTo(2));
       });
 
-
       it("can pop remaining elements", [&pq]() {
         AssertThat(pq.size(), Is().EqualTo(4u));
 
@@ -218,7 +216,6 @@ go_bandit([]() {
         AssertThat(pq.has_top(), Is().True());
         AssertThat(pq.top(), Is().EqualTo(3));
       });
-
 
       it("can pop remaining elements", [&pq]() {
         AssertThat(pq.size(), Is().EqualTo(4u));
@@ -323,4 +320,4 @@ go_bandit([]() {
       });
     });
   });
- });
+});

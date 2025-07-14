@@ -2142,11 +2142,9 @@ namespace adiar::internal
 
     const size_t outer_roots_memory = aux_outer_memory - outer_pq_memory;
 
-    const size_t outer_pq_memory_fits =
-      outer_default_lpq_t::memory_fits(outer_pq_memory);
+    const size_t outer_pq_memory_fits = outer_default_lpq_t::memory_fits(outer_pq_memory);
 
-    const size_t outer_roots_memory_fits =
-      internal_roots_sorter_t::memory_fits(outer_pq_memory);
+    const size_t outer_roots_memory_fits = internal_roots_sorter_t::memory_fits(outer_pq_memory);
 
     const size_t pq_roots_bound = (dag->max_1level_cut * 3u) / 2u;
 
