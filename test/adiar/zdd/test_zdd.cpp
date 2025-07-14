@@ -383,16 +383,16 @@ go_bandit([]() {
       });
 
       describe("==, !=", [&]() {
-        it("checks two derivations of same __bdd&& [==]",
+        it("checks two derivations of same __zdd&& [==]",
            [&]() { AssertThat((x0 | x1) == ((x0_or_x1 - x1) | x1), Is().True()); });
 
-        it("checks two derivations of same __bdd&& [!=]",
+        it("checks two derivations of same __zdd&& [!=]",
            [&]() { AssertThat((x0 | x1) != ((x0_or_x1 - x1) | x1), Is().False()); });
 
-        it("checks two derivations of different __bdd&& [==]",
+        it("checks two derivations of different __zdd&& [==]",
            [&]() { AssertThat((x0 | x1) == (x0_or_x1 - x1), Is().False()); });
 
-        it("checks two derivations of different __bdd&& [!=]",
+        it("checks two derivations of different __zdd&& [!=]",
            [&]() { AssertThat((x0 | x1) != (x0_or_x1 - x1), Is().True()); });
       });
 
