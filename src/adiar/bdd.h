@@ -4,12 +4,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \defgroup module__bdd Binary Decision Diagrams
 ///
-/// \brief A Binary Decision Diagram (BDD) represents a boolean function \f$ \{ 0,1 \}^n \rightarrow
-/// \{ 0,1 \} \f$ over a finite domain of \f$ n \f$ boolean input variables.
+/// \brief A Binary Decision Diagram (BDD) represents a boolean function \f$ \{ 0, 1 \}^n
+/// \rightarrow \{ 0, 1 \} \f$ over a finite domain of \f$ n \f$ boolean input variables.
 ///
 /// The \ref bdd class takes care of reference counting and optimal garbage collection of the
-/// underlying files. To ensure the most disk-space is available, try to garbage collect the \ref
-/// bdd objects as quickly as possible and/or minimise the number of lvalues of said type.
+/// underlying files. To ensure the most disk-space is available, try to release your \ref bdd
+/// objects as quickly as possible and/or minimise the number of lvalues of said type.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -31,7 +31,7 @@ namespace adiar
   /// \{
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name Basic BDD Constructors
+  /// \name Basic Constructors
   ///
   /// To construct a more complex but well-structured \ref bdd by hand, please
   /// use the \ref bdd_builder (see \ref builder) instead.
@@ -42,7 +42,7 @@ namespace adiar
   /// \brief The BDD representing the given constant value.
   ///
   /// \param value
-  ///    The constant Boolean value
+  ///    The constant boolean value
   ///
   /// \see bdd_false bdd_true
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ namespace adiar
   /// \brief       The BDD representing the given constant value.
   ///
   /// \param value
-  ///    The constant Boolean (terminal) value
+  ///    The constant boolean (terminal) value
   ///
   /// \see bdd_const bdd_false bdd_true
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +64,8 @@ namespace adiar
   /// \brief The BDD representing the constant `false`.
   ///
   /// \returns \f$ \bot \f$
+  ///
+  /// \see bdd_bot
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bdd
   bdd_false();
@@ -311,7 +313,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name Basic BDD Manipulation
+  /// \name Basic Operations
   ///
   /// \{
 
@@ -320,7 +322,7 @@ namespace adiar
   ///
   /// \details Flips the negation flag such that reading nodes with a `node_stream` within Adiar's
   ///          algorithms will on-the-fly change the `false` terminals into the `true` terminals and
-  ///          vica versa.
+  ///          vice versa.
   ///
   /// \returns \f$ \neg f \f$
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -620,6 +622,8 @@ namespace adiar
   bdd_diff(const exec_policy& ep, const bdd& f, const bdd& g);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \remark Unary difference subtracts from \f$ \top \f$ value, making its equivalent to negation.
+  ///
   /// \see bdd_diff, bdd_not
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bdd
@@ -696,7 +700,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief   Restrict a single variable to a constant value.
   ///
-  /// \details The variable `i` is restructed to the value `v`
+  /// \details The variable `i` is restricted to the value `v`.
   ///
   /// \param f
   ///    BDD to restrict.
@@ -783,7 +787,8 @@ namespace adiar
   /// \brief  Restrict the root to `false`, i.e. follow its low edge.
   ///
   /// \remark In other BDD packages, this function is good for traversing a BDD. But, here this is
-  ///         not a constant-time operation but constructs an entire new BDD of up-to linear size.
+  ///         not a constant-time operation but constructs an entire new BDD of up-to linear size
+  ///         (requires a full traversal).
   ///
   /// \throws invalid_argument If `f` is a terminal.
   ///
@@ -802,7 +807,8 @@ namespace adiar
   /// \brief  Restrict the root to `true`, i.e. follow its high edge.
   ///
   /// \remark In other BDD packages, this function is good for traversing a BDD. But, here this is
-  ///         not a constant-time operation but constructs an entire new BDD of up-to linear size.
+  ///         not a constant-time operation but constructs an entire new BDD of up-to linear size
+  ///         (requires a full traversal).
   ///
   /// \throws invalid_argument If `f` is a terminal.
   ///
@@ -1373,454 +1379,11 @@ namespace adiar
 
   /// \endcond
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Relational Product of *states* and a *relation*.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* (or *next*) set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    Predicate whether a variable should be existentially quantified.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprod(const bdd& states, const bdd& relation, const predicate<bdd::label_type>& pred);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Relational Product of *states* and a *relation*.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprod(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const predicate<bdd::label_type>& pred);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product, including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    A (partial) variable relabelling from *next* to *current*. Variables for which `m` returns
-  ///    an empty value are existentially quantified, i.e. the previously *current* state variables.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product, including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product, including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    A (partial) variable relabelling from *next* to *current*. Variables for which `m` returns
-  ///    an empty value are existentially quantified, i.e. the previously *current* state variables.
-  ///
-  /// \param m_type
-  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product, including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product for *disjoint* variable orderings,
-  ///        including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states. These are all encoded with the
-  ///    variables `0`, `1`, ... `varcount - 1`.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* state variables. The *next* state is encoded with
-  ///    variables `varcount`, `varcount+1`, ... `2*varcount - 1`.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const bdd& states, const bdd& relation, const bdd::label_type varcount);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product for *disjoint* variable orderings,
-  ///        including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const bdd::label_type varcount);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product for *interleaved* variable orderings,
-  ///        including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states. These are all encoded with
-  ///    *even* variables.
-  ///
-  /// \param relation
-  ///    A relation between *current* (even) and *next* (odd) state variables.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const bdd& states, const bdd& relation);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product for *interleaved* variable orderings,
-  ///        including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const exec_policy& ep, const bdd& states, const bdd& relation);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product, including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    A (partial) variable relabelling from *current* to *next*. Variables for which `m` returns
-  ///    an empty value are existentially quantified, i.e. the *next* state variables (the
-  ///    previously *current* state variables).
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product, including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product, including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    A (partial) variable relabelling from *current* to *next*. Variables for which `m` returns
-  ///    an empty value are existentially quantified, i.e. the *next* state variables (the
-  ///    previously *current* state variables).
-  ///
-  /// \param m_type
-  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product, including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product for *disjoint* variable orderings,
-  ///        including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states. These are all encoded with the
-  ///    variables `0`, `1`, ... `varcount - 1`.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* state variables. The *next* state is encoded with
-  ///    variables `varcount`, `varcount+1`, ... `2*varcount - 1`.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const bdd& states, const bdd& relation, const bdd::label_type varcount);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product for *disjoint* variable orderings,
-  ///        including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const bdd::label_type varcount);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product for *interleaved* variable orderings,
-  ///        including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states. These are all encoded with
-  ///    *even* variables.
-  ///
-  /// \param relation
-  ///    A relation between *current* (even) and *next* (odd) state variables.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const bdd& states, const bdd& relation);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product for *interleaved* variable orderings,
-  ///        including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const exec_policy& ep, const bdd& states, const bdd& relation);
-
   /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name BDD Predicates
-  ///
-  /// \{
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Check whether a BDD is canonical.
-  ///
-  /// \copydetails adiar::internal::dd_iscanonical
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_iscanonical(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is a constant.
-  ///
-  /// \see bdd_isfalse bdd_istrue
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_isconst(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is a constant (terminal).
-  ///
-  /// \see bdd_isfalse bdd_istrue
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_isterminal(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is the constant `false`.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_isfalse(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is the constant `true`.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_istrue(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is a function dependent on a single variable.
-  ///
-  /// \see bdd_isithvar bdd_isnithvar
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_isvar(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is the function of a single positive variable.
-  ///
-  /// \see bdd_isvar bdd_ithvar
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_isithvar(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD is the function of a single negative variable.
-  ///
-  /// \see bdd_isvar bdd_nithvar
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_isnithvar(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether a BDD represents a cube.
-  ///
-  /// \see bdd_cube
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_iscube(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether the two BDDs represent the same function.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_equal(const bdd& f, const bdd& g);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether the two BDDs represent the same function.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_equal(const exec_policy&, const bdd& f, const bdd& g);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \see bdd_equal
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  operator==(const bdd& f, const bdd& g);
-
-  /// \cond
-  bool
-  operator==(__bdd&& f, const bdd& g);
-  bool
-  operator==(const bdd& f, __bdd&& g);
-  bool
-  operator==(__bdd&& f, __bdd&& g);
-  /// \endcond
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether the two BDDs represent different functions.
-  ///
-  /// \see bdd_equal
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_unequal(const bdd& f, const bdd& g);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Whether the two BDDs represent different functions.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  bdd_unequal(const exec_policy& ep, const bdd& f, const bdd& g);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \see bdd_equal bdd_unequal
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bool
-  operator!=(const bdd& f, const bdd& g);
-
-  /// \cond
-  bool
-  operator!=(const bdd& f, __bdd&& g);
-  bool
-  operator!=(__bdd&& f, const bdd& g);
-  bool
-  operator!=(__bdd&& f, __bdd&& g);
-  /// \endcond
-
-  /// \}
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name BDD Counting Operations
-  ///
-  /// \{
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief The number of (internal) nodes used to represent the function.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  size_t
-  bdd_nodecount(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief The number of variables that influence the outcome of f, i.e. the number of levels in
-  ///        the BDD.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd::label_type
-  bdd_varcount(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Count all unique (but not necessarily disjoint) paths to the true terminal.
-  ///
-  /// \returns The number of unique paths.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  uint64_t
-  bdd_pathcount(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Count all unique (but not necessarily disjoint) paths to the true terminal.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  uint64_t
-  bdd_pathcount(const exec_policy& ep, const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief          Count the number of assignments x that make f(x) true.
-  ///
-  /// \param f
-  ///    BDD to count within.
-  ///
-  /// \param varcount
-  ///    The number of variables in the domain of the function. This number should be larger than or
-  ///    equal to the number of levels in the BDD (\see bdd_varcount())
-  ///
-  /// \returns        The number of unique assignments.
-  ///
-  /// \throws invalid_argument If varcount is not larger than the number of levels in the BDD.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  uint64_t
-  bdd_satcount(const bdd& f, bdd::label_type varcount);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Count the number of assignments x that make f(x) true.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  uint64_t
-  bdd_satcount(const exec_policy& ep, const bdd& f, bdd::label_type varcount);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Count the number of assignments x that make f(x) true.
-  ///
-  /// \details Same as `bdd_satcount(f, varcount)`, with varcount set to be the size of the global
-  ///          domain or the number of variables within the given BDD.
-  ///
-  /// \see domain_set bdd_varcount
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  uint64_t
-  bdd_satcount(const bdd& f);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Count the number of assignments *x that make f(x) true.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  uint64_t
-  bdd_satcount(const exec_policy& ep, const bdd& f);
-
-  /// \}
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name Input Variables
+  /// \name Variable Reordering / Substitution
   ///
   /// \{
 
@@ -1930,6 +1493,520 @@ namespace adiar
 
   /// \endcond
 
+  /// \}
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \name Transition System Operations
+  ///
+  /// \{
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Relational Product of *states* and a *relation*.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* (or *next*) set of states.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* states.
+  ///
+  /// \param m
+  ///    Predicate whether a variable should be existentially quantified.
+  ///
+  /// \returns \f$ \exists x \in \mathit{pred}(x) : (\mathit{states} \land \mathit{relation}) \f$
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprod(const bdd& states, const bdd& relation, const predicate<bdd::label_type>& pred);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Relational Product of *states* and a *relation*.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprod(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const predicate<bdd::label_type>& pred);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product, including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* states.
+  ///
+  /// \param m
+  ///    A (partial) variable relabelling from *next* to *current*. Variables for which `m` returns
+  ///    an empty value are existentially quantified, i.e. the previously *current* state variables.
+  ///    For all intends an purposes, this relabelling happens *after* quantification.
+  ///
+  /// \returns \f$ (\exists x \in \{ x \mid \mathit{m}(x) = \text{None} \}
+  ///                        : (\mathit{states} \land \mathit{relation}))[x' \mapsto m(x')] \f$
+  ///
+  /// \throws invalid_argument if `m` is not a monotonic relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product, including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product, including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* states.
+  ///
+  /// \param m
+  ///    A (partial) variable relabelling from *next* to *current*. Variables for which `m` returns
+  ///    an empty value are existentially quantified, i.e. the previously *current* state variables.
+  ///    For all intends an purposes, this relabelling happens *after* quantification.
+  ///
+  /// \param m_type
+  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
+  ///
+  /// \returns \f$ (\exists x \in \{ x \mid \mathit{m}(x) = \text{None} \}
+  ///                        : (\mathit{states} \land \mathit{relation}))[x' \mapsto m(x')] \f$
+  ///
+  /// \throws invalid_argument if `m` is not a monotonic relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m,
+              replace_type m_type);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product, including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m,
+              replace_type m_type);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product for *disjoint* variable orderings,
+  ///        including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states. These are all encoded with the
+  ///    variables `0`, `1`, ... `varcount - 1`.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* state variables. The *next* state is encoded with
+  ///    variables `varcount`, `varcount+1`, ... `2*varcount - 1`.
+  ///
+  /// \returns \f$ (\exists x \in \{ x \mid x < \mathit{varcount} \}
+  ///                        : (\mathit{states} \land \mathit{relation}))
+  ///              [x' \mapsto x' - \mathit{varcount}] \f$
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const bdd& states, const bdd& relation, const bdd::label_type varcount);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product for *disjoint* variable orderings,
+  ///        including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const bdd::label_type varcount);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product for *interleaved* variable orderings,
+  ///        including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states. These are all encoded with
+  ///    *even* variables.
+  ///
+  /// \param relation
+  ///    A relation between *current* (even) and *next* (odd) state variables.
+  ///
+  /// \returns \f$ (\exists x \in \{ x \mid x \equiv 0 \mod 2 \}
+  ///                        : (\mathit{states} \land \mathit{relation}))
+  ///              [x' \mapsto x' - 1] \f$
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const bdd& states, const bdd& relation);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Forwards step with the Relational Product for *interleaved* variable orderings,
+  ///        including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relnext(const exec_policy& ep, const bdd& states, const bdd& relation);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product, including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* states.
+  ///
+  /// \param m
+  ///    A (partial) variable relabelling from *current* to *next*. Variables for which `m` returns
+  ///    an empty value are existentially quantified, i.e. the *next* state variables (the
+  ///    previously *current* state variables). For all intends an purposes, this relabelling
+  ///    happens *prior* to conjunction.
+  ///
+  /// \returns \f$ (\exists x' \in \{ x' \mid \mathit{m}(x') = \text{None} \}
+  ///                        : (\mathit{states}[x \mapsto m(x)] \land \mathit{relation})) \f$
+  ///
+  /// \throws invalid_argument if `m` is not a monotonic relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product, including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product, including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* states.
+  ///
+  /// \param m
+  ///    A (partial) variable relabelling from *current* to *next*. Variables for which `m` returns
+  ///    an empty value are existentially quantified, i.e. the *next* state variables (the
+  ///    previously *current* state variables). For all intends and purposes, this relabelling
+  ///    happens *prior* to conjunction.
+  ///
+  /// \param m_type
+  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
+  ///
+  /// \returns \f$ (\exists x' \in \{ x' \mid \mathit{m}(x') = \text{None} \}
+  ///                        : (\mathit{states}[x \mapsto m(x)] \land \mathit{relation})) \f$
+  ///
+  /// \throws invalid_argument if `m` is not a monotonic relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m,
+              replace_type m_type);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product, including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const function<optional<bdd::label_type>(bdd::label_type)>& m,
+              replace_type m_type);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product for *disjoint* variable orderings,
+  ///        including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states. These are all encoded with the
+  ///    variables `0`, `1`, ... `varcount - 1`.
+  ///
+  /// \param relation
+  ///    A relation between *current* and *next* state variables. The *next* state is encoded with
+  ///    variables `varcount`, `varcount+1`, ... `2*varcount - 1`.
+  ///
+  /// \returns \f$ (\exists x' \in \{ x' \mid \geq \mathit{varcount} \}
+  ///                         : (\mathit{states}[x \mapsto x + \mathit{varcount}]
+  ///                            \land \mathit{relation})) \f$
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const bdd& states, const bdd& relation, const bdd::label_type varcount);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product for *disjoint* variable orderings,
+  ///        including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const exec_policy& ep,
+              const bdd& states,
+              const bdd& relation,
+              const bdd::label_type varcount);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product for *interleaved* variable orderings,
+  ///        including relabelling.
+  ///
+  /// \param states
+  ///    A symbolic representation of the *current* set of states. These are all encoded with
+  ///    *even* variables.
+  ///
+  /// \param relation
+  ///    A relation between *current* (even) and *next* (odd) state variables.
+  ///
+  /// \returns \f$ (\exists x' \{ x' \mid x' \equiv 1 \mod 2 \}
+  ///                         : (\mathit{states}[x \mapsto x + 1] \land \mathit{relation})) \f$
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const bdd& states, const bdd& relation);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Backwards step with the Relational Product for *interleaved* variable orderings,
+  ///        including relabelling.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd
+  bdd_relprev(const exec_policy& ep, const bdd& states, const bdd& relation);
+
+  /// \}
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \name Predicates
+  ///
+  /// \{
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Check whether a BDD is canonical.
+  ///
+  /// \copydetails adiar::internal::dd_iscanonical
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_iscanonical(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is a constant.
+  ///
+  /// \see bdd_isfalse bdd_istrue
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_isconst(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is a constant (terminal).
+  ///
+  /// \see bdd_isfalse bdd_istrue
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_isterminal(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is the constant `false`.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_isfalse(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is the constant `true`.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_istrue(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is a function dependent on a single variable, i.e. is a literal.
+  ///
+  /// \details Whether `f` is equivalent to \f$ x \f$ or \f$ \neg x \f$.
+  ///
+  /// \see bdd_isithvar bdd_isnithvar
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_isvar(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is the function of a single positive variable.
+  ///
+  /// \details Whether `f` is equivalent to \f$ x \f$.
+  ///
+  /// \see bdd_isvar bdd_ithvar
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_isithvar(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD is the function of a single negative variable.
+  ///
+  /// \details Whether `f` is equivalent to \f$ \neg x \f$.
+  ///
+  /// \see bdd_isvar bdd_nithvar
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_isnithvar(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether a BDD represents a cube.
+  ///
+  /// \see bdd_cube
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_iscube(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether the two BDDs represent the same function.
+  ///
+  /// \remark If either `f` or `g` is an unreduced result of an immediate computation as part of
+  ///         evaluating `bdd_equal`'s' parameters, one will have to pay the cost of reducing it. If
+  ///         you need the result later, please store it in an intermediate variable.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_equal(const bdd& f, const bdd& g);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether the two BDDs represent the same function.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_equal(const exec_policy&, const bdd& f, const bdd& g);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \see bdd_equal
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  operator==(const bdd& f, const bdd& g);
+
+  /// \cond
+  bool
+  operator==(__bdd&& f, const bdd& g);
+  bool
+  operator==(const bdd& f, __bdd&& g);
+  bool
+  operator==(__bdd&& f, __bdd&& g);
+  /// \endcond
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether the two BDDs represent different functions.
+  ///
+  /// \remark If either `f` or `g` is an unreduced result of an immediate computation as part of
+  ///         evaluating `bdd_unequal`'s' parameters, one will have to pay the cost of reducing it.
+  ///         If you need the result later, please store it in an intermediate variable.
+  ///
+  /// \see bdd_equal
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_unequal(const bdd& f, const bdd& g);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Whether the two BDDs represent different functions.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  bdd_unequal(const exec_policy& ep, const bdd& f, const bdd& g);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \see bdd_equal bdd_unequal
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bool
+  operator!=(const bdd& f, const bdd& g);
+
+  /// \cond
+  bool
+  operator!=(const bdd& f, __bdd&& g);
+  bool
+  operator!=(__bdd&& f, const bdd& g);
+  bool
+  operator!=(__bdd&& f, __bdd&& g);
+  /// \endcond
+
+  /// \}
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \name Counting Operations
+  ///
+  /// \{
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief The number of (internal) nodes used to represent the function.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  size_t
+  bdd_nodecount(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief The number of variables that influence the outcome of the Boolean function, i.e. the
+  ///        number of levels present in the BDD.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  bdd::label_type
+  bdd_varcount(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Count all unique (but not necessarily disjoint) paths to the true terminal.
+  ///
+  /// \returns The number of unique paths.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  uint64_t
+  bdd_pathcount(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Count all unique (but not necessarily disjoint) paths to the true terminal.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  uint64_t
+  bdd_pathcount(const exec_policy& ep, const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief          Count the number of assignments x that make f(x) true.
+  ///
+  /// \param f
+  ///    BDD to count within.
+  ///
+  /// \param varcount
+  ///    The number of variables in the domain of the function. This number should be larger than or
+  ///    equal to the number of levels in the BDD (\see bdd_varcount())
+  ///
+  /// \returns        The number of unique assignments.
+  ///
+  /// \throws invalid_argument If varcount is not larger than the number of levels in the BDD.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  uint64_t
+  bdd_satcount(const bdd& f, bdd::label_type varcount);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief   Count the number of assignments x that make f(x) true.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  uint64_t
+  bdd_satcount(const exec_policy& ep, const bdd& f, bdd::label_type varcount);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief   Count the number of assignments x that make f(x) true.
+  ///
+  /// \details Same as `bdd_satcount(f, varcount)`, with varcount set to be the size of the global
+  ///          domain or the number of variables within the given BDD.
+  ///
+  /// \see domain_set bdd_varcount
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  uint64_t
+  bdd_satcount(const bdd& f);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief   Count the number of assignments *x that make f(x) true.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  uint64_t
+  bdd_satcount(const exec_policy& ep, const bdd& f);
+
+  /// \}
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \name Input Variables
+  ///
+  /// \{
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Get (in \em ascending order) all of the variable labels that occur
   ///        in the BDD.
@@ -2007,7 +2084,8 @@ namespace adiar
   ///    Generator of domain in ascending order.
   ///
   /// \param d_size
-  ///    Upper bound on the number of elements generated by `d`.
+  ///    Upper bound on the number of elements generated by `d`. This value is merely an allocation
+  ///    hint for the sake of optimisation.
   ///
   /// \returns A bdd whos only path to the `true` terminal reflects the minimal assignment.
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2301,7 +2379,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name Conversion to BDDs
+  /// \name Conversion from other Decision Diagrams
   ///
   /// \{
 
@@ -2390,7 +2468,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \name DOT Files of BDDs
+  /// \name DOT Files
   ///
   /// \{
 
