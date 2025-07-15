@@ -42,7 +42,7 @@ jobs:
 
     # Install dependencies
     - name: Set up Developer Command Prompt
-      uses: ilammy/msvc-dev-cmd@v1.12.1
+      uses: ilammy/msvc-dev-cmd@v1.13.0
       with:
         arch: x64
 
