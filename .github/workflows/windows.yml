@@ -57,7 +57,7 @@ jobs:
         toolset: msvc
 
     - name: Install Graphviz
-      uses: ts-graphviz/setup-graphviz@v1
+      uses: ts-graphviz/setup-graphviz@v2
 
     # Build
     - name: Build tests
