@@ -11,14 +11,14 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Check adiar.h
-      uses: sbeyer/include-guards-check-action@v1.0.0
+      uses: sbeyer/include-guards-check-action@v2.0.0
       with:
         path: src/adiar
         pattern: '{file}'
         only: 'adiar\.h'
 
     - name: Check other files in src/adiar files
-      uses: sbeyer/include-guards-check-action@v1.0.0
+      uses: sbeyer/include-guards-check-action@v2.0.0
       with:
         path: src
         pattern: '{dirs}_{file}'
