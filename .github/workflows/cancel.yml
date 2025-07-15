@@ -7,37 +7,37 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'Benchmarks'
         with:
           workflow_id: 'benchmark.yml'
           access_token: ${{ github.token }}
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'Examples'
         with:
           workflow_id: 'examples.yml'
           access_token: ${{ github.token }}
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'Unit tests'
         with:
           workflow_id: 'test.yml'
           access_token: ${{ github.token }}
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'System Tests'
         with:
           workflow_id: 'system_test.yml'
           access_token: ${{ github.token }}
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'Linux Build'
         with:
           workflow_id: 'linux.yml'
           access_token: ${{ github.token }}
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'MacOS Build'
         with:
           workflow_id: 'mac.yml'
           access_token: ${{ github.token }}
-      - uses: styfle/cancel-workflow-action@0.9.0
+      - uses: styfle/cancel-workflow-action@0.12.1
         name: 'Windows Build'
         with:
           workflow_id: 'windows.yml'
