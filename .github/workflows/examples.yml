@@ -40,7 +40,7 @@ jobs:
             N: '1 2 3 4 5'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
