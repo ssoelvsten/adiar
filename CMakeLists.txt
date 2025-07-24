@@ -80,7 +80,7 @@ endif (ADIAR_DOCS)
 # Formatting
 # ============================================================================ #
 if (${PROJECT_IS_TOP_LEVEL})
-  include(cmake/clang-cxx-dev-tools.cmake)
+  include(tools/clang-cxx-dev.cmake)
 endif()
 
 # ============================================================================ #
