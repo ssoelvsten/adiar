@@ -288,7 +288,7 @@ playground:
                 ..
 	@cd build/ && $(MAKE) $(MAKE_FLAGS) adiar_playground
 	@echo "" && echo ""
-	@./build/src/adiar_playground ${M}
+	@./build/app/adiar_playground ${M}
 
 play:
 	@$(MAKE) playground
