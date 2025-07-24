@@ -272,8 +272,7 @@ docs:
 # ============================================================================ #
 #  PLAYGROUND
 # ============================================================================ #
-M = 1024
-
+playground: M := 1024
 playground:
 	@mkdir -p build/
 	@cd build/ && cmake -D CMAKE_BUILD_TYPE=Debug \
@@ -291,16 +290,29 @@ play:
 # ============================================================================ #
 #  EXAMPLES
 # ============================================================================ #
+examples/builder: M := 1024
+examples/builder:
+  # Build
+	@mkdir -p build/
+	@cd build/ && cmake -D CMAKE_BUILD_TYPE=Release ..
 
+	@cd build/ && $(MAKE) $(MAKE_FLAGS) adiar_example-builder
+
+  # Run
+	@echo ""
+	./build/examples/adiar_example-builder -M ${M}
+	@echo ""
+
+examples/queens: M := 1024
 examples/queens: N := 8
 examples/queens:
   # Build
 	@mkdir -p build/
 	@cd build/ && cmake -D CMAKE_BUILD_TYPE=Release ..
 
-	@cd build/ && $(MAKE) $(MAKE_FLAGS) queens
+	@cd build/ && $(MAKE) $(MAKE_FLAGS) adiar_example-queens
 
   # Run
 	@echo ""
-	./build/examples/queens -N ${N} -M ${M}
+	./build/examples/adiar_example-queens -N ${N} -M ${M}
 	@echo ""

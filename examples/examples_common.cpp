@@ -19,8 +19,8 @@ inline double duration_of(timestamp_t &before, timestamp_t &after) {
 #include <adiar/adiar.h>
 
 // Command-line arguments
-int N = -1;
-size_t M = 0;
+int    N = -1;
+size_t M =  0;
 
 bool init_cl_arguments(int argc, char* argv[])
 {
@@ -29,7 +29,7 @@ bool init_cl_arguments(int argc, char* argv[])
 
   opterr = 0; // Squelch errors of "weird" command-line arguments
 
-  while ((c = getopt(argc, argv, "N:M:h")) != -1) {
+  while ((c = getopt(argc, argv, "N:M:")) != -1) {
     try {
       switch(c) {
       case 'N':
@@ -41,16 +41,7 @@ bool init_cl_arguments(int argc, char* argv[])
         if (M == 0) {
           std::cout << "  Must specify positive amount of memory for Adiar (-M)" << std::endl;
         }
-
         continue;
-
-      case 'h':
-        std::cout << "Usage:  -flag    [mandatory]  Description" << std::endl
-                  << std::endl
-                  << "        -h       [ ]          Print this information" << std::endl
-                  << "        -N SIZE  [x]          Specify the size of problem" << std::endl
-                  << "        -M MiB   [x]          Specify the amount of memory (MiB) to be dedicated to Adiar" << std::endl;
-        return true;
       }
     } catch (std::invalid_argument const &ex) {
       std::cout << "Invalid number: " << argv[1] << std::endl;
@@ -59,11 +50,6 @@ bool init_cl_arguments(int argc, char* argv[])
       std::cout << "Number out of range: " << argv[1] << std::endl;
       exit = true;
     }
-  }
-
-  if (N == -1) {
-    std::cout << "  Must specify instance size (-N)" << std::endl;
-    exit = true;
   }
 
   if (M == 0) {

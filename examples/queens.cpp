@@ -236,7 +236,11 @@ int main(int argc, char* argv[])
       should_error_exit = true;
     }
 
-    if (should_error_exit) { exit(1); }
+    if (should_error_exit) { return 1; }
+  }
+
+  if (N == -1) {
+    N = 8;
   }
 
   // ===== ADIAR =====
@@ -292,5 +296,5 @@ int main(int argc, char* argv[])
   adiar::adiar_deinit();
 
   // Return 'all good'
-  exit(correct_result ? 0 : 1);
+  return !correct_result;
 }
