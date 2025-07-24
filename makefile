@@ -254,7 +254,7 @@ coverage:
   # create report
 	@rm -rf tests/report/
 	@lcov --capture --directory build/ --output-file ./coverage.info
-	@lcov --remove coverage.info --output-file coverage.info "/usr/*" "*/external/*" "./tests/*"
+	@lcov --remove coverage.info --ignore-errors unused --output-file coverage.info "/usr/*" "external/*" "*/external/*" "tests/*"
   # print report to console
 	@lcov --list coverage.info
   # print report to html file
