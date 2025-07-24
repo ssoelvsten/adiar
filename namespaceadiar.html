@@ -1405,12 +1405,12 @@ template&lt;typename ValueType , typename OutputIt &gt; </td></tr>
 <tr class="memdesc:gad03c9cc7b4569454beac5e739ff6e44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrap an iterator into a consumer function. <br /></td></tr>
 <tr class="separator:gad03c9cc7b4569454beac5e739ff6e44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad03c9cc7b4569454beac5e739ff6e44f" id="r_gad03c9cc7b4569454beac5e739ff6e44f"><td class="memTemplParams" colspan="2">
-template&lt;typename OutputIt , typename  = enable_if&lt;              !is_void&lt;typename std::iterator_traits&lt;std::remove_reference_t&lt;OutputIt&gt;&gt;::value_type&gt;              &gt;&gt; </td></tr>
+template&lt;typename OutputIt , typename  = enable_if&lt;!is_void&lt;              typename std::iterator_traits&lt;std::remove_reference_t&lt;OutputIt&gt;&gt;::value_type&gt;&gt;&gt; </td></tr>
 <tr class="memitem:gad03c9cc7b4569454beac5e739ff6e44f"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="group__module____functional.html#ga3d65dbfd2713f575acf291dfbabd8e7b">consumer</a>&lt; typename std::iterator_traits&lt; std::remove_reference_t&lt; OutputIt &gt; &gt;::value_type &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>make_consumer</b> (OutputIt &amp;&amp;iter)</td></tr>
 <tr class="memdesc:gad03c9cc7b4569454beac5e739ff6e44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrap an iterator into a consumer function. <br /></td></tr>
 <tr class="separator:gad03c9cc7b4569454beac5e739ff6e44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad03c9cc7b4569454beac5e739ff6e44f" id="r_gad03c9cc7b4569454beac5e739ff6e44f"><td class="memTemplParams" colspan="2">
-template&lt;typename OutputIt , typename  = enable_if&lt;              is_void&lt;typename std::iterator_traits&lt;std::remove_reference_t&lt;OutputIt&gt;&gt;::value_type&gt;            &gt;&gt; </td></tr>
+template&lt;typename OutputIt , typename  = enable_if&lt;is_void&lt;              typename std::iterator_traits&lt;std::remove_reference_t&lt;OutputIt&gt;&gt;::value_type&gt;&gt;&gt; </td></tr>
 <tr class="memitem:gad03c9cc7b4569454beac5e739ff6e44f"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="group__module____functional.html#ga3d65dbfd2713f575acf291dfbabd8e7b">consumer</a>&lt; typename std::remove_reference_t&lt; OutputIt &gt;::container_type::value_type &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>make_consumer</b> (OutputIt &amp;&amp;iter)</td></tr>
 <tr class="memdesc:gad03c9cc7b4569454beac5e739ff6e44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrap an insertion iterator into a consumer function. <br /></td></tr>
 <tr class="separator:gad03c9cc7b4569454beac5e739ff6e44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
