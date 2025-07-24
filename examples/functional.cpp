@@ -3,6 +3,8 @@
 
 #include <adiar/adiar.h>
 
+////////////////////////////////////////////////////////////////////////////////
+// Printing functions
 void print(const adiar::bdd &f, const std::string &s)
 {
   std::cout << "Example: " << s << "\n";
@@ -12,6 +14,8 @@ void print(const adiar::bdd &f, const std::string &s)
   std::cout << "\n";
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Examples explained in 'docs/tutorial/functional.md'
 void predicates(const adiar::bdd &f)
 {
   /// [is_odd]
@@ -86,6 +90,7 @@ void consumers(const adiar::bdd &f)
   std::cout << "\n";
 }
 
+////////////////////////////////////////////////////////////////////////////////
 int main()
 {
   adiar::adiar_init(adiar::minimum_memory);

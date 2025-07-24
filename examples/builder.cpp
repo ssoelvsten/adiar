@@ -2,6 +2,8 @@
 
 #include <adiar/adiar.h>
 
+////////////////////////////////////////////////////////////////////////////////
+// Example explained in 'docs/tutorial/builder.md'
 adiar::bdd example()
 {
   /// [example]
@@ -17,6 +19,7 @@ adiar::bdd example()
   return f;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 int main()
 {
   adiar::adiar_init(adiar::minimum_memory);
