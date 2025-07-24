@@ -1,8 +1,32 @@
-#include "examples_common.cpp"
+#include <cstdint>
+#include <iterator>
+#include <ratio>
+#include <vector>
+
+// Timing
+#include <chrono>
+
+/* A few chrono wrappers to improve readability of the code below */
+typedef std::chrono::high_resolution_clock::time_point timestamp_t;
+
+inline timestamp_t get_timestamp() {
+  return std::chrono::high_resolution_clock::now();
+}
+
+inline double duration_of(timestamp_t &before, timestamp_t &after) {
+  return std::chrono::duration<double, std::ratio<1,1> /* seconds */>(after - before).count();
+}
+
+// Command-line arguments
+#include <getopt.h>
+
+int    N = -1;
+size_t M =  0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // For comments and explanation, please see 'docs/tutorial/queens.md'.
 ////////////////////////////////////////////////////////////////////////////////
+#include <adiar/adiar.h>
 
 size_t largest_nodes = 0;
 
@@ -230,18 +254,43 @@ int main(int argc, char* argv[])
 {
   // ===== Parse argument =====
   {
-    bool should_error_exit = init_cl_arguments(argc, argv);
-    if (!should_error_exit && N == 0) {
-      std::cout << "  Must specify positive number for N" << "\n";
-      should_error_exit = true;
+    int c;
+
+    opterr = 0; // Squelch errors of "weird" command-line arguments
+
+    while ((c = getopt(argc, argv, "N:M:")) != -1) {
+      try {
+        switch(c) {
+        case 'N':
+          N = std::stoi(optarg);
+          continue;
+
+        case 'M':
+          M = std::stoi(optarg);
+          if (M == 0) {
+            std::cerr << "Must specify positive amount of memory for Adiar (-M)" << std::endl;
+          }
+          continue;
+        }
+      } catch (std::invalid_argument const &ex) {
+        std::cerr << "Invalid number: " << argv[1] << std::endl;
+        return -1;
+      } catch (std::out_of_range const &ex) {
+        std::cerr << "Number out of range: " << argv[1] << std::endl;
+        return -1;
+      }
     }
 
-    if (should_error_exit) { return 1; }
+    if (M == 0) {
+      std::cerr << "Must specify MiB of memory for Adiar (-M)" << std::endl;
+      return -1;
+    }
+
+    if (N == -1) {
+      N = 8;
+    }
   }
 
-  if (N == -1) {
-    N = 8;
-  }
 
   // ===== ADIAR =====
   // Initialize

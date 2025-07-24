@@ -1,15 +1,8 @@
-#include "examples_common.cpp"
+#include <adiar/adiar.h>
 
-int main(int argc, char* argv[])
+int main()
 {
-  // ===== Parse argument =====
-  {
-    bool should_error_exit = init_cl_arguments(argc, argv);
-    if (should_error_exit) { return 1; }
-  }
-
-  // ===== Builder example =====
-  adiar::adiar_init(M*1024*1024);
+  adiar::adiar_init(adiar::minimum_memory);
 
   {
     /// [example]
