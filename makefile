@@ -304,30 +304,3 @@ examples/queens:
 	@echo ""
 	./build/examples/queens -N ${N} -M ${M}
 	@echo ""
-
-
-examples/knights_tour/all: N := 5
-examples/knights_tour/all:
-  # Build
-	@mkdir -p build/
-	@cd build/ && cmake -D CMAKE_BUILD_TYPE=Release ..
-
-	@cd build/ && $(MAKE) $(MAKE_FLAGS) knights_tour
-
-  # Run
-	@echo ""
-	@./build/examples/knights_tour -N ${N} -M ${M}
-	@echo ""
-
-examples/knights_tour/closed: N := 6
-examples/knights_tour/closed:
-  # Build
-	@mkdir -p build/
-	@cd build/ && cmake -D CMAKE_BUILD_TYPE=Release ..
-
-	@cd build/ && $(MAKE) $(MAKE_FLAGS) knights_tour
-
-  # Run
-	@echo ""
-	@./build/examples/knights_tour -N ${N} -M ${M} -c
-	@echo ""
