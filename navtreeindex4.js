@@ -1,5 +1,14 @@
 var NAVTREEINDEX4 =
 {
+"structadiar_1_1statistics_1_1reduce__t.html":[4,6,0,14],
+"structadiar_1_1statistics_1_1reduce__t.html#a2519ee24c18aafb9177078b92d6c338d":[4,6,0,14,3],
+"structadiar_1_1statistics_1_1reduce__t.html#a5f8c1dab667836c226b3c4cf7debca22":[4,6,0,14,2],
+"structadiar_1_1statistics_1_1reduce__t.html#a624cd625bf7ff160e3625ddf65cca558":[4,6,0,14,4],
+"structadiar_1_1statistics_1_1reduce__t.html#a8f89cf0d7b85be177d529be8dbbcef5c":[4,6,0,14,1],
+"structadiar_1_1statistics_1_1reduce__t.html#ab769667ff5ecea10ecd9e2589b7e72bf":[4,6,0,14,0],
+"structadiar_1_1statistics_1_1replace__t.html":[4,6,0,15],
+"structadiar_1_1statistics_1_1replace__t.html#a13f299ab622357fab0d8dc674de72246":[4,6,0,15,0],
+"structadiar_1_1statistics_1_1replace__t.html#a607faa9215476566eb69dbfb179dc031":[4,6,0,15,2],
 "structadiar_1_1statistics_1_1replace__t.html#a63f5b487d41f67a87ab5049e58b2f71e":[4,6,0,15,6],
 "structadiar_1_1statistics_1_1replace__t.html#a70c8dddb8ddfa03d0171f1e3400704b1":[4,6,0,15,1],
 "structadiar_1_1statistics_1_1replace__t.html#a78dfb9ef02471071328d028c67be9942":[4,6,0,15,5],

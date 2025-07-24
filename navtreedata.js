@@ -65,24 +65,36 @@ var NAVTREE =
           [ "Consumers", "page__functional.html#autotoc_md29", null ]
         ] ]
       ] ],
-      [ "Manual Construction", "page__builder.html", null ]
+      [ "Manual Construction", "page__builder.html", null ],
+      [ "Queens", "page__queens.html", [
+        [ "Queens", "page__queens.html#autotoc_md30", [
+          [ "Variable Ordering", "page__queens.html#autotoc_md31", null ],
+          [ "Constructing the Board", "page__queens.html#autotoc_md32", [
+            [ "S(i,j) : Single Position", "page__queens.html#autotoc_md33", null ],
+            [ "R(i) : Row", "page__queens.html#autotoc_md34", null ],
+            [ "B() : Board", "page__queens.html#autotoc_md35", null ]
+          ] ],
+          [ "Counting Solutions", "page__queens.html#autotoc_md36", null ],
+          [ "Enumerating all Solutions", "page__queens.html#autotoc_md37", null ]
+        ] ]
+      ] ]
     ] ],
     [ "Papers", "page__papers.html", [
       [ "Citing this Project", "page__cite.html", [
-        [ "Lars Arge", "page__cite.html#autotoc_md33", null ],
-        [ "Adiar", "page__cite.html#autotoc_md34", [
-          [ "v1.0", "page__cite.html#autotoc_md35", null ],
-          [ "v1.1", "page__cite.html#autotoc_md36", null ],
-          [ "v1.2", "page__cite.html#autotoc_md37", null ],
-          [ "v2.0", "page__cite.html#autotoc_md38", null ],
-          [ "v2.1", "page__cite.html#autotoc_md39", null ],
-          [ "Future Work", "page__cite.html#autotoc_md40", null ]
+        [ "Lars Arge", "page__cite.html#autotoc_md41", null ],
+        [ "Adiar", "page__cite.html#autotoc_md42", [
+          [ "v1.0", "page__cite.html#autotoc_md43", null ],
+          [ "v1.1", "page__cite.html#autotoc_md44", null ],
+          [ "v1.2", "page__cite.html#autotoc_md45", null ],
+          [ "v2.0", "page__cite.html#autotoc_md46", null ],
+          [ "v2.1", "page__cite.html#autotoc_md47", null ],
+          [ "Future Work", "page__cite.html#autotoc_md48", null ]
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
-        [ "64-bit Encoding of Pointers", "page__amend.html#autotoc_md30", [
-          [ "v1.2", "page__amend.html#autotoc_md31", null ],
-          [ "v2.0", "page__amend.html#autotoc_md32", null ]
+        [ "64-bit Encoding of Pointers", "page__amend.html#autotoc_md38", [
+          [ "v1.2", "page__amend.html#autotoc_md39", null ],
+          [ "v2.0", "page__amend.html#autotoc_md40", null ]
         ] ]
       ] ]
     ] ],
@@ -123,7 +135,7 @@ var NAVTREEINDEX =
 "functions.html",
 "group__module____bdd.html#ga86ec1b01efc86bbb4d8a588f74158af1",
 "namespaceadiar.html#acebb242b8863e068f36f10ec5a9c6fb9",
-"structadiar_1_1statistics_1_1replace__t.html#a63f5b487d41f67a87ab5049e58b2f71e"
+"structadiar_1_1statistics_1_1reduce__t.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

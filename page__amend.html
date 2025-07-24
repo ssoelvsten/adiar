@@ -102,20 +102,20 @@ $(document).ready(function(){initNavTree('page__amend.html',''); initResizable()
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#autotoc_md30">64-bit Encoding of Pointers</a><ul><li class="level2"><a href="#autotoc_md31">v1.2</a></li>
-<li class="level2"><a href="#autotoc_md32">v2.0</a></li>
+<ul><li class="level1"><a href="#autotoc_md38">64-bit Encoding of Pointers</a><ul><li class="level2"><a href="#autotoc_md39">v1.2</a></li>
+<li class="level2"><a href="#autotoc_md40">v2.0</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="textblock"><p>During the further development of Adiar, we have revisited, revised, and iterated up our prior ideas. What follows is a record of these changes, leaving the information in prior papers out of date.</p>
-<h1><a class="anchor" id="autotoc_md30"></a>
+<h1><a class="anchor" id="autotoc_md38"></a>
 64-bit Encoding of Pointers</h1>
 <p>In the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a> for [<a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a>], we show in Section 3.5 how to encode the <em>unique identifier</em> into a single 64-bit integer. This is (1) to decrease the BDD size and especially (2) to make the pointer sorting operations as fast as possible.</p>
-<h2><a class="anchor" id="autotoc_md31"></a>
+<h2><a class="anchor" id="autotoc_md39"></a>
 v1.2</h2>
 <p>It was always the intention that the <em>flag</em> bit on children should be used for the addition of <em>complement edges</em> in BDDs. Yet, up to this point it was left unused. Hence, we reassigned the meaning of this bit to instead propagate an edge being <em>tainted</em> by the decision diagram's reduction rule [<a href="https://link.springer.com/chapter/10.1007/978-3-031-45332-8_4">ATVA 23</a>].</p>
-<h2><a class="anchor" id="autotoc_md32"></a>
+<h2><a class="anchor" id="autotoc_md40"></a>
 v2.0</h2>
 <p>For <em>Nested Sweeping</em>, we need to <em>taint</em> an arc's <em>source</em> to be originating from the <em>outer sweep</em>. Yet, the <em>flag</em> was up to this point used to store the <em>out-index</em> of the source. Hence, for <em>internal nodes</em> we introduce the out-index (<em>p</em>) on the second least-significant bit - essentially adding a second (possibly non-Boolean) <em>flag</em>.</p>
 <p><b>Figure 10 (b):</b></p>

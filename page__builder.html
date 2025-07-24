@@ -102,23 +102,24 @@ $(document).ready(function(){initNavTree('page__builder.html',''); initResizable
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>In some cases, one may already know the shape of an <code><a class="el" href="classadiar_1_1bdd.html" title="A reduced Binary Decision Diagram.">adiar::bdd</a></code> for a more complex function. In those cases, it is much cheaper to construct them by hand than to manipulate logic formulas. The <code><a class="el" href="group__module____builder.html#gacd91e76ef56facef01409c952e0ec8ef" title="Builder for BDDs.">adiar::bdd_builder</a></code> class allows you to do exactly this by providing you with the “pointers” of prior constructed nodes such that they can be referenced by new ones.</p>
-<p>For example, consider the following BDD consisting of 3 nodes that represents the formula \( (x_0 \land x_1) \lor x_2 \).</p>
+<p>For example, consider the following BDD consisting of 3 nodes that represents the formula \(f(x_0, x_1, x_2) \equiv (x_0 \land x_1) \lor x_2 \).</p>
 <div class="dotgraph">
 <iframe scrolling="no" frameborder="0" src="dot_inline_dotgraph_1.svg" width="179" height="375"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
 <p>This can be created manually using an <code><a class="el" href="group__module____builder.html#gacd91e76ef56facef01409c952e0ec8ef" title="Builder for BDDs.">adiar::bdd_builder</a></code> (see <code><a class="el" href="classadiar_1_1builder.html" title="A builder for decision diagrams.">adiar::builder</a></code> for all its member functions) as follows.</p>
-<div class="fragment"><div class="line"><a class="code hl_class" href="classadiar_1_1builder.html">adiar::bdd_builder</a> b;</div>
+<div class="fragment"><div class="line">  <a class="code hl_class" href="classadiar_1_1builder.html">adiar::bdd_builder</a> b;</div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1builder__ptr.html">adiar::bdd_ptr</a> p2 = b.<a class="code hl_function" href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">add_node</a>(2, <span class="keyword">false</span>, <span class="keyword">true</span>);</div>
-<div class="line"><span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1builder__ptr.html">adiar::bdd_ptr</a> p1 = b.<a class="code hl_function" href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">add_node</a>(1, p2, <span class="keyword">true</span>);</div>
-<div class="line"><span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1builder__ptr.html">adiar::bdd_ptr</a> p0 = b.<a class="code hl_function" href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">add_node</a>(0, p2, p1);</div>
+<div class="line">  <span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1builder__ptr.html">adiar::bdd_ptr</a> p2 = b.<a class="code hl_function" href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">add_node</a>(2, <span class="keyword">false</span>, <span class="keyword">true</span>);</div>
+<div class="line">  <span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1builder__ptr.html">adiar::bdd_ptr</a> p1 = b.<a class="code hl_function" href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">add_node</a>(1, p2, <span class="keyword">true</span>);</div>
+<div class="line">  <span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1builder__ptr.html">adiar::bdd_ptr</a> p0 = b.<a class="code hl_function" href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">add_node</a>(0, p2, p1);</div>
 <div class="line"> </div>
-<div class="line"><a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a> example_a = b.<a class="code hl_function" href="classadiar_1_1builder.html#ad352fdf568e8d100de19174386fc200c">build</a>();</div>
+<div class="line">  <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a> f = b.<a class="code hl_function" href="classadiar_1_1builder.html#ad352fdf568e8d100de19174386fc200c">build</a>();</div>
 <div class="ttc" id="aclassadiar_1_1bdd_html"><div class="ttname"><a href="classadiar_1_1bdd.html">adiar::bdd</a></div><div class="ttdoc">A reduced Binary Decision Diagram.</div><div class="ttdef"><b>Definition</b> bdd.h:53</div></div>
 <div class="ttc" id="aclassadiar_1_1builder__ptr_html"><div class="ttname"><a href="classadiar_1_1builder__ptr.html">adiar::builder_ptr</a></div><div class="ttdoc">The pointer type that builders use to identify the nodes they have constructed in a decision diagram.</div><div class="ttdef"><b>Definition</b> builder.h:54</div></div>
 <div class="ttc" id="aclassadiar_1_1builder_html"><div class="ttname"><a href="classadiar_1_1builder.html">adiar::builder</a></div><div class="ttdoc">A builder for decision diagrams.</div><div class="ttdef"><b>Definition</b> builder.h:146</div></div>
 <div class="ttc" id="aclassadiar_1_1builder_html_a865e87726a9135ab4d2c8d17c2a8fe9a"><div class="ttname"><a href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">adiar::builder::add_node</a></div><div class="ttdeci">builder_ptr&lt; Policy &gt; add_node(typename Policy::label_type label, const builder_ptr&lt; Policy &gt; &amp;low, const builder_ptr&lt; Policy &gt; &amp;high)</div><div class="ttdoc">Add an internal node with a given label and its two children.</div><div class="ttdef"><b>Definition</b> builder.h:241</div></div>
 <div class="ttc" id="aclassadiar_1_1builder_html_ad352fdf568e8d100de19174386fc200c"><div class="ttname"><a href="classadiar_1_1builder.html#ad352fdf568e8d100de19174386fc200c">adiar::builder::build</a></div><div class="ttdeci">Policy::dd_type build()</div><div class="ttdoc">Builds the decision diagram with the added nodes. This also clears the builder.</div><div class="ttdef"><b>Definition</b> builder.h:420</div></div>
-</div><!-- fragment --> </div></div><!-- contents -->
+</div><!-- fragment --><p>To play around with this example, please take a look at <code>examples/builder.cpp</code>. </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

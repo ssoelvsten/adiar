@@ -1,20 +1,10 @@
 var searchData=
 [
-  ['nand_5fop_0',['nand_op',['../namespaceadiar.html#ad7cfa6a6a4566938e74764b4d0b58668',1,'adiar']]],
-  ['negation_1',['Negation',['../page__basic.html#autotoc_md10',1,'']]],
-  ['nested_2',['Nested',['../classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197a44d2c93a61deb96d9309e5a35501fb83',1,'adiar::exec_policy::quantify']]],
-  ['nested_5flevels_3',['nested_levels',['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1outer__up__t.html#a7b05971e3b90ec3c2c0c168c8ace9e92',1,'adiar::statistics::nested_sweeping_t::outer_up_t']]],
-  ['nested_5fpolicy_5ft_4',['nested_policy_t',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__policy__t.html',1,'adiar::statistics::quantify_t']]],
-  ['nested_5fsweeping_5',['nested_sweeping',['../structadiar_1_1statistics.html#a73464fed848ef4a2baeb8786b027859c',1,'adiar::statistics']]],
-  ['nested_5fsweeping_5ft_6',['nested_sweeping_t',['../structadiar_1_1statistics_1_1nested__sweeping__t.html',1,'adiar::statistics']]],
-  ['nested_5fsweeps_7',['nested_sweeps',['../structadiar_1_1statistics_1_1quantify__t.html#a1db4cee9d4faed5901af5aa9f357661f',1,'adiar::statistics::quantify_t::nested_sweeps'],['../structadiar_1_1statistics_1_1replace__t.html#ad5e4c0171fc95515c27fd65ee4916177',1,'adiar::statistics::replace_t::nested_sweeps']]],
-  ['nested_5ftransposition_5ft_8',['nested_transposition_t',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html',1,'adiar::statistics::quantify_t']]],
-  ['node_5ffile_9',['node_file',['../structadiar_1_1statistics.html#abd960bddf01859439b3bae5a72b6fc82',1,'adiar::statistics']]],
-  ['node_5ffile_5ft_10',['node_file_t',['../structadiar_1_1statistics_1_1node__file__t.html',1,'adiar::statistics']]],
-  ['node_5ffile_5ftype_11',['node_file_type',['../classadiar_1_1internal_1_1dd.html#a0cdac2e628e7e850c765f934b54bd6c6',1,'adiar::internal::dd']]],
-  ['node_5ftype_12',['node_type',['../classadiar_1_1internal_1_1____dd.html#aa1eafa94e60449e285536ba37968bd83',1,'adiar::internal::__dd::node_type'],['../classadiar_1_1internal_1_1dd.html#ae61644f31c4f02c71977814fa92c2435',1,'adiar::internal::dd::node_type']]],
-  ['non_5fmonotone_13',['Non_Monotone',['../namespaceadiar.html#a4679f9678ef99959f046aea209221af0a1160d47014d611622714f6b197a4cfad',1,'adiar']]],
-  ['none_14',['none',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aa8e05a681ff42ad31d1746e01c4f8caf',1,'adiar::statistics::quantify_t::nested_transposition_t::none'],['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642a6adf97f83acf6453d4a6a4b1070f3754',1,'adiar::None']]],
-  ['nor_5fop_15',['nor_op',['../namespaceadiar.html#ab7377b5180e5350007f09a2932f1cc1a',1,'adiar']]],
-  ['number_5fof_5fterminals_16',['number_of_terminals',['../classadiar_1_1internal_1_1____dd.html#afbef57f343dbd466d9300bd282640058',1,'adiar::internal::__dd::number_of_terminals(const bool value) const'],['../classadiar_1_1internal_1_1____dd.html#a9269b183c9faf9a654aae8d0aef7e651',1,'adiar::internal::__dd::number_of_terminals() const'],['../classadiar_1_1internal_1_1dd.html#aa97722d01a0549b7ee27d9e9a1798e55',1,'adiar::internal::dd::number_of_terminals(const bool value) const'],['../classadiar_1_1internal_1_1dd.html#aef2f8cbd3631a1e42e6554eac2d7e132',1,'adiar::internal::dd::number_of_terminals() const']]]
+  ['label_5ftype_0',['label_type',['../classadiar_1_1internal_1_1____dd.html#ae0cf2e3c87dd7d2ea7c63b5e6b316c6e',1,'adiar::internal::__dd::label_type'],['../classadiar_1_1internal_1_1dd.html#a89544dd479c73f3704c989d54e72b10b',1,'adiar::internal::dd::label_type']]],
+  ['lars_20arge_1',['Lars Arge',['../page__cite.html#autotoc_md41',1,'']]],
+  ['less_5fop_2',['less_op',['../namespaceadiar.html#a4366c3ebe3d208e6a4f1a40097d0dd13',1,'adiar']]],
+  ['levelized_5fpriority_5fqueue_3',['levelized_priority_queue',['../structadiar_1_1statistics.html#a40ee08e08fd241c4123f6578969e738d',1,'adiar::statistics']]],
+  ['levelized_5fpriority_5fqueue_5ft_4',['levelized_priority_queue_t',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html',1,'adiar::statistics']]],
+  ['license_5',['License',['../index.html#autotoc_md2',1,'']]],
+  ['lpq_6',['lpq',['../structadiar_1_1statistics_1_1____alg__base.html#ab769667ff5ecea10ecd9e2589b7e72bf',1,'adiar::statistics::__alg_base']]]
 ];
