@@ -104,13 +104,18 @@ Other dependencies that we cannot provide as a submodule are shown below. The
   These can then be turned into a graphical representation by use of a number of
   tools, such as *graphviz* (2.40+).
 
+- [ ] **LCOV**
+
+  To analyse code coverage and to produce the reports, we use the *LTP GCOV extension code coverage
+  tool*
+
 To install all of the above, run the respective command below.
 
-| Operating System | Shell command                                                        |
-|------------------|----------------------------------------------------------------------|
-| Ubuntu 22+       | `apt install        cmake g++     libboost-all-dev doxygen graphviz` |
-| Fedora 36+       | `dnf install        cmake gcc-c++ boost-devel      doxygen graphviz` |
-| Arch Linux       | `pacman -S --needed cmake gcc     boost-libs       doxygen graphviz` |
+| Operating System | Shell command                                                             |
+|------------------|---------------------------------------------------------------------------|
+| Ubuntu 22+       | `apt install        cmake g++     libboost-all-dev doxygen graphviz lcov` |
+| Fedora 36+       | `dnf install        cmake gcc-c++ boost-devel      doxygen graphviz lcov` |
+| Arch Linux       | `pacman -S --needed cmake gcc     boost-libs       doxygen graphviz lcov` |
 
 ## Usage
 
