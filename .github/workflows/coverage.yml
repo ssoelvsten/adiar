@@ -16,7 +16,7 @@ jobs:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
-          paths: '["src/adiar/**", "test/**"]'
+          paths: '["src/adiar/**", "tests/**"]'
 
     outputs:
       should_skip: ${{ github.event_name == 'pull_request' && steps.skip_check.outputs.should_skip == 'true' }}
@@ -50,18 +50,18 @@ jobs:
 
     - name: CMake | build unit tests
       working-directory: ${{runner.workspace}}/build
-      run: cmake --build . --target test-adiar
+      run: cmake --build . --target adiar_test-all
 
     - name: Run unit tests
       working-directory: ${{runner.workspace}}/build
-      run: ./test/test-adiar --reporter=info --colorizer=light
+      run: ./tests/adiar_test-all --reporter=info --colorizer=light
 
     - name: Generate code coverage report
       working-directory: ${{runner.workspace}}
       if: always()
       run: |
         lcov -c -d build/ -o ./coverage.info
-        lcov --remove coverage.info --output-file coverage.info --ignore-errors unused "/usr/*" "*/external/*" "./test/*"
+        lcov --remove coverage.info --output-file coverage.info --ignore-errors unused "/usr/*" "*/external/*" "./tests/*"
 
     - name: Upload report to Codecov.io
       working-directory: ${{runner.workspace}}

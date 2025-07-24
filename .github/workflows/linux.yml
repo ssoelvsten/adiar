@@ -22,7 +22,7 @@ jobs:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
-          paths: '["src/adiar/**", "test/**"]'
+          paths: '["src/adiar/**", "tests/**"]'
 
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
@@ -87,11 +87,11 @@ jobs:
         cmake -E make_directory ${{github.workspace}}/build
         cd ${{github.workspace}}/build
         cmake -D CMAKE_BUILD_TYPE=DEBUG -D ADIAR_STATS=ON ..
-        cmake --build . --target test-adiar
+        cmake --build . --target adiar_test-all
 
     - name: Run tests
       working-directory: ${{github.workspace}}/build
-      run: ./test/test-adiar --reporter=info --colorizer=light
+      run: ./tests/adiar_test-all --reporter=info --colorizer=light
 
   skip_build:
     name: 'Build + Test (Linux, ${{matrix.cc.cc}}-${{matrix.cc.v}})'
