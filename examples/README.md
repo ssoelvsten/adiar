@@ -5,9 +5,6 @@ To provide examples of how to use *Adiar* in your project, we provide a few work
 are also described in the [documentation](https://ssoelvsten.github.io/adiar/). More thorough
 examples can be found in the [BDD Benchmarking Suite](https://github.com/SSoelvsten/bdd-benchmark).
 
-All examples have an *M* variable to be set for the MiB of memory that is to be
-available to *Adiar*. The default is 1024 MiB.
-
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
@@ -19,7 +16,7 @@ available to *Adiar*. The default is 1024 MiB.
 
 **Files:** `queens.cpp`
 
-**Target:** `make examples/queens N=<?>`
+**Target:** `make examples/queens N=<?> M=<?>`
 
 Solve the N-Queens problem for *N = `?`* (default: `8`). This is done by
 constructing an BDD row-by-row that represents whether the row is in a legal
@@ -31,6 +28,9 @@ To list the solutions, we take the same BDD, but instead of counting the number
 of assignments within, we use it to prune a recursive enumeration of all
 possible queen placements. For up to *N = 8* we run both the solution counting
 procedure and the enumeration procedure.
+
+You can choose the amount (MiB) of internal memory, *M*, to be used by *Adiar*.
+The default is 1024 MiB.
 
 **Notice**: This is a pretty simple example and has all of the normal
 shortcomings for BDDs trying to solve the N-Queens problem. At around *N* = 14
