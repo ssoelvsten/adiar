@@ -4,33 +4,24 @@
 #include <ratio>
 #include <vector>
 
-// Timing
-#include <chrono>
-
-/* A few chrono wrappers to improve readability of the code below */
-typedef std::chrono::high_resolution_clock::time_point timestamp_t;
-
-inline timestamp_t get_timestamp() {
-  return std::chrono::high_resolution_clock::now();
-}
-
-inline double duration_of(timestamp_t &before, timestamp_t &after) {
-  return std::chrono::duration<double, std::ratio<1,1> /* seconds */>(after - before).count();
-}
-
-// Command-line arguments
-#include <getopt.h>
-
-int    N = -1;
-size_t M =  0;
-
-////////////////////////////////////////////////////////////////////////////////
-// For comments and explanation, please see 'docs/tutorial/queens.md'.
-////////////////////////////////////////////////////////////////////////////////
 #include <adiar/adiar.h>
 
+////////////////////////////////////////////////////////////////////////////////
+// Command-line arguments (parsed later)
+#include <getopt.h>
+
+int    N = 8;
+size_t M = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+// Statistics on BDD size
 size_t largest_nodes = 0;
 
+////////////////////////////////////////////////////////////////////////////////
+// NOTE: Example is explained in 'docs/tutorial/queens.md'.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
 /// [label]
 inline typename adiar::bdd::label_type label_of_position(uint64_t i, uint64_t j)
 {
@@ -38,6 +29,7 @@ inline typename adiar::bdd::label_type label_of_position(uint64_t i, uint64_t j)
 }
 /// [label]
 
+////////////////////////////////////////////////////////////////////////////////
 /// [queens_S]
 adiar::bdd queens_S(int i, int j)
 {
@@ -98,6 +90,7 @@ adiar::bdd queens_R(int i)
 }
 /// [queens_R]
 
+////////////////////////////////////////////////////////////////////////////////
 /// [queens_B]
 adiar::bdd queens_B()
 {
@@ -115,6 +108,7 @@ adiar::bdd queens_B()
 }
 /// [queens_B]
 
+////////////////////////////////////////////////////////////////////////////////
 /// [queens_count]
 uint64_t queens_count(const adiar::bdd &board)
 {
@@ -124,6 +118,7 @@ uint64_t queens_count(const adiar::bdd &board)
 
 uint64_t deepest_row = 0;
 
+////////////////////////////////////////////////////////////////////////////////
 /// [print_assignment]
 void print_assignment(std::vector<uint64_t>& assignment)
 {
@@ -137,6 +132,7 @@ void print_assignment(std::vector<uint64_t>& assignment)
 }
 /// [print_assignment]
 
+////////////////////////////////////////////////////////////////////////////////
 /// [queens_list_rec]
 uint64_t queens_list_rec(uint64_t N, uint64_t row,
                          std::vector<uint64_t>& partial_assignment,
@@ -196,6 +192,7 @@ uint64_t queens_list_rec(uint64_t N, uint64_t row,
 }
 /// [queens_list_rec]
 
+////////////////////////////////////////////////////////////////////////////////
 /// [queens_list]
 uint64_t queens_list(uint64_t N, const adiar::bdd& board)
 {
@@ -218,6 +215,21 @@ uint64_t queens_list(uint64_t N, const adiar::bdd& board)
 }
 /// [queens_list]
 
+////////////////////////////////////////////////////////////////////////////////
+// A few chrono wrappers to improve readability of the code below
+#include <chrono>
+
+typedef std::chrono::high_resolution_clock::time_point timestamp_t;
+
+inline timestamp_t get_timestamp() {
+  return std::chrono::high_resolution_clock::now();
+}
+
+inline double duration_of(timestamp_t &before, timestamp_t &after) {
+  return std::chrono::duration<double, std::ratio<1,1> /* seconds */>(after - before).count();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // expected number taken from:
 //  https://en.wikipedia.org/wiki/Eight_queens_puzzle#Counting_solutions
 uint64_t expected_result[28] = {
@@ -251,6 +263,7 @@ uint64_t expected_result[28] = {
   234907967154122528
 };
 
+////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char* argv[])
 {
   // ===== Parse argument =====

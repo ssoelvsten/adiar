@@ -3,6 +3,8 @@
 
 #include <adiar/adiar.h>
 
+////////////////////////////////////////////////////////////////////////////////
+// Printing functions
 void print(const bool b, const std::string &s)
 {
   std::cout << "Example: " << s << "\n";
@@ -33,6 +35,8 @@ void print(const adiar::bdd &f, const std::string &s)
   std::cout << "\n";
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Code snippets explained in 'docs/tutorial/basic.md'
 adiar::bdd constants_top()
 {
   /// [constants.top]
@@ -310,6 +314,7 @@ void dot(const adiar::bdd &f)
   /// [dot]
 }
 
+///////////////////////////////////////////////////////////////////////////////
 int main() {
   adiar::adiar_init(adiar::minimum_memory);
 
