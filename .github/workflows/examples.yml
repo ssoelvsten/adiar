@@ -20,7 +20,7 @@ jobs:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
-          paths: '["src/adiar/**", "example/**"]'
+          paths: '["src/adiar/**", "examples/**"]'
 
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
@@ -61,7 +61,7 @@ jobs:
 
     - name: Run example
       working-directory: ${{runner.workspace}}/build
-      run: for n in ${{ matrix.N }}; do ./example/${{ matrix.exec }} -N $n -M 1024; done
+      run: for n in ${{ matrix.N }}; do ./examples/${{ matrix.exec }} -N $n -M 1024; done
 
   run-dummy:
     name: 'Example: ${{ matrix.name }}'
