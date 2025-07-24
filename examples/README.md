@@ -39,19 +39,6 @@ shortcomings for BDDs trying to solve the N-Queens problem. At around *N* = 14
 the intermediate sizes explodes a lot. One can with about 100 GB of disk space
 or memory compute it.
 
-## Knight's Tours
-
-**Files:** `knights_tour.cpp`
-
-**Target:** `make example/knights_tour/<?> N=<?>`
-
-Counts the number of Knight's Tours on an *N = `?`* sized square board. Either
-*all* or only the *closed* tours are counted. This is done by combining ZDDs
-that describe the possible transitions at every time step together with ZDDs
-that make every square visited only once. If only the *closed* tours are
-supposed to be used, then the first time-step is fixed to the top-left corner
-and the next and last time-step fixed to the two possible moves by a Knight.
-
 ## References
 
 - [[Kunkle10](https://dl.acm.org/doi/abs/10.1145/1837210.1837222)] Daniel
