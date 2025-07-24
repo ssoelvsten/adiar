@@ -302,6 +302,9 @@ examples/NAME:
 	./build/examples/adiar_example-$(NAME)
 	@echo ""
 
+examples/basic:
+	$(MAKE) $(MAKE_FLAGS) examples/NAME NAME=basic
+
 examples/builder:
 	$(MAKE) $(MAKE_FLAGS) examples/NAME NAME=builder
 

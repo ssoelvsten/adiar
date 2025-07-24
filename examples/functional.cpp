@@ -9,7 +9,6 @@ void print(const adiar::bdd &f, const std::string &s)
   std::cout << " | adiar::bdd_nodecount(f) = " << adiar::bdd_nodecount(f) << "\n";
   std::cout << " | adiar::bdd_varcount(f)  = " << adiar::bdd_varcount(f) << "\n";
   std::cout << " | adiar::bdd_satcount(f)  = " << adiar::bdd_satcount(f) << "\n";
-
   std::cout << "\n";
 }
 

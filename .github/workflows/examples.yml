@@ -36,6 +36,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: 'Basic'
+            target: adiar_example-basic
           - name: 'Builder'
             target: adiar_example-builder
           - name: 'Functional'
