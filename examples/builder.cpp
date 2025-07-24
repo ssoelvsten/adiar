@@ -1,19 +1,28 @@
+#include <iostream>
+
 #include <adiar/adiar.h>
+
+adiar::bdd example()
+{
+  /// [example]
+  adiar::bdd_builder b;
+
+  const adiar::bdd_ptr p2 = b.add_node(2, false, true);
+  const adiar::bdd_ptr p1 = b.add_node(1, p2, true);
+  const adiar::bdd_ptr p0 = b.add_node(0, p2, p1);
+
+  adiar::bdd f = b.build();
+  /// [example]
+
+  return f;
+}
 
 int main()
 {
   adiar::adiar_init(adiar::minimum_memory);
 
   {
-    /// [example]
-    adiar::bdd_builder b;
-
-    const adiar::bdd_ptr p2 = b.add_node(2, false, true);
-    const adiar::bdd_ptr p1 = b.add_node(1, p2, true);
-    const adiar::bdd_ptr p0 = b.add_node(0, p2, p1);
-
-    adiar::bdd f = b.build();
-    /// [example]
+    adiar::bdd f = example();
 
     std::cout << "adiar::bdd_topvar(f)    = " << adiar::bdd_topvar(f) << "\n";
     std::cout << "adiar::bdd_nodecount(f) = " << adiar::bdd_nodecount(f) << "\n";
