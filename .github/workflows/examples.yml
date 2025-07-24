@@ -52,11 +52,11 @@ jobs:
       run: |
         cmake -E make_directory ${{runner.workspace}}/build
         cd ${{runner.workspace}}/build
-        cmake $GITHUB_WORKSPACE -D CMAKE_BUILD_TYPE=Release && cmake --build . --target queens
+        cmake $GITHUB_WORKSPACE -D CMAKE_BUILD_TYPE=Release && cmake --build . --target adiar_example-queens
 
     - name: Run | queens
       working-directory: ${{runner.workspace}}/build
-      run: for n in ${{ matrix.N }}; do ./examples/queens -N $n -M 1024; done
+      run: for n in ${{ matrix.N }}; do ./examples/adiar_example-queens -N $n -M 1024; done
 
   run-dummy:
     name: 'Example: ${{ matrix.name }}'

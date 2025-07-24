@@ -21,3 +21,8 @@ apply to \ref module__zdd .
   Use of `adiar::builder` to manually construct a decision diagram, node for
   node.
 
+- \subpage page__queens
+
+  Combining all of the above to symbolically compute the solution to the
+  Queens problem.
+
