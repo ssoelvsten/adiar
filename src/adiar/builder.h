@@ -459,8 +459,7 @@ namespace adiar
     {
       if (nf) { return; }
 
-      adiar_assert(!nw.is_open(),
-                   "`nw`'s attachment should be consistent with existence of `nf`");
+      adiar_assert(!nw.is_open(), "`nw`'s attachment should be consistent with existence of `nf`");
 
       // Initialise file
       nf = internal::make_shared_levelized_file<node_type>();
