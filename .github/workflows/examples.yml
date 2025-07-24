@@ -38,6 +38,8 @@ jobs:
         include:
           - name: 'Builder'
             target: adiar_example-builder
+          - name: 'Functional'
+            target: adiar_example-functional
 
     steps:
     - uses: actions/checkout@v4

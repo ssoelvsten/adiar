@@ -4,5 +4,6 @@ macro(add_example NAME)
 endmacro(add_example)
 
 add_example(builder)
+add_example(functional)
 add_example(queens)
 

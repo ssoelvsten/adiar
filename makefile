@@ -285,23 +285,28 @@ playground:
 	@./build/app/adiar_playground ${M}
 
 play:
-	@$(MAKE) playground
+	@$(MAKE) $(MAKE_FLAGS) playground
 
 # ============================================================================ #
 #  EXAMPLES
 # ============================================================================ #
-examples/builder: M := 1024
-examples/builder:
+examples/NAME:
   # Build
 	@mkdir -p build/
 	@cd build/ && cmake -D CMAKE_BUILD_TYPE=Release ..
 
-	@cd build/ && $(MAKE) $(MAKE_FLAGS) adiar_example-builder
+	@cd build/ && $(MAKE) $(MAKE_FLAGS) adiar_example-$(NAME)
 
   # Run
 	@echo ""
-	./build/examples/adiar_example-builder -M ${M}
+	./build/examples/adiar_example-$(NAME)
 	@echo ""
+
+examples/builder:
+	$(MAKE) $(MAKE_FLAGS) examples/NAME NAME=builder
+
+examples/functional:
+	$(MAKE) $(MAKE_FLAGS) examples/NAME NAME=functional
 
 examples/queens: M := 1024
 examples/queens: N := 8
