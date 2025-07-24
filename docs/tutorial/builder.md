@@ -7,7 +7,7 @@ do exactly this by providing you with the “pointers” of prior constructed no
 such that they can be referenced by new ones.
 
 For example, consider the following BDD consisting of 3 nodes that represents
-the formula \f$ (x_0 \land x_1) \lor x_2 \f$.
+the formula \f$f(x_0, x_1, x_2) \equiv (x_0 \land x_1) \lor x_2 \f$.
 
 \dot
 digraph builder_example {
@@ -37,12 +37,6 @@ digraph builder_example {
 This can be created manually using an `adiar::bdd_builder` (see `adiar::builder`
 for all its member functions) as follows.
 
-```cpp
-adiar::bdd_builder b;
+\snippet builder.cpp example
 
-const adiar::bdd_ptr p2 = b.add_node(2, false, true);
-const adiar::bdd_ptr p1 = b.add_node(1, p2, true);
-const adiar::bdd_ptr p0 = b.add_node(0, p2, p1);
-
-adiar::bdd example_a = b.build();
-```
+To play around with this example, please take a look at `examples/builder.cpp`.

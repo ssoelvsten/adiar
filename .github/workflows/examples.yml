@@ -25,6 +25,41 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
 
+  run-minor:
+    name: 'Example: ${{ matrix.name }}'
+    runs-on: ubuntu-latest
+
+    needs: skip_duplicate
+    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 'Builder'
+            target: adiar_example-builder
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+
+    - name: Apt | install boost
+      run: |
+        sudo apt update
+        sudo apt install libboost-all-dev
+
+    - name: CMake | build
+      run: |
+        cmake -E make_directory ${{runner.workspace}}/build
+        cd ${{runner.workspace}}/build
+        cmake $GITHUB_WORKSPACE -D CMAKE_BUILD_TYPE=Release && cmake --build . --target ${{ matrix.target }}
+
+    - name: Run | ...
+      working-directory: ${{runner.workspace}}/build
+      run: ./examples/${{ matrix.target }} -M 1024
+
+
   run-queens:
     name: 'Example: Queens'
     runs-on: ubuntu-latest
