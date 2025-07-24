@@ -11,20 +11,14 @@ An `adiar::predicate` is a function that given a value of some type `T` returns
 a `bool`. For example, the following *lambda* is a predicate for whether a BDD
 variable is odd.
 
-```cpp
-const adiar::predicate<int> is_odd = [](int x) -> bool
-{
-  return x % 2;
-};
-```
+\snippet functional.cpp is_odd
 
 In \ref page__basic, we showed how to use it to quantify a single variable. You
 can parse the above predicate to `adiar::bdd_exists` to quantify all odd variables
 at once.
 
-```cpp
-adiar::bdd _ = adiar::bdd_exists(f, is_odd);
-```
+\snippet functional.cpp predicate
+
 
 Iterators
 ==================================
@@ -36,22 +30,15 @@ it can provide its data in the same order as they need to be consumed by the BDD
 operation. In the case of `adiar::bdd_exists`, the iterator's data has to be in
 *descending* order.
 
-```cpp
-std::vector<int> xs = { 5, 3, 1 };
-
-adiar::bdd _ = adiar::bdd_exists(f, xs.begin(), xs.end());
-```
+\snippet functional.cpp iterators_1
 
 Reversely, one can also parse information from Adiar's algorithms back into
 one's own data structures with an output iterator. For example, the variables
 within a BDD can be copied (in *ascending* order) into a `std::vector` with the
 `adiar::bdd_support` function as follows.
 
-```cpp
-std::vector<int> xs;
+\snippet functional.cpp iterators_2
 
-adiar::bdd_support(f, std::back_inserter(xs));
-```
 
 Generators and Consumers
 ==================================
@@ -68,17 +55,7 @@ A generator function is a stateful function object that when called provides an
 x<sub>3</sub>, and x<sub>1</sub> can also be done with the following *lambda*
 function.
 
-```cpp
-const auto gen = [x = 7]() mutable -> adiar::optional<int>
-{
-  // If x < 0, we are done.
-  if (x < 0) { return {}; }
-  // Otherwise, return x-2.
-  return {x -= 2};
-};
-
-adiar::bdd _ = adiar::bdd_exists(f, gen);
-```
+\snippet functional.cpp generators
 
 Similarly, one can parse an (*ascending*) iterator or generator
 `adiar::bdd_restrict` to restrict multiple variables. Doing so is going to be
@@ -91,13 +68,7 @@ A consumer function essentially is a *callback* that consumes the result. For
 example, we can print all of the variables that are present within a BDD to the
 console with the following *lambda* function.
 
-```cpp
-const auto con = [](int x) -> void
-{
- std::cout << x << "\n";
-};
-adiar::bdd_support(f, con);
-```
+\snippet functional.cpp consumers
 
 Similarly, one can obtain the satisfying assignment of `adiar::bdd_satmin` and
 `adiar::bdd_satmax` with iterators and/or consumer functions.
