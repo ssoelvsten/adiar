@@ -4,6 +4,9 @@
 operations. For more advanced usage, you need to use \ref module__functional as
 a bridge between your own code and Adiar.
 
+To play around with the examples below, please take a look at
+`examples/functional.cpp`.
+
 Predicates
 ==================================
 

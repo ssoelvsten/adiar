@@ -2,6 +2,9 @@
 
 [TOC]
 
+To play around with the examples below, please take a look at
+`examples/basic.cpp`.
+
 Creating BDDs
 ===============================
 
