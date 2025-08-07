@@ -281,8 +281,8 @@ conventional recursive algorithms via a *Unique Node Table*.
     author        = {S{\o}lvsten, Steffan Christ},
     year          = {2025},
     month         = {05},
-    school        = {Aarhus University}
-    type          = {PhD thesis}
-    url           = {https://soeg.kb.dk/permalink/45KBDK_KGL/1pioq0f/alma99126389524805763},
+    school        = {Aarhus University},
+    type          = {PhD thesis},
+    url           = {https://soeg.kb.dk/permalink/45KBDK_KGL/1pioq0f/alma99126389524805763}
   }
   ```
