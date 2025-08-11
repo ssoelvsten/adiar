@@ -61,7 +61,7 @@ jobs:
           - { circuit: mem_ctrl }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: 'ssoelvsten/bdd-benchmark'
           submodules: 'recursive'
@@ -127,7 +127,7 @@ jobs:
           - { category: httt,              circuit: 4x4_9_tippy_bwnib }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: 'ssoelvsten/bdd-benchmark'
           submodules: 'recursive'
@@ -188,7 +188,7 @@ jobs:
           - { N: 14 }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: 'ssoelvsten/bdd-benchmark'
           submodules: 'recursive'
