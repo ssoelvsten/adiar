@@ -1,5 +1,6 @@
 var NAVTREEINDEX4 =
 {
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d":[4,6,0,13,1,4],
 "structadiar_1_1statistics_1_1reduce__t.html":[4,6,0,14],
 "structadiar_1_1statistics_1_1reduce__t.html#a2519ee24c18aafb9177078b92d6c338d":[4,6,0,14,3],
 "structadiar_1_1statistics_1_1reduce__t.html#a5f8c1dab667836c226b3c4cf7debca22":[4,6,0,14,2],

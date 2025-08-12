@@ -88,7 +88,8 @@ var NAVTREE =
           [ "v1.2", "page__cite.html#autotoc_md45", null ],
           [ "v2.0", "page__cite.html#autotoc_md46", null ],
           [ "v2.1", "page__cite.html#autotoc_md47", null ],
-          [ "Future Work", "page__cite.html#autotoc_md48", null ]
+          [ "Future Work", "page__cite.html#autotoc_md48", null ],
+          [ "Student Projects", "page__cite.html#autotoc_md49", null ]
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
@@ -135,7 +136,7 @@ var NAVTREEINDEX =
 "functions.html",
 "group__module____bdd.html#ga86ec1b01efc86bbb4d8a588f74158af1",
 "namespaceadiar.html#acebb242b8863e068f36f10ec5a9c6fb9",
-"structadiar_1_1statistics_1_1reduce__t.html"
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

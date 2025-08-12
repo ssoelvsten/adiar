@@ -18,8 +18,8 @@ var NAVTREEINDEX3 =
 "namespacemembers_e.html":[5,1,0,4],
 "namespacemembers_enum.html":[5,1,4],
 "namespacemembers_f.html":[5,1,0,5],
-"namespacemembers_func.html":[5,1,1],
 "namespacemembers_func.html":[5,1,1,0],
+"namespacemembers_func.html":[5,1,1],
 "namespacemembers_func_b.html":[5,1,1,1],
 "namespacemembers_func_d.html":[5,1,1,2],
 "namespacemembers_func_e.html":[5,1,1,3],
@@ -77,6 +77,7 @@ var NAVTREEINDEX3 =
 "page__cite.html#autotoc_md46":[3,0,1,3],
 "page__cite.html#autotoc_md47":[3,0,1,4],
 "page__cite.html#autotoc_md48":[3,0,1,5],
+"page__cite.html#autotoc_md49":[3,0,1,6],
 "page__functional.html":[2,1],
 "page__functional.html#autotoc_md25":[2,1,0],
 "page__functional.html#autotoc_md26":[2,1,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#a9cbb4437bd4b144404f205be1122056e":[4,6,0,13,1,1],
 "structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aa8e05a681ff42ad31d1746e01c4f8caf":[4,6,0,13,1,0],
 "structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ab0aafa99d65a0f04e699ec33ec75c901":[4,6,0,13,1,6],
-"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ac6f1a46078169d94fe18ee72d44bf2b6":[4,6,0,13,1,3],
-"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d":[4,6,0,13,1,4]
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ac6f1a46078169d94fe18ee72d44bf2b6":[4,6,0,13,1,3]
 };

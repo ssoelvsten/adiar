@@ -22,12 +22,13 @@ var searchData=
   ['prod3_5ft_19',['prod3_t',['../structadiar_1_1statistics_1_1prod3__t.html',1,'adiar::statistics']]],
   ['products_20',['products',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__policy__t.html#a4c62db97a5f491ab701e72aed519bfcb',1,'adiar::statistics::quantify_t::nested_policy_t']]],
   ['project_21',['project',['../index.html#autotoc_md1',1,'About the Project'],['../page__cite.html',1,'Citing this Project']]],
-  ['pruning_22',['pruning',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d',1,'adiar::statistics::quantify_t::nested_transposition_t']]],
-  ['push_5fbucket_23',['push_bucket',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a704d98578648ed0b0daf834b92b21fe7',1,'adiar::statistics::levelized_priority_queue_t']]],
-  ['push_5fin_5forder_24',['push_in_order',['../structadiar_1_1statistics_1_1arc__file__t.html#a873e75b1ded2fa2476c962742dc15d07',1,'adiar::statistics::arc_file_t']]],
-  ['push_5finternal_25',['push_internal',['../structadiar_1_1statistics_1_1arc__file__t.html#abc227884106daee37eaf50fa5beb0d82',1,'adiar::statistics::arc_file_t']]],
-  ['push_5flevel_26',['push_level',['../structadiar_1_1statistics_1_1node__file__t.html#ab2987bf9926b0e9a85acc47390bb4a94',1,'adiar::statistics::node_file_t::push_level'],['../structadiar_1_1statistics_1_1arc__file__t.html#a4e41194c32c9314f5e9d70103e9d321e',1,'adiar::statistics::arc_file_t::push_level']]],
-  ['push_5fnode_27',['push_node',['../structadiar_1_1statistics_1_1node__file__t.html#a4391476b5bc3ec1dbc1f50512b0473c9',1,'adiar::statistics::node_file_t']]],
-  ['push_5fout_5fof_5forder_28',['push_out_of_order',['../structadiar_1_1statistics_1_1arc__file__t.html#a861b71e63d0d957a09a07d2ddf271b1f',1,'adiar::statistics::arc_file_t']]],
-  ['push_5foverflow_29',['push_overflow',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a844804602d4c05ae87cef7f40c10371d',1,'adiar::statistics::levelized_priority_queue_t']]]
+  ['projects_22',['Student Projects',['../page__cite.html#autotoc_md49',1,'']]],
+  ['pruning_23',['pruning',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d',1,'adiar::statistics::quantify_t::nested_transposition_t']]],
+  ['push_5fbucket_24',['push_bucket',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a704d98578648ed0b0daf834b92b21fe7',1,'adiar::statistics::levelized_priority_queue_t']]],
+  ['push_5fin_5forder_25',['push_in_order',['../structadiar_1_1statistics_1_1arc__file__t.html#a873e75b1ded2fa2476c962742dc15d07',1,'adiar::statistics::arc_file_t']]],
+  ['push_5finternal_26',['push_internal',['../structadiar_1_1statistics_1_1arc__file__t.html#abc227884106daee37eaf50fa5beb0d82',1,'adiar::statistics::arc_file_t']]],
+  ['push_5flevel_27',['push_level',['../structadiar_1_1statistics_1_1node__file__t.html#ab2987bf9926b0e9a85acc47390bb4a94',1,'adiar::statistics::node_file_t::push_level'],['../structadiar_1_1statistics_1_1arc__file__t.html#a4e41194c32c9314f5e9d70103e9d321e',1,'adiar::statistics::arc_file_t::push_level']]],
+  ['push_5fnode_28',['push_node',['../structadiar_1_1statistics_1_1node__file__t.html#a4391476b5bc3ec1dbc1f50512b0473c9',1,'adiar::statistics::node_file_t']]],
+  ['push_5fout_5fof_5forder_29',['push_out_of_order',['../structadiar_1_1statistics_1_1arc__file__t.html#a861b71e63d0d957a09a07d2ddf271b1f',1,'adiar::statistics::arc_file_t']]],
+  ['push_5foverflow_30',['push_overflow',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a844804602d4c05ae87cef7f40c10371d',1,'adiar::statistics::levelized_priority_queue_t']]]
 ];
