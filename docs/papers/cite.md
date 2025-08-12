@@ -277,7 +277,7 @@ conventional recursive algorithms via a *Unique Node Table*.
   In: *Royal Library, Denmark*. (2025)
   ```bibtex
   @Thesis{soelvsten2025:thesis,
-    title         = {I/O-efficient Symbolic Model Checking},
+    title         = {{I/O}-efficient Symbolic Model Checking},
     author        = {S{\o}lvsten, Steffan Christ},
     year          = {2025},
     month         = {05},
