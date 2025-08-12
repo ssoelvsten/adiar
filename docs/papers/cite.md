@@ -286,3 +286,40 @@ conventional recursive algorithms via a *Unique Node Table*.
     url           = {https://soeg.kb.dk/permalink/45KBDK_KGL/1pioq0f/alma99126389524805763}
   }
   ```
+
+Student Projects
+------------------------
+Clausen and Nielsen investigated whether it is possible to translate the algorithm by [Savický &
+Wegener](https://doi.org/10.1007/s002360050083) to Adiar. Despite of the good work they did, their
+results were negative. Yet, this spawned the ideas in Sølvsten's thesis.
+
+- Anders Benjamin Clausen and Kent Nielsen.
+  “*I/O-efficient Static Variable Reordering for Binary Decision Diagrams*”.
+  (2023)
+  ```bibtex
+  @Thesis{Clausen2022,
+    title   = {{I/O}-efficient Static Variable Reordering for Binary Decision Diagrams},
+    author  = {Clausen, Anders Benjamin
+           and Nielsen, Kent},
+    year    = {2023},
+    school  = {Department of Computer Science, University of Aarhus},
+    type    = {Bachelor's Thesis}
+  }
+  ```
+
+Carstensen investigated the possibility to implement the `adiar::bdd_optmin` operation (part of
+[v2.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.0.0)) which can be used to obtain the
+smallest satisfying assignment according to some linear cost function.
+
+- Erik Funder Carstensen.
+  “*Solving optimization problems I/O efficiently: An extension to Adiar*”.
+  (2024)
+  ```bibtex
+  @Misc{Carstensen2024,
+    title   = {Solving optimization problems {I/O} efficiently: An extension to {Adiar}},
+    author  = {Carstensen, Erik Funder},
+    year    = {2024},
+    school  = {Department of Computer Science, University of Aarhus},
+    type    = {Master's Course Report}
+  }
+  ```
