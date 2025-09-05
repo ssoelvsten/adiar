@@ -32,7 +32,7 @@ var searchData=
   ['statistics_5fget_29',['statistics_get',['../group__module____statistics.html#ga4f0439fa1b9af8e4510e5910fe27cc16',1,'adiar']]],
   ['statistics_5fprint_30',['statistics_print',['../group__module____statistics.html#ga27ad872ca3c87a2a5d3a41b16e286cad',1,'adiar']]],
   ['statistics_5freset_31',['statistics_reset',['../group__module____statistics.html#ga3b38ee176ed58300fd1ec790752c36e5',1,'adiar']]],
-  ['student_20projects_32',['Student Projects',['../page__cite.html#autotoc_md49',1,'']]],
+  ['student_20projects_32',['Student Projects',['../page__cite.html#autotoc_md50',1,'']]],
   ['sum_5factual_5fmax_5fsize_33',['sum_actual_max_size',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#ae485ef1f9462d3c8106dc37a519ca896',1,'adiar::statistics::levelized_priority_queue_t']]],
   ['sum_5fdestructors_34',['sum_destructors',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a18db66cef68fc1e68532347a86bd3d2b',1,'adiar::statistics::levelized_priority_queue_t']]],
   ['sum_5fmax_5fsize_5fratio_35',['sum_max_size_ratio',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a6cbf004655dd759cc729fad62a47321d',1,'adiar::statistics::levelized_priority_queue_t']]],

@@ -6,7 +6,7 @@ var searchData=
   ['acc_5fwidth_3',['acc_width',['../structadiar_1_1statistics_1_1____raccess__base.html#aa47ab119b5ced85c9d5f1f4ecec4ea8d',1,'adiar::statistics::__raccess_base::acc_width'],['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1inputs__t.html#a806003c314dd835828208aea2157dfe3',1,'adiar::statistics::nested_sweeping_t::inner_down_t::inputs_t::acc_width']]],
   ['access_4',['access',['../classadiar_1_1exec__policy.html#a34534681bd89bb97b4cfc8bcbe3c19bb',1,'adiar::exec_policy::access'],['../index.html#autotoc_md0',1,'Quick Access']]],
   ['add_5fnode_5',['add_node',['../classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a',1,'adiar::builder::add_node(typename Policy::label_type label, const builder_ptr&lt; Policy &gt; &amp;low, const builder_ptr&lt; Policy &gt; &amp;high)'],['../classadiar_1_1builder.html#ad269fc72c107b7b48b18ac361b3588ff',1,'adiar::builder::add_node(const typename Policy::label_type label, const bool low, const builder_ptr&lt; Policy &gt; &amp;high)'],['../classadiar_1_1builder.html#a0a3e99be90e8d4d3fa74d42046be0485',1,'adiar::builder::add_node(const typename Policy::label_type label, const builder_ptr&lt; Policy &gt; &amp;low, const bool high)'],['../classadiar_1_1builder.html#a52a124e8c1a1d646b788140689841fd1',1,'adiar::builder::add_node(const typename Policy::label_type label, const bool low, const bool high)'],['../classadiar_1_1builder.html#ad1f7073a58dd67a37287e0cf47ed2ce7',1,'adiar::builder::add_node(bool terminal_value)']]],
-  ['adiar_6',['adiar',['../namespaceadiar.html',1,'adiar'],['../page__cite.html#autotoc_md42',1,'Adiar']]],
+  ['adiar_6',['adiar',['../namespaceadiar.html',1,'adiar'],['../page__cite.html#autotoc_md43',1,'Adiar']]],
   ['adiar_20kernel_7',['Adiar Kernel',['../group__module____adiar.html',1,'']]],
   ['adiar_5fdeinit_8',['adiar_deinit',['../group__module____adiar.html#ga9501bb9e871253964682b7ac1942f911',1,'adiar']]],
   ['adiar_5finit_9',['adiar_init',['../group__module____adiar.html#ga4f0460393f1bb6651306587b11d64660',1,'adiar']]],
@@ -19,7 +19,7 @@ var searchData=
   ['arc_5ffile_16',['arc_file',['../structadiar_1_1statistics.html#a71af2d8c10882a8db51be5d6de3c129e',1,'adiar::statistics']]],
   ['arc_5ffile_5ft_17',['arc_file_t',['../structadiar_1_1statistics_1_1arc__file__t.html',1,'adiar::statistics']]],
   ['arc_5ftype_18',['arc_type',['../classadiar_1_1internal_1_1____dd.html#a527247761bb12a0b07a17a65062c356a',1,'adiar::internal::__dd']]],
-  ['arge_19',['Lars Arge',['../page__cite.html#autotoc_md41',1,'']]],
+  ['arge_19',['Lars Arge',['../page__cite.html#autotoc_md42',1,'']]],
   ['assignment_20',['assignment',['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642',1,'adiar']]],
   ['assignments_21',['Satisfying Assignments',['../page__basic.html#autotoc_md15',1,'']]],
   ['auto_22',['auto',['../classadiar_1_1exec__policy.html#a24984bb43a1a8929b858011949155b18a06b9281e396db002010bde1de57262eb',1,'adiar::exec_policy::Auto'],['../classadiar_1_1exec__policy.html#a34534681bd89bb97b4cfc8bcbe3c19bba06b9281e396db002010bde1de57262eb',1,'adiar::exec_policy::Auto']]]

@@ -1,7 +1,7 @@
 var searchData=
 [
   ['objects_0',['objects',['../page__functional.html',1,'Function Objects'],['../group__module____functional.html',1,'Function Objects']]],
-  ['of_20pointers_1',['64-bit Encoding of Pointers',['../page__amend.html#autotoc_md38',1,'']]],
+  ['of_20pointers_1',['64-bit Encoding of Pointers',['../page__amend.html#autotoc_md39',1,'']]],
   ['operations_2',['Counting Operations',['../page__basic.html#autotoc_md22',1,'']]],
   ['operator_3',['If-Then-Else Operator',['../page__basic.html#autotoc_md12',1,'']]],
   ['operator_20float_4',['operator float',['../classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html#a6ed4b05448b8839cc8793ef6ae995b81',1,'adiar::exec_policy::quantify::transposition_growth']]],

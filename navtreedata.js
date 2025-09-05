@@ -81,21 +81,22 @@ var NAVTREE =
     ] ],
     [ "Papers", "page__papers.html", [
       [ "Citing this Project", "page__cite.html", [
-        [ "Lars Arge", "page__cite.html#autotoc_md41", null ],
-        [ "Adiar", "page__cite.html#autotoc_md42", [
-          [ "v1.0", "page__cite.html#autotoc_md43", null ],
-          [ "v1.1", "page__cite.html#autotoc_md44", null ],
-          [ "v1.2", "page__cite.html#autotoc_md45", null ],
-          [ "v2.0", "page__cite.html#autotoc_md46", null ],
-          [ "v2.1", "page__cite.html#autotoc_md47", null ],
-          [ "Future Work", "page__cite.html#autotoc_md48", null ],
-          [ "Student Projects", "page__cite.html#autotoc_md49", null ]
+        [ "Lars Arge", "page__cite.html#autotoc_md42", null ],
+        [ "Adiar", "page__cite.html#autotoc_md43", [
+          [ "v1.0", "page__cite.html#autotoc_md44", null ],
+          [ "v1.1", "page__cite.html#autotoc_md45", null ],
+          [ "v1.2", "page__cite.html#autotoc_md46", null ],
+          [ "v2.0", "page__cite.html#autotoc_md47", null ],
+          [ "v2.1", "page__cite.html#autotoc_md48", null ],
+          [ "Future Work", "page__cite.html#autotoc_md49", null ],
+          [ "Student Projects", "page__cite.html#autotoc_md50", null ]
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
-        [ "64-bit Encoding of Pointers", "page__amend.html#autotoc_md38", [
-          [ "v1.2", "page__amend.html#autotoc_md39", null ],
-          [ "v2.0", "page__amend.html#autotoc_md40", null ]
+        [ "Error in <tt>Reduce</tt> PseudoCode", "page__amend.html#autotoc_md38", null ],
+        [ "64-bit Encoding of Pointers", "page__amend.html#autotoc_md39", [
+          [ "v1.2", "page__amend.html#autotoc_md40", null ],
+          [ "v2.0", "page__amend.html#autotoc_md41", null ]
         ] ]
       ] ]
     ] ],
@@ -136,7 +137,7 @@ var NAVTREEINDEX =
 "functions.html",
 "group__module____bdd.html#ga86ec1b01efc86bbb4d8a588f74158af1",
 "namespaceadiar.html#acebb242b8863e068f36f10ec5a9c6fb9",
-"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d"
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ac6f1a46078169d94fe18ee72d44bf2b6"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
