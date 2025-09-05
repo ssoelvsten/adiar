@@ -13,6 +13,6 @@ var searchData=
   ['trivial_5ffile_10',['trivial_file',['../structadiar_1_1statistics_1_1prod2__t.html#a3fb3fbf6dce52ee96fac9d9f183fb5fb',1,'adiar::statistics::prod2_t']]],
   ['trivial_5fterminal_11',['trivial_terminal',['../structadiar_1_1statistics_1_1prod2__t.html#a6d3f4d0066639dda6b702f51d3bdff09',1,'adiar::statistics::prod2_t']]],
   ['true_12',['True',['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642af827cf462f62848df37c5e1e94a4da74',1,'adiar']]],
-  ['tt_20reduce_20tt_20pseudocode_13',['Error in &lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md38',1,'']]],
+  ['tt_20reduce_20tt_20pseudocode_13',['Error: in &lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md38',1,'']]],
   ['tutorial_14',['Tutorial',['../page__tutorial.html',1,'']]]
 ];

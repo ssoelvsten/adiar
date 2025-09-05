@@ -93,8 +93,8 @@ var NAVTREE =
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
-        [ "Error in <tt>Reduce</tt> PseudoCode", "page__amend.html#autotoc_md38", null ],
-        [ "64-bit Encoding of Pointers", "page__amend.html#autotoc_md39", [
+        [ "Error: in <tt>Reduce</tt> PseudoCode", "page__amend.html#autotoc_md38", null ],
+        [ "Change: 64-bit Encoding of Pointers", "page__amend.html#autotoc_md39", [
           [ "v1.2", "page__amend.html#autotoc_md40", null ],
           [ "v2.0", "page__amend.html#autotoc_md41", null ]
         ] ]

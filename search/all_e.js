@@ -8,7 +8,7 @@ var searchData=
   ['identity_5freturns_5',['identity_returns',['../structadiar_1_1statistics_1_1replace__t.html#a70c8dddb8ddfa03d0171f1e3400704b1',1,'adiar::statistics::replace_t']]],
   ['if_20then_20else_20operator_6',['If-Then-Else Operator',['../page__basic.html#autotoc_md12',1,'']]],
   ['imp_5fop_7',['imp_op',['../namespaceadiar.html#a1f92605f3ca215eed0b6412de8bb7437',1,'adiar']]],
-  ['in_20tt_20reduce_20tt_20pseudocode_8',['Error in &lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md38',1,'']]],
+  ['in_20tt_20reduce_20tt_20pseudocode_8',['Error: in &lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md38',1,'']]],
   ['information_9',['BDD Information',['../page__basic.html#autotoc_md21',1,'']]],
   ['inner_5farcs_10',['inner_arcs',['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__up__t.html#a48e1ddfb869669074e7fc899fceaf540',1,'adiar::statistics::nested_sweeping_t::inner_up_t']]],
   ['inner_5fdown_11',['inner_down',['../structadiar_1_1statistics_1_1nested__sweeping__t.html#ab5f4b829b0a3293ebacd923b3c4b9f51',1,'adiar::statistics::nested_sweeping_t']]],
