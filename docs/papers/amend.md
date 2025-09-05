@@ -1,12 +1,21 @@
 \page page__amend Amendments
 
-During the further development of Adiar, we have revisited, revised, and
-iterated up our prior ideas. What follows is a record of these changes, leaving
-the information in prior papers out of date.
+Despite the best efforts of us and the reviewers, some of the published papers
+include errors. Furthermore, throughout the development of Adiar, we have
+revisited, revised, and iterated upon our previous ideas. What follows is a
+record of errors and changes we have made.
 
 [TOC]
 
-64-bit Encoding of Pointers
+Error: Reduce PseudoCode
+========================
+
+Figure 6 of the [TACAS
+22](https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16) paper has an
+error on line 3. It should be `Q_red != Ø or F_leaf.has_next()`; this has been
+fixed in the [extended arXiv paper](https://arxiv.org/abs/2104.12101).
+
+Change: 64-bit Encoding of Pointers
 ========================
 
 In the [extended arXiv paper](https://arxiv.org/abs/2104.12101) for [[TACAS
