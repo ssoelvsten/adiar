@@ -29,10 +29,17 @@ when they outgrow the memory limit of the given machine.
   <p style="margin-bottom:1rem;">Figure: Running time solving N Queens (lower is better).</p>
 </div>
 
-
 This project has been developed at the
 [Logic and Semantics](https://logsem.github.io/) group at
 [Aarhus University](https://cs.au.dk).
+
+If you have obtained a copy of Adiar via a fork or downloaded it from Zenodo,
+then it might be lacking some features or bug fixes. You can find the most
+recent version at the following repository.
+
+<div align="center">
+  https://github.com/ssoelvsten/adiar/
+</div>
 
 **Table of Contents**
 
