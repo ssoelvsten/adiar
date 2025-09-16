@@ -1,6 +1,8 @@
 # Adiar
 [![MIT License](https://img.shields.io/github/license/ssoelvsten/adiar)](LICENSE.md)
 &nbsp;
+[![Zenodo](https://img.shields.io/badge/doi-10.5281%2Fzenodo.4718218-blue)](https://doi.org/10.5281/zenodo.4718218)
+
 [![Documentation](https://img.shields.io/website?down_message=not%20available&label=docs&up_message=available&url=https%3A%2F%2Fssoelvsten.github.io%2Fadiar)](https://ssoelvsten.github.io/adiar)
 &nbsp;
 [![test](http://img.shields.io/github/actions/workflow/status/ssoelvsten/adiar/linux.yml?branch=main&label=tests%20%28linux%29&logo=github&logoColor=white)](https://github.com/SSoelvsten/adiar/actions/workflows/linux.yml)
