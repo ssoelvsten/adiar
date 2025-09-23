@@ -314,7 +314,7 @@ namespace adiar::internal
 #endif
       return typename Policy::dd_type(std::move(__dd));
     }
-    adiar_unreachable();
+    adiar_unreachable(); // LCOV_EXCL_LINE
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
