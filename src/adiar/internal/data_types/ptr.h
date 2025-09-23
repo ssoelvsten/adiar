@@ -64,7 +64,7 @@ namespace adiar::internal
     //   Template with the desired uint type and the number of label bits. Or better is to use
     //   `std::conditional_type` to derive the smallest type that can fit all the requested number
     //   of bits.
-    using raw_type = uint64_t;
+    using raw_type = uint64_t; // cppcheck-suppress [uninitMemberVar]
 
   protected:
     ////////////////////////////////////////////////////////////////////////////////////////////////
