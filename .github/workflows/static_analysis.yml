@@ -2,22 +2,25 @@ name: static analysis
 
 on: [pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   include-guards:
-    name: Check include guards
+    name: inclusion guards
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v5
+    - uses: actions/checkout@v5
 
-    - name: Check adiar.h
+    - name: Check src/adiar/adiar.h
       uses: sbeyer/include-guards-check-action@v2.0.0
       with:
         path: src/adiar
         pattern: '{file}'
         only: 'adiar\.h'
 
-    - name: Check other files in src/adiar files
+    - name: Check other files in src/adiar/* files
       uses: sbeyer/include-guards-check-action@v2.0.0
       with:
         path: src
@@ -26,31 +29,25 @@ jobs:
 
 
   cppcheck:
-    name: 'Cppcheck'
+    name: cppcheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
-      - name: 'Run Cppcheck'
-        uses: deep5050/cppcheck-action@main
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          enable: warning,performance,portability,information
-          force_language: c++
-          max_ctu_depth: 4
-          std: c++17
-          output_file: ./cppcheck_report.txt
-          other_options: --suppress=missingInclude
+          submodules: 'recursive'
 
-      - name: 'Print cppcheck_report.txt'
-        run: cat ./cppcheck_report.txt
-
-      - name: 'Filter cppcheck_report.txt (fail if non-empty)'
-        run: sudo python3 .github/workflows/cppcheck.py ./cppcheck_report.txt
-
-      - name: 'Post cppcheck_report.txt on PR (if failed)'
-        if: failure()
-        uses: mshick/add-pr-comment@main
+      - name: cppcheck
+        uses: JacobDomagala/StaticAnalysis@v0.0.8
         with:
-          message-path: ./cppcheck_report.txt
-          message-id: 'cppcheck'
+          # Project Settings
+          language: c++
+          use_cmake: true
+          cmake_args: "-D ADIAR_STATS=ON"
+
+          # Dependencies
+          apt_pckgs: libboost-all-dev
+          exclude_dir: external
+
+          # Analysis Settings
+          # clang_tidy_args: <???>
+          cppcheck_args: --enable=all --suppress=missingIncludeSystem
