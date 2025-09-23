@@ -29,8 +29,8 @@ namespace adiar::internal
   // Data structures
   struct mapping
   {
-    node::uid_type old_uid;
-    node::uid_type new_uid;
+    node::uid_type     old_uid;
+    node::pointer_type new_uid;
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -260,12 +260,12 @@ go_bandit([]() {
         node_test_ifstream ns(cube);
 
         AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(2, node::max_id, terminal_T, terminal_F)));
+        AssertThat(ns.pull(), Is().EqualTo(node(2, bdd::max_id, terminal_T, terminal_F)));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(1, node::max_id, node::pointer_type(2, node::max_id), terminal_F)));
+          Is().EqualTo(node(1, bdd::max_id, node::pointer_type(2, bdd::max_id), terminal_F)));
 
         AssertThat(ns.can_pull(), Is().False());
 
@@ -305,12 +305,12 @@ go_bandit([]() {
         node_test_ifstream ns(cube);
 
         AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(2, node::max_id, terminal_T, terminal_F)));
+        AssertThat(ns.pull(), Is().EqualTo(node(2, bdd::max_id, terminal_T, terminal_F)));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(1, node::max_id, node::pointer_type(2, node::max_id), terminal_F)));
+          Is().EqualTo(node(1, bdd::max_id, node::pointer_type(2, bdd::max_id), terminal_F)));
 
         AssertThat(ns.can_pull(), Is().False());
 
@@ -350,7 +350,7 @@ go_bandit([]() {
         node_test_ifstream ns(cube);
 
         AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(0, node::max_id, terminal_F, terminal_T)));
+        AssertThat(ns.pull(), Is().EqualTo(node(0, bdd::max_id, terminal_F, terminal_T)));
 
         AssertThat(ns.can_pull(), Is().False());
 
@@ -388,17 +388,17 @@ go_bandit([]() {
         node_test_ifstream ns(cube);
 
         AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(3, node::max_id, terminal_F, terminal_T)));
+        AssertThat(ns.pull(), Is().EqualTo(node(3, bdd::max_id, terminal_F, terminal_T)));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(1, node::max_id, terminal_F, node::pointer_type(3, node::max_id))));
+          Is().EqualTo(node(1, bdd::max_id, terminal_F, node::pointer_type(3, bdd::max_id))));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(0, node::max_id, node::pointer_type(1, node::max_id), terminal_F)));
+          Is().EqualTo(node(0, bdd::max_id, node::pointer_type(1, bdd::max_id), terminal_F)));
 
         AssertThat(ns.can_pull(), Is().False());
 
@@ -442,22 +442,22 @@ go_bandit([]() {
         node_test_ifstream ns(cube);
 
         AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(4, node::max_id, terminal_F, terminal_T)));
+        AssertThat(ns.pull(), Is().EqualTo(node(4, bdd::max_id, terminal_F, terminal_T)));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(3, node::max_id, node::pointer_type(4, node::max_id), terminal_F)));
+          Is().EqualTo(node(3, bdd::max_id, node::pointer_type(4, bdd::max_id), terminal_F)));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(1, node::max_id, terminal_F, node::pointer_type(3, node::max_id))));
+          Is().EqualTo(node(1, bdd::max_id, terminal_F, node::pointer_type(3, bdd::max_id))));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(0, node::max_id, node::pointer_type(1, node::max_id), terminal_F)));
+          Is().EqualTo(node(0, bdd::max_id, node::pointer_type(1, bdd::max_id), terminal_F)));
 
         AssertThat(ns.can_pull(), Is().False());
 
@@ -507,27 +507,27 @@ go_bandit([]() {
            node_test_ifstream ns(cube);
 
            AssertThat(ns.can_pull(), Is().True());
-           AssertThat(ns.pull(), Is().EqualTo(node(4, node::max_id, terminal_F, terminal_T)));
+           AssertThat(ns.pull(), Is().EqualTo(node(4, bdd::max_id, terminal_F, terminal_T)));
 
            AssertThat(ns.can_pull(), Is().True());
            AssertThat(
              ns.pull(),
-             Is().EqualTo(node(3, node::max_id, node::pointer_type(4, node::max_id), terminal_F)));
+             Is().EqualTo(node(3, bdd::max_id, node::pointer_type(4, bdd::max_id), terminal_F)));
 
            AssertThat(ns.can_pull(), Is().True());
            AssertThat(
              ns.pull(),
-             Is().EqualTo(node(2, node::max_id, terminal_F, node::pointer_type(3, node::max_id))));
+             Is().EqualTo(node(2, bdd::max_id, terminal_F, node::pointer_type(3, bdd::max_id))));
 
            AssertThat(ns.can_pull(), Is().True());
            AssertThat(
              ns.pull(),
-             Is().EqualTo(node(1, node::max_id, node::pointer_type(2, node::max_id), terminal_F)));
+             Is().EqualTo(node(1, bdd::max_id, node::pointer_type(2, bdd::max_id), terminal_F)));
 
            AssertThat(ns.can_pull(), Is().True());
            AssertThat(
              ns.pull(),
-             Is().EqualTo(node(0, node::max_id, node::pointer_type(1, node::max_id), terminal_F)));
+             Is().EqualTo(node(0, bdd::max_id, node::pointer_type(1, bdd::max_id), terminal_F)));
 
            AssertThat(ns.can_pull(), Is().False());
 

@@ -13,7 +13,7 @@ namespace adiar::internal
   inline arc
   low_arc_of(const node& n)
   {
-    return { n.uid() /*.as_ptr(false)*/, n.low() };
+    return arc(n.uid() /*.as_ptr(false)*/, n.low());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ namespace adiar::internal
   inline arc
   high_arc_of(const node& n)
   {
-    return { n.uid().as_ptr(true), n.high() };
+    return arc(n.uid().as_ptr(true), n.high());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ namespace adiar::internal
     adiar_assert(essential(low.source()) == low.source()
                  && essential(high.source()) == low.source());
 
-    return node(low.source(), low.target(), high.target());
+    return node(node::uid_type(low.source()), low.target(), high.target());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ namespace adiar::internal
     adiar_assert(essential(low.source()) == low.source()
                  && essential(high.source()) == low.source());
 
-    return node(replace(low.source(), label), low.target(), high.target());
+    return node(node::uid_type(replace(low.source(), label)), low.target(), high.target());
   }
 }
 

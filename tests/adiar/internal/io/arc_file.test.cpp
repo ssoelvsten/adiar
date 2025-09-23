@@ -29,9 +29,9 @@ go_bandit([]() {
         levelized_file<arc> af;
 
         arc_ofstream aw(af);
-        aw.push_internal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0)));
-        aw.push_internal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 0)));
-        aw.push_internal(arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0)));
+        aw.push_internal(arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0)));
+        aw.push_internal(arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 0)));
+        aw.push_internal(arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0)));
         aw.close();
 
         AssertThat(af.size(), Is().EqualTo(3u));
@@ -53,8 +53,8 @@ go_bandit([]() {
         levelized_file<arc> af;
 
         arc_ofstream aw(af);
-        aw.push_terminal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), false, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), true, arc::pointer_type(true)));
         aw.close();
 
         AssertThat(af.size(), Is().EqualTo(2u));
@@ -74,10 +74,10 @@ go_bandit([]() {
 
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), false, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), false, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), true, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<1>(), Is().False());
 
         AssertThat(lfs.can_pull<2>(), Is().False());
@@ -87,8 +87,8 @@ go_bandit([]() {
         levelized_file<arc> af;
 
         arc_ofstream aw(af);
-        aw.push_terminal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), false, arc::pointer_type(false)));
         aw.close();
 
         AssertThat(af.size(), Is().EqualTo(2u));
@@ -106,12 +106,12 @@ go_bandit([]() {
 
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), true, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<1>(), Is().False());
 
         AssertThat(lfs.can_pull<2>(), Is().True());
         AssertThat(lfs.pull<2>(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), false, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), false, arc::pointer_type(false))));
         AssertThat(lfs.can_pull<2>(), Is().False());
       });
 
@@ -120,14 +120,14 @@ go_bandit([]() {
 
         arc_ofstream aw(af);
 
-        aw << arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0))
-           << arc(arc::pointer_type(1, 0), true, arc::pointer_type(true))  // <-- in-order
-           << arc(arc::pointer_type(1, 1), false, arc::pointer_type(true)) // <-- in-order
-           << arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 1))
-           << arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0))
-           << arc(arc::pointer_type(2, 0), false, arc::pointer_type(false)) // <-- in-order
-           << arc(arc::pointer_type(2, 0), true, arc::pointer_type(true))   // <-- in-order
-           << arc(arc::pointer_type(1, 1), true, arc::pointer_type(true));  // <-- out-of-order
+        aw << arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0))
+           << arc(arc::uid_type(1, 0), true, arc::pointer_type(true))  // <-- in-order
+           << arc(arc::uid_type(1, 1), false, arc::pointer_type(true)) // <-- in-order
+           << arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 1))
+           << arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0))
+           << arc(arc::uid_type(2, 0), false, arc::pointer_type(false)) // <-- in-order
+           << arc(arc::uid_type(2, 0), true, arc::pointer_type(true))   // <-- in-order
+           << arc(arc::uid_type(1, 1), true, arc::pointer_type(true));  // <-- out-of-order
 
         aw.close();
 
@@ -144,32 +144,32 @@ go_bandit([]() {
         levelized_ifstream<arc> lfs(af);
         AssertThat(lfs.can_pull<0>(), Is().True());
         AssertThat(lfs.pull<0>(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0))));
         AssertThat(lfs.can_pull<0>(), Is().True());
         AssertThat(lfs.pull<0>(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 1))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 1))));
         AssertThat(lfs.can_pull<0>(), Is().True());
         AssertThat(lfs.pull<0>(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0))));
+                   Is().EqualTo(arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0))));
         AssertThat(lfs.can_pull<0>(), Is().False());
 
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 0), true, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), false, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), false, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), false, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), false, arc::pointer_type(false))));
         AssertThat(lfs.can_pull<1>(), Is().True());
         AssertThat(lfs.pull<1>(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), true, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<1>(), Is().False());
 
         AssertThat(lfs.can_pull<2>(), Is().True());
         AssertThat(lfs.pull<2>(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), true, arc::pointer_type(true))));
         AssertThat(lfs.can_pull<2>(), Is().False());
       });
     });
@@ -187,14 +187,14 @@ go_bandit([]() {
        */
       {
         arc_ofstream aw(af);
-        aw << arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0));
-        aw << arc(arc::pointer_type(1, 0), true, arc::pointer_type(true));  // <-- in-order
-        aw << arc(arc::pointer_type(1, 1), false, arc::pointer_type(true)); // <-- in-order
-        aw << arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 1));
-        aw << arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0));
-        aw << arc(arc::pointer_type(2, 0), false, arc::pointer_type(false)); // <-- in-order
-        aw << arc(arc::pointer_type(2, 0), true, arc::pointer_type(true));   // <-- in-order
-        aw << arc(arc::pointer_type(1, 1), true, arc::pointer_type(true));   // <-- out-of-order
+        aw << arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0))
+           << arc(arc::uid_type(1, 0), true, arc::pointer_type(true))  // <-- in-order
+           << arc(arc::uid_type(1, 1), false, arc::pointer_type(true)) // <-- in-order
+           << arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 1))
+           << arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0))
+           << arc(arc::uid_type(2, 0), false, arc::pointer_type(false)) // <-- in-order
+           << arc(arc::uid_type(2, 0), true, arc::pointer_type(true))   // <-- in-order
+           << arc(arc::uid_type(1, 1), true, arc::pointer_type(true));  // <-- out-of-order
       }
 
       it("merges terminal arcs on 'pull' [default: backwards]", [&af]() {
@@ -202,19 +202,19 @@ go_bandit([]() {
 
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), true, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), false, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), false, arc::pointer_type(false))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), true, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), false, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), false, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 0), true, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().False());
       });
 
@@ -223,19 +223,19 @@ go_bandit([]() {
 
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 0), true, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), false, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), false, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), true, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), false, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), false, arc::pointer_type(false))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), true, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), true, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().False());
       });
 
@@ -245,19 +245,19 @@ go_bandit([]() {
 
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), true, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), true, arc::pointer_type(false))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(2, 0), false, arc::pointer_type(true))));
+                   Is().EqualTo(arc(arc::uid_type(2, 0), false, arc::pointer_type(true))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), true, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), true, arc::pointer_type(false))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 1), false, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(1, 1), false, arc::pointer_type(false))));
         AssertThat(as.can_pull_terminal(), Is().True());
         AssertThat(as.pull_terminal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 0), true, arc::pointer_type(false))));
+                   Is().EqualTo(arc(arc::uid_type(1, 0), true, arc::pointer_type(false))));
         AssertThat(as.can_pull_terminal(), Is().False());
       });
       */
@@ -267,13 +267,13 @@ go_bandit([]() {
 
         AssertThat(as.can_pull_internal(), Is().True());
         AssertThat(as.pull_internal(),
-                   Is().EqualTo(arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0))));
+                   Is().EqualTo(arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0))));
         AssertThat(as.can_pull_internal(), Is().True());
         AssertThat(as.pull_internal(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 1))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 1))));
         AssertThat(as.can_pull_internal(), Is().True());
         AssertThat(as.pull_internal(),
-                   Is().EqualTo(arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0))));
+                   Is().EqualTo(arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0))));
         AssertThat(as.can_pull_internal(), Is().False());
       });
 
@@ -372,8 +372,8 @@ go_bandit([]() {
 
         {
           arc_ofstream aw(af);
-          aw.push_terminal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(false)));
-          aw.push_terminal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true)));
+          aw.push_terminal(arc(arc::uid_type(0, 0), false, arc::pointer_type(false)));
+          aw.push_terminal(arc(arc::uid_type(0, 0), true, arc::pointer_type(true)));
 
           aw.push(level_info(0, 1));
           aw.close();
@@ -392,8 +392,8 @@ go_bandit([]() {
       */
       {
         arc_ofstream aw(x0_ordered);
-        aw.push_terminal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), true, arc::pointer_type(true)));
 
         aw.push(level_info(0, 1));
         aw.close();
@@ -407,8 +407,8 @@ go_bandit([]() {
       */
       {
         arc_ofstream aw(x0_unordered);
-        aw.push_terminal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(0, 0), false, arc::pointer_type(false)));
 
         aw.push(level_info(0, 1));
         aw.close();
@@ -509,26 +509,26 @@ go_bandit([]() {
 
         aw.push(level_info(0, 1));
 
-        aw.push_internal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0)));
-        aw.push_internal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(2, 0)));
+        aw.push_internal(arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0)));
+        aw.push_internal(arc(arc::uid_type(0, 0), true, arc::pointer_type(2, 0)));
 
         aw.push(level_info(1, 1));
 
-        aw.push_terminal(arc(arc::pointer_type(1, 0), false, arc::pointer_type(false)));
-        aw.push_internal(arc(arc::pointer_type(1, 0), true, arc::pointer_type(2, 0)));
+        aw.push_terminal(arc(arc::uid_type(1, 0), false, arc::pointer_type(false)));
+        aw.push_internal(arc(arc::uid_type(1, 0), true, arc::pointer_type(2, 0)));
 
         aw.push(level_info(2, 1));
 
-        aw.push_internal(arc(arc::pointer_type(2, 0), false, arc::pointer_type(3, 0)));
-        aw.push_internal(arc(arc::pointer_type(2, 0), true, arc::pointer_type(3, 1)));
+        aw.push_internal(arc(arc::uid_type(2, 0), false, arc::pointer_type(3, 0)));
+        aw.push_internal(arc(arc::uid_type(2, 0), true, arc::pointer_type(3, 1)));
 
         aw.push(level_info(3, 2));
 
-        aw.push_terminal(arc(arc::pointer_type(3, 0), false, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(3, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(3, 0), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(3, 0), true, arc::pointer_type(true)));
 
-        aw.push_terminal(arc(arc::pointer_type(3, 1), false, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(3, 1), true, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(3, 1), false, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(3, 1), true, arc::pointer_type(false)));
 
         aw.close();
 
@@ -644,15 +644,15 @@ go_bandit([]() {
 
           aw.push(level_info(0, 1));
 
-          aw.push_internal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 0)));
-          aw.push_terminal(arc(arc::pointer_type(1, 0), true, arc::pointer_type(true)));
+          aw.push_internal(arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 0)));
+          aw.push_terminal(arc(arc::uid_type(1, 0), true, arc::pointer_type(true)));
 
           aw.push(level_info(1, 1));
 
-          aw.push_internal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(2, 0)));
-          aw.push_internal(arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0)));
-          aw.push_terminal(arc(arc::pointer_type(2, 0), false, arc::pointer_type(false)));
-          aw.push_terminal(arc(arc::pointer_type(2, 0), true, arc::pointer_type(true)));
+          aw.push_internal(arc(arc::uid_type(0, 0), false, arc::pointer_type(2, 0)));
+          aw.push_internal(arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0)));
+          aw.push_terminal(arc(arc::uid_type(2, 0), false, arc::pointer_type(false)));
+          aw.push_terminal(arc(arc::uid_type(2, 0), true, arc::pointer_type(true)));
 
           aw.push(level_info(2, 1));
 
@@ -698,26 +698,26 @@ go_bandit([]() {
 
         aw.push(level_info(0, 1));
 
-        aw.push_internal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(2, 0)));
-        aw.push_internal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 0)));
+        aw.push_internal(arc(arc::uid_type(0, 0), false, arc::pointer_type(2, 0)));
+        aw.push_internal(arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 0)));
 
         aw.push(level_info(1, 1));
 
-        aw.push_terminal(arc(arc::pointer_type(1, 0), false, arc::pointer_type(false)));
-        aw.push_internal(arc(arc::pointer_type(1, 0), true, arc::pointer_type(2, 1)));
+        aw.push_terminal(arc(arc::uid_type(1, 0), false, arc::pointer_type(false)));
+        aw.push_internal(arc(arc::uid_type(1, 0), true, arc::pointer_type(2, 1)));
 
         aw.push(level_info(2, 2));
 
-        aw.push_terminal(arc(arc::pointer_type(2, 0), false, arc::pointer_type(false)));
-        aw.push_internal(arc(arc::pointer_type(2, 0), true, arc::pointer_type(3, 0)));
+        aw.push_terminal(arc(arc::uid_type(2, 0), false, arc::pointer_type(false)));
+        aw.push_internal(arc(arc::uid_type(2, 0), true, arc::pointer_type(3, 0)));
 
-        aw.push_internal(arc(arc::pointer_type(2, 1), false, arc::pointer_type(3, 0)));
-        aw.push_terminal(arc(arc::pointer_type(2, 1), true, arc::pointer_type(true)));
+        aw.push_internal(arc(arc::uid_type(2, 1), false, arc::pointer_type(3, 0)));
+        aw.push_terminal(arc(arc::uid_type(2, 1), true, arc::pointer_type(true)));
 
         aw.push(level_info(3, 1));
 
-        aw.push_terminal(arc(arc::pointer_type(3, 0), false, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(3, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(3, 0), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(3, 0), true, arc::pointer_type(true)));
 
         aw.close();
 
@@ -792,8 +792,8 @@ go_bandit([]() {
       */
       {
         arc_ofstream aw(afA);
-        aw.push_terminal(arc(arc::pointer_type(1, 0), false, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(1, 0), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(1, 0), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(1, 0), true, arc::pointer_type(true)));
 
         aw.push(level_info(1, 1));
         aw.close();
@@ -818,21 +818,21 @@ go_bandit([]() {
       {
         arc_ofstream aw(afB);
 
-        aw.push_internal(arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 0)));
-        aw.push_internal(arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0)));
-        aw.push_internal(arc(arc::pointer_type(1, 0), true, arc::pointer_type(2, 1)));
-        aw.push_internal(arc(arc::pointer_type(0, 0), true, arc::pointer_type(2, 2)));
-        aw.push_internal(arc(arc::pointer_type(2, 0), true, arc::pointer_type(4, 0)));
-        aw.push_internal(arc(arc::pointer_type(2, 1), true, arc::pointer_type(4, 1)));
-        aw.push_internal(arc(arc::pointer_type(2, 2), false, arc::pointer_type(4, 1)));
+        aw.push_internal(arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 0)));
+        aw.push_internal(arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0)));
+        aw.push_internal(arc(arc::uid_type(1, 0), true, arc::pointer_type(2, 1)));
+        aw.push_internal(arc(arc::uid_type(0, 0), true, arc::pointer_type(2, 2)));
+        aw.push_internal(arc(arc::uid_type(2, 0), true, arc::pointer_type(4, 0)));
+        aw.push_internal(arc(arc::uid_type(2, 1), true, arc::pointer_type(4, 1)));
+        aw.push_internal(arc(arc::uid_type(2, 2), false, arc::pointer_type(4, 1)));
 
-        aw.push_terminal(arc(arc::pointer_type(2, 0), false, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(2, 1), false, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(2, 2), true, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(4, 0), false, arc::pointer_type(true)));
-        aw.push_terminal(arc(arc::pointer_type(4, 0), true, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(4, 1), false, arc::pointer_type(false)));
-        aw.push_terminal(arc(arc::pointer_type(4, 1), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(2, 0), false, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(2, 1), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(2, 2), true, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(4, 0), false, arc::pointer_type(true)));
+        aw.push_terminal(arc(arc::uid_type(4, 0), true, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(4, 1), false, arc::pointer_type(false)));
+        aw.push_terminal(arc(arc::uid_type(4, 1), true, arc::pointer_type(true)));
 
         aw.push(level_info(0, 1));
         aw.push(level_info(1, 1));

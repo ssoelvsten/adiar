@@ -22,8 +22,8 @@ go_bandit([]() {
       nw << node(false);
     }
 
-    const ptr_uint64 terminal_T(true);
-    const ptr_uint64 terminal_F(false);
+    const bdd::pointer_type terminal_T(true);
+    const bdd::pointer_type terminal_F(false);
 
     shared_levelized_file<bdd::node_type> bdd_x0;
     /*
@@ -34,7 +34,7 @@ go_bandit([]() {
 
     { // Garbage collect writer to free write-lock
       node_ofstream nw(bdd_x0);
-      nw << node(0, node::max_id, terminal_F, terminal_T);
+      nw << node(0, bdd::max_id, terminal_F, terminal_T);
     }
 
     shared_levelized_file<bdd::node_type> bdd_not_x0;
@@ -46,7 +46,7 @@ go_bandit([]() {
 
     { // Garbage collect writer to free write-lock
       node_ofstream nw(bdd_not_x0);
-      nw << node(0, node::max_id, terminal_T, terminal_F);
+      nw << node(0, bdd::max_id, terminal_T, terminal_F);
     }
 
     shared_levelized_file<bdd::node_type> bdd_x1;
@@ -58,7 +58,7 @@ go_bandit([]() {
 
     { // Garbage collect writer to free write-lock
       node_ofstream nw(bdd_x1);
-      nw << node(1, node::max_id, terminal_F, terminal_T);
+      nw << node(1, bdd::max_id, terminal_F, terminal_T);
     }
 
     shared_levelized_file<bdd::node_type> bdd_0and2;
@@ -73,8 +73,8 @@ go_bandit([]() {
     { // Garbage collect writer to free write-lock
       node_ofstream nw(bdd_0and2);
 
-      const node n2(2, node::max_id, terminal_F, terminal_T);
-      const node n1(0, node::max_id, terminal_F, n2.uid());
+      const node n2(2, bdd::max_id, terminal_F, terminal_T);
+      const node n1(0, bdd::max_id, terminal_F, n2.uid());
 
       nw << n2 << n1;
     }
@@ -91,8 +91,8 @@ go_bandit([]() {
     { // Garbage collect writer to free write-lock
       node_ofstream nw(bdd_0or2);
 
-      const node n2(2, node::max_id, terminal_F, terminal_T);
-      const node n1(0, node::max_id, n2.uid(), terminal_T);
+      const node n2(2, bdd::max_id, terminal_F, terminal_T);
+      const node n1(0, bdd::max_id, n2.uid(), terminal_T);
 
       nw << n2 << n1;
     }
@@ -111,9 +111,9 @@ go_bandit([]() {
     { // Garbage collect writer to free write-lock
       node_ofstream nw(bdd_23_13);
 
-      const node n3(2, node::max_id, terminal_F, terminal_T);
-      const node n2(1, node::max_id, terminal_F, n3.uid());
-      const node n1(0, node::max_id, n2.uid(), n3.uid());
+      const node n3(2, bdd::max_id, terminal_F, terminal_T);
+      const node n2(1, bdd::max_id, terminal_F, n3.uid());
+      const node n1(0, bdd::max_id, n2.uid(), n3.uid());
 
       nw << n3 << n2 << n1;
     }

@@ -27,6 +27,7 @@ namespace adiar::internal
   public:
     using value_type = typename stream_type::value_type;
 
+    using pointer_type      = typename value_type::pointer_type;
     using uid_type          = typename value_type::uid_type;
     using signed_label_type = typename value_type::signed_label_type;
     using idx_type          = typename value_type::id_type;

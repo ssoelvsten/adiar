@@ -80,14 +80,15 @@ namespace adiar::internal
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Obtain the node with the given uid.
+    /// \brief Obtain the node with the given *uid* (pointer).
     ////////////////////////////////////////////////////////////////////////////////////////////////
     const value_type&
-    at(uid_type u) const
+    at(pointer_type p) const
     {
-      adiar_assert(static_cast<signed_label_type>(u.label()) == this->current_level());
+      adiar_assert(!p.is_nil());
+      adiar_assert(static_cast<signed_label_type>(p.label()) == this->current_level());
 
-      const idx_type idx = this->current_width() - ((uid_type::max_id + 1u) - u.id());
+      const idx_type idx = this->current_width() - ((pointer_type::max_id + 1u) - p.id());
       return parent_type::at(idx);
     }
   };

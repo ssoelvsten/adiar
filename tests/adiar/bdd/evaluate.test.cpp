@@ -4,8 +4,8 @@
 go_bandit([]() {
   describe("adiar/bdd/evaluate.cpp", []() {
     { // bdd_eval
-      ptr_uint64 terminal_T = ptr_uint64(true);
-      ptr_uint64 terminal_F = ptr_uint64(false);
+      bdd::pointer_type terminal_T = bdd::pointer_type(true);
+      bdd::pointer_type terminal_F = bdd::pointer_type(false);
 
       shared_levelized_file<bdd::node_type> bdd;
       /*
@@ -319,8 +319,8 @@ go_bandit([]() {
     } // bdd_eval
 
     { // bdd_satmin, bdd_satmax
-      ptr_uint64 terminal_T = ptr_uint64(true);
-      ptr_uint64 terminal_F = ptr_uint64(false);
+      bdd::pointer_type terminal_T = bdd::pointer_type(true);
+      bdd::pointer_type terminal_F = bdd::pointer_type(false);
 
       shared_levelized_file<bdd::node_type> bdd_T;
       {

@@ -2,8 +2,8 @@
 
 go_bandit([]() {
   describe("adiar/bdd/relprod.cpp", []() {
-    const ptr_uint64 terminal_T = ptr_uint64(true);
-    const ptr_uint64 terminal_F = ptr_uint64(false);
+    const bdd::pointer_type terminal_T = bdd::pointer_type(true);
+    const bdd::pointer_type terminal_F = bdd::pointer_type(false);
 
     // ------------------------------------------------------------------------------------------ //
 
