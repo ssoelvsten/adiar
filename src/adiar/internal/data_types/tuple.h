@@ -6,6 +6,7 @@
 
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/ptr.h>
+#include <adiar/internal/unreachable.h>
 
 namespace adiar::internal
 {
@@ -181,6 +182,7 @@ namespace adiar::internal
       } else if constexpr (cardinality == 4) {
         return adiar::internal::first(_values[0], _values[1], _values[2], _values[3]);
       }
+      adiar_unreachable(); // LCOV_EXCL_LINE
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -201,6 +203,7 @@ namespace adiar::internal
       } else if constexpr (cardinality == 4) {
         return adiar::internal::second(_values[0], _values[1], _values[2], _values[3]);
       }
+      adiar_unreachable(); // LCOV_EXCL_LINE
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -219,6 +222,7 @@ namespace adiar::internal
       } else if constexpr (cardinality == 4) {
         return adiar::internal::third(_values[0], _values[1], _values[2], _values[3]);
       }
+      adiar_unreachable(); // LCOV_EXCL_LINE
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -235,6 +239,7 @@ namespace adiar::internal
       } else if constexpr (cardinality == 4) {
         return adiar::internal::fourth(_values[0], _values[1], _values[2], _values[3]);
       }
+      adiar_unreachable(); // LCOV_EXCL_LINE
     }
 
     /* ============================ CONSTRUCTORS ============================ */
