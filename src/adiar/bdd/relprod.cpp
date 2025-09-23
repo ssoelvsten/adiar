@@ -237,7 +237,6 @@ namespace adiar
       // Since only a single terminal terminal survives, this piece of code is never executed.
       adiar_unreachable();
     }
-
     // LCOV_EXCL_STOP
 
   public:
