@@ -287,14 +287,14 @@ public:
       while (!inner_pq.empty_level()) {
         // Get target of next request
         const node::pointer_type next = inner_pq.top().target.first();
-        node::pointer_type t;
+        node::uid_type t;
 
         if (next.label() % _nesting_modulo == 1) {
           // Collapse immediately to a terminal
-          t = node::pointer_type(level_label % (_nesting_modulo + 1) > 0);
+          t = node::uid_type(level_label % (_nesting_modulo + 1) > 0);
         } else {
           // Create a simple (i, _, _) node with two terminals.
-          t = node::pointer_type(level_label, level_size++);
+          t = node::uid_type(level_label, level_size++);
 
           const node::pointer_type t0((level_label) % (_nesting_modulo) > 1);
           aw.push_terminal({ t, false, t0 });
@@ -468,10 +468,10 @@ go_bandit([]() {
           test_roots_sorter_t s(1024, 16);
 
           {
-            const reduce_arc i1 = arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 1));
+            const reduce_arc i1 = arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 1));
             s.push(i1);
 
-            const reduce_arc i2 = arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 0));
+            const reduce_arc i2 = arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 0));
             s.push(i2);
           }
 
@@ -505,10 +505,10 @@ go_bandit([]() {
           test_roots_sorter_t s(1024, 16);
 
           {
-            const reduce_arc a1 = arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 1));
+            const reduce_arc a1 = arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 1));
             s.push(a1);
 
-            const reduce_arc a2 = arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 0));
+            const reduce_arc a2 = arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 0));
             s.push(a2);
           }
 
@@ -749,7 +749,7 @@ go_bandit([]() {
 
           AssertThat(s.size(), Is().EqualTo(0u));
 
-          s.push(arc(arc::pointer_type(2, 0), false, arc::pointer_type(3, 0)));
+          s.push(arc(arc::uid_type(2, 0), false, arc::pointer_type(3, 0)));
           AssertThat(s.size(), Is().EqualTo(1u));
 
           s.push({ { arc::pointer_type(3, 0) }, {}, { arc::pointer_type(2, 0, true) } });
@@ -772,17 +772,17 @@ go_bandit([]() {
 
           AssertThat(s.deepest_source(), Is().EqualTo(test_roots_sorter_t::no_level));
 
-          const reduce_arc a1 = arc(arc::pointer_type(0, 0), false, arc::pointer_type(1, 1));
+          const reduce_arc a1 = arc(arc::uid_type(0, 0), false, arc::pointer_type(1, 1));
           s.push(a1);
 
           AssertThat(s.deepest_source(), Is().EqualTo(0u));
 
-          const reduce_arc a2 = arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0));
+          const reduce_arc a2 = arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0));
           s.push(a2);
 
           AssertThat(s.deepest_source(), Is().EqualTo(1u));
 
-          const reduce_arc a3 = arc(arc::pointer_type(0, 0), true, arc::pointer_type(1, 0));
+          const reduce_arc a3 = arc(arc::uid_type(0, 0), true, arc::pointer_type(1, 0));
           s.push(a3);
 
           AssertThat(s.deepest_source(), Is().EqualTo(1u));
@@ -798,12 +798,12 @@ go_bandit([]() {
 
           AssertThat(s.deepest_source(), Is().EqualTo(test_roots_sorter_t::no_level));
 
-          const reduce_arc a1 = arc(arc::pointer_type(2, 0), false, arc::pointer_type(3, 1));
+          const reduce_arc a1 = arc(arc::uid_type(2, 0), false, arc::pointer_type(3, 1));
           s.push(a1);
 
           AssertThat(s.deepest_source(), Is().EqualTo(2u));
 
-          const reduce_arc a2 = arc(arc::pointer_type(1, 0), false, arc::pointer_type(4, 0));
+          const reduce_arc a2 = arc(arc::uid_type(1, 0), false, arc::pointer_type(4, 0));
           s.push(a2);
 
           AssertThat(s.deepest_source(), Is().EqualTo(2u));
@@ -871,7 +871,7 @@ go_bandit([]() {
 
           AssertThat(s.deepest_source(), Is().EqualTo(test_roots_sorter_t::no_level));
 
-          const reduce_arc a1 = arc(arc::pointer_type(2, 0), false, arc::pointer_type(1, 1));
+          const reduce_arc a1 = arc(arc::uid_type(2, 0), false, arc::pointer_type(1, 1));
           s.push(a1);
 
           AssertThat(s.deepest_source(), Is().EqualTo(2u));
@@ -880,7 +880,7 @@ go_bandit([]() {
 
           AssertThat(s.deepest_source(), Is().EqualTo(test_roots_sorter_t::no_level));
 
-          const reduce_arc a2 = arc(arc::pointer_type(1, 0), false, arc::pointer_type(2, 0));
+          const reduce_arc a2 = arc(arc::uid_type(1, 0), false, arc::pointer_type(2, 0));
           s.push(a2);
 
           AssertThat(s.deepest_source(), Is().EqualTo(1u));
@@ -1097,9 +1097,9 @@ go_bandit([]() {
           //          / \
           //          F T
           */
-          const node::pointer_type n1(1, 0);
-          const node::pointer_type n2(2, 0);
-          const node::pointer_type n3(3, 0);
+          const node::uid_type n1(1, 0);
+          const node::uid_type n2(2, 0);
+          const node::uid_type n3(3, 0);
 
           shared_levelized_file<arc> dag;
 
@@ -1136,9 +1136,9 @@ go_bandit([]() {
           //          / \
           //          F T
           */
-          const node::pointer_type n1(1, 0);
-          const node::pointer_type n2(2, 0);
-          const node::pointer_type n3(3, 0);
+          const node::uid_type n1(1, 0);
+          const node::uid_type n2(2, 0);
+          const node::uid_type n3(3, 0);
 
           shared_levelized_file<arc> dag;
 
@@ -1178,10 +1178,10 @@ go_bandit([]() {
           //           / \
           //           F T
           */
-          const node::pointer_type n1(0, 0);
-          const node::pointer_type n2(2, 0);
-          const node::pointer_type n3(3, 0);
-          const node::pointer_type n4(4, 0);
+          const node::uid_type n1(0, 0);
+          const node::uid_type n2(2, 0);
+          const node::uid_type n3(3, 0);
+          const node::uid_type n4(4, 0);
 
           shared_levelized_file<arc> dag;
 
@@ -1215,12 +1215,12 @@ go_bandit([]() {
       });
 
       describe("inner::down__pq_decorator", [&terminal_F, &terminal_T]() {
-        const uid_uint64 inner_n1 = ptr_uint64(3, 0);
-        const uid_uint64 inner_n2 = ptr_uint64(3, 1);
-        const uid_uint64 inner_n3 = ptr_uint64(4, 0);
-        const uid_uint64 inner_n4 = ptr_uint64(4, 1);
-        const uid_uint64 inner_n5 = ptr_uint64(5, 0);
-        const uid_uint64 inner_n6 = ptr_uint64(5, 1);
+        const node::uid_type inner_n1(3, 0);
+        const node::uid_type inner_n2(3, 1);
+        const node::uid_type inner_n3(4, 0);
+        const node::uid_type inner_n4(4, 1);
+        const node::uid_type inner_n5(5, 0);
+        const node::uid_type inner_n6(5, 1);
 
         shared_levelized_file<node> dag;
 
@@ -1247,9 +1247,9 @@ go_bandit([]() {
         using test_roots_sorter_t = nested_sweeping::outer::
           roots_sorter<memory_mode::Internal, test_request_t, request_first_lt<test_request_t>>;
 
-        const test_request_t root1({ inner_n1 }, {}, { ptr_uint64(1, 0, false) });
-        const test_request_t root2({ inner_n2 }, {}, { ptr_uint64(1, 0, true) });
-        const test_request_t root3({ inner_n6 }, {}, { ptr_uint64(1, 1, false) });
+        const test_request_t root1({ inner_n1 }, {}, { node::pointer_type(1, 0, false) });
+        const test_request_t root2({ inner_n2 }, {}, { node::pointer_type(1, 0, true) });
+        const test_request_t root3({ inner_n6 }, {}, { node::pointer_type(1, 1, false) });
 
         /*
         //
@@ -1305,7 +1305,7 @@ go_bandit([]() {
         it("merges size of PQ and Sorter", [&]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
-          const test_request_t root4({ inner_n2 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n2 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1381,7 +1381,7 @@ go_bandit([]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
           // Add new request to tie with sorter
-          const test_request_t root4({ inner_n2 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n2 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1422,7 +1422,7 @@ go_bandit([]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
           // Add new request to tie with sorter
-          const test_request_t root4({ inner_n1 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n1 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1472,7 +1472,7 @@ go_bandit([]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
           // Add new request to tie with sorter
-          const test_request_t root4({ inner_n1 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n1 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1524,7 +1524,7 @@ go_bandit([]() {
         it("can top the same request from PQ multiple times", [&]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
-          const test_request_t root4({ inner_n1 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n1 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1598,7 +1598,7 @@ go_bandit([]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
           // Add new request to tie with sorter
-          const test_request_t root4({ inner_n2 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n2 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1645,7 +1645,7 @@ go_bandit([]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
           // Add new request to tie with sorter
-          const test_request_t root4({ inner_n1 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n1 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1701,7 +1701,7 @@ go_bandit([]() {
           test_pq_t pq({ bdd(dag) }, memory_available(), 16, lpq_stats);
 
           // Add new request to tie with sorter
-          const test_request_t root4({ inner_n1 }, {}, { ptr_uint64(1, 2, false) });
+          const test_request_t root4({ inner_n1 }, {}, { node::pointer_type(1, 2, false) });
           pq.push(root4);
 
           test_decorator dec(pq, sorter);
@@ -1727,7 +1727,7 @@ go_bandit([]() {
         it("cleans taint flags on targets from outer roots", [&]() {
           sorter.reset(); // ignore 'before_each' and do our own setup
 
-          const test_request_t root1_taint({ flag(inner_n1) }, {}, { ptr_uint64(1, 0, false) });
+          const test_request_t root1_taint({ flag(inner_n1) }, {}, { node::pointer_type(1, 0, false) });
           sorter.push(root1_taint);
           sorter.push(root2);
           sorter.push(root3);
@@ -1754,7 +1754,7 @@ go_bandit([]() {
         it("cleans taint flags on targets from outer roots [cardinality == 1]", [&]() {
           sorter.reset(); // ignore 'before_each' and do our own setup
 
-          const test_request_t root1_taint({ flag(inner_n1) }, {}, { ptr_uint64(1, 0, false) });
+          const test_request_t root1_taint({ flag(inner_n1) }, {}, { node::pointer_type(1, 0, false) });
           sorter.push(root1_taint);
 
           sorter.sort();
@@ -1793,7 +1793,7 @@ go_bandit([]() {
              test_roots_sorter_t sorter(1024, 16);
 
              const test_request_t req(
-               { flag(inner_n1), flag(inner_n2) }, {}, { ptr_uint64(1, 0, false) });
+                                      { flag(inner_n1), flag(inner_n2) }, {}, { node::pointer_type(1, 0, false) });
              sorter.push(req);
 
              sorter.sort();
@@ -1997,9 +1997,9 @@ go_bandit([]() {
       });
 
       describe("inner::up__arc_ifstream__decorator", [&terminal_F, &terminal_T]() {
-        const arc::pointer_type n0(0, 0);
-        const arc::pointer_type n1(1, 0);
-        const arc::pointer_type n2(2, 0);
+        const arc::uid_type n0(0, 0);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
 
         shared_levelized_file<arc> outer;
         { // Garbage collect writer to free write-lock
@@ -2101,13 +2101,13 @@ go_bandit([]() {
           //      / \
           //      F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
-          const arc::pointer_type n4(2, 0);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
+          const arc::uid_type n4(2, 0);
 
           shared_levelized_file<arc> in;
 
@@ -2146,13 +2146,13 @@ go_bandit([]() {
           out_ofstream.unsafe_max_1level_cut({ 0, 1, 1, 2 });
 
           // 3 ---> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 3 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 2 ---> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 2 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
 
           pq.setup_next_level(1);
 
@@ -2217,12 +2217,12 @@ go_bandit([]() {
           //    / \ / \
           //    T F F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
 
           shared_levelized_file<arc> in;
 
@@ -2298,12 +2298,12 @@ go_bandit([]() {
           //    / \ / \
           //    F T T F
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
 
           shared_levelized_file<arc> in;
 
@@ -2383,14 +2383,14 @@ go_bandit([]() {
           //         / \ / \
           //         T F F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
-          const arc::pointer_type n4(2, 0);
-          const arc::pointer_type n5(2, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
+          const arc::uid_type n4(2, 0);
+          const arc::uid_type n5(2, 1);
 
           shared_levelized_file<arc> in;
 
@@ -2436,11 +2436,11 @@ go_bandit([]() {
           out_ofstream.unsafe_max_1level_cut({ 0, 2, 3, 5 });
 
           // 3 ---> 5
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 3 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id - 1)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id - 1)));
           // 2 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id - 1)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id - 1)));
 
           pq.setup_next_level(1);
 
@@ -2511,13 +2511,13 @@ go_bandit([]() {
           //         / \
           //         F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
-          const arc::pointer_type n4(2, 0);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
+          const arc::uid_type n4(2, 0);
 
           shared_levelized_file<arc> in;
 
@@ -2557,11 +2557,11 @@ go_bandit([]() {
           out_ofstream.unsafe_max_1level_cut({ 0, 1, 2, 2 });
 
           // 3 ---> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 3 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 2 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
 
           pq.setup_next_level(1);
 
@@ -2626,13 +2626,13 @@ go_bandit([]() {
           //       / \
           //       F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
-          const arc::pointer_type n4(2, 0);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
+          const arc::uid_type n4(2, 0);
 
           shared_levelized_file<arc> in;
 
@@ -2673,7 +2673,7 @@ go_bandit([]() {
           // HACK: do not set 1-level cut to see desired behaviour
 
           // 2 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
 
           pq.setup_next_level(1);
 
@@ -2738,15 +2738,15 @@ go_bandit([]() {
           //         / \
           //         F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(2, 0);
-          const arc::pointer_type n4(2, 1);
-          const arc::pointer_type n5(2, 2);
-          const arc::pointer_type n6(3, 0);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(2, 0);
+          const arc::uid_type n4(2, 1);
+          const arc::uid_type n5(2, 2);
+          const arc::uid_type n6(3, 0);
 
           shared_levelized_file<arc> in;
 
@@ -2791,9 +2791,9 @@ go_bandit([]() {
           out_ofstream.unsafe_max_1level_cut({ 0, 1, 1, 2 });
 
           // 5 ---> 6
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, arc::max_id)));
           // 3 ---> 6
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, arc::max_id)));
 
           pq.setup_next_level(2);
 
@@ -2864,14 +2864,14 @@ go_bandit([]() {
           //    / \ / \
           //    T F F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
-          const arc::pointer_type n4(2, 0);
-          const arc::pointer_type n5(2, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
+          const arc::uid_type n4(2, 0);
+          const arc::uid_type n5(2, 1);
 
           shared_levelized_file<arc> in;
 
@@ -2917,13 +2917,13 @@ go_bandit([]() {
           out_ofstream.unsafe_max_1level_cut({ 0, 2, 2, 4 });
 
           // 3 ---> 5
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 2 ---> 5
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id)));
           // 3 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id - 1)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id - 1)));
           // 2 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, node::max_id - 1)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(2, arc::max_id - 1)));
 
           pq.setup_next_level(1);
 
@@ -2994,14 +2994,14 @@ go_bandit([]() {
           //    / \  || / \
           //    F T  F  F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(2, 0);
-          const arc::pointer_type n4(2, 1);
-          const arc::pointer_type n5(2, 2);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(2, 0);
+          const arc::uid_type n4(2, 1);
+          const arc::uid_type n5(2, 2);
 
           shared_levelized_file<arc> in;
 
@@ -3088,9 +3088,9 @@ go_bandit([]() {
           //     / \
           //     T T
           */
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
+          const arc::uid_type n1(0, 0);
 
           shared_levelized_file<arc> in;
 
@@ -3156,11 +3156,11 @@ go_bandit([]() {
           //     ||  ||
           //     T   T
           */
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
 
           shared_levelized_file<arc> in;
 
@@ -3250,12 +3250,12 @@ go_bandit([]() {
           //    / \ / \
           //    F T T F
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(1, 0);
-          const arc::pointer_type n3(1, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(1, 0);
+          const arc::uid_type n3(1, 1);
 
           shared_levelized_file<arc> in;
 
@@ -3335,14 +3335,14 @@ go_bandit([]() {
           //         / \ / \
           //         T F F T
           */
-          const arc::pointer_type terminal_F(false);
-          const arc::pointer_type terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const arc::pointer_type n1(0, 0);
-          const arc::pointer_type n2(2, 0);
-          const arc::pointer_type n3(2, 1);
-          const arc::pointer_type n4(3, 0);
-          const arc::pointer_type n5(3, 1);
+          const arc::uid_type n1(0, 0);
+          const arc::uid_type n2(2, 0);
+          const arc::uid_type n3(2, 1);
+          const arc::uid_type n4(3, 0);
+          const arc::uid_type n5(3, 1);
 
           shared_levelized_file<arc> in;
 
@@ -3388,11 +3388,11 @@ go_bandit([]() {
           out_ofstream.unsafe_max_1level_cut({ 0, 2, 3, 5 });
 
           // 3 ---> 5
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, node::max_id)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, arc::max_id)));
           // 3 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, node::max_id - 1)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, arc::max_id - 1)));
           // 2 - -> 4
-          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, node::max_id - 1)));
+          pq.push(arc(arcs.pull_internal().source(), node::pointer_type(3, arc::max_id - 1)));
 
           pq.setup_next_level(1);
 
@@ -3710,16 +3710,16 @@ go_bandit([]() {
           //            T F
           */
 
-          const uid_uint64 terminal_F(false);
-          const uid_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const uid_uint64 n0(0, 0);
-          const uid_uint64 n1(1, 0);
-          const uid_uint64 n2(1, 1);
-          const uid_uint64 n3(2, 0);
-          const uid_uint64 n4(2, 1);
-          const uid_uint64 n5(2, 2);
-          const uid_uint64 n6(3, 0);
+          const arc::uid_type n0(0, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(1, 1);
+          const arc::uid_type n3(2, 0);
+          const arc::uid_type n4(2, 1);
+          const arc::uid_type n5(2, 2);
+          const arc::uid_type n6(3, 0);
 
           shared_levelized_file<arc> in_outer;
           { // Garbage collect writer to free write-lock
@@ -3821,7 +3821,7 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().True()); // 3
             AssertThat(out_nodes.pull(),
                        Is().EqualTo(
-                         node(2, node::max_id - 1, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+                                    node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -3842,15 +3842,15 @@ go_bandit([]() {
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n2, true, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                       Is().EqualTo(arc(n2, true, arc::pointer_type(2, arc::max_id - 1))));
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n2, false, ptr_uint64(2, ptr_uint64::max_id))));
+                       Is().EqualTo(arc(n2, false, arc::pointer_type(2, arc::max_id))));
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n1, true, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                       Is().EqualTo(arc(n1, true, arc::pointer_type(2, arc::max_id - 1))));
 
             AssertThat(out_pq.can_pull(), Is().False());
           });
@@ -3908,7 +3908,7 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().True()); // 5
             AssertThat(
               out_nodes.pull(),
-              Is().EqualTo(node(2, node::max_id, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+              Is().EqualTo(node(2, node::max_id, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().True()); // 4
             AssertThat(out_nodes.pull(),
@@ -3917,7 +3917,7 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().True()); // 3
             AssertThat(out_nodes.pull(),
                        Is().EqualTo(
-                         node(2, node::max_id - 2, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+                         node(2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -3938,15 +3938,15 @@ go_bandit([]() {
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n2, true, ptr_uint64(2, ptr_uint64::max_id))));
+                       Is().EqualTo(arc(n2, true, arc::pointer_type(2, arc::max_id))));
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n2, false, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                       Is().EqualTo(arc(n2, false, arc::pointer_type(2, arc::max_id - 1))));
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n1, true, ptr_uint64(2, ptr_uint64::max_id - 2))));
+                       Is().EqualTo(arc(n1, true, arc::pointer_type(2, arc::max_id - 2))));
 
             AssertThat(out_pq.can_pull(), Is().False());
           });
@@ -4010,7 +4010,7 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().True()); // 3
             AssertThat(out_nodes.pull(),
                        Is().EqualTo(
-                         node(2, node::max_id - 1, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+                         node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -4031,15 +4031,15 @@ go_bandit([]() {
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n2, true, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                       Is().EqualTo(arc(n2, true, arc::pointer_type(2, arc::max_id - 1))));
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n2, false, ptr_uint64(2, ptr_uint64::max_id))));
+                       Is().EqualTo(arc(n2, false, arc::pointer_type(2, arc::max_id))));
 
             AssertThat(out_pq.can_pull(), Is().True());
             AssertThat(out_pq.pull(),
-                       Is().EqualTo(arc(n1, true, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                       Is().EqualTo(arc(n1, true, arc::pointer_type(2, arc::max_id - 1))));
 
             AssertThat(out_pq.can_pull(), Is().False());
           });
@@ -4099,7 +4099,7 @@ go_bandit([]() {
                AssertThat(out_nodes.can_pull(), Is().True()); // 5
                AssertThat(out_nodes.pull(),
                           Is().EqualTo(
-                            node(2, node::max_id, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+                            node(2, node::max_id, terminal_T, node::pointer_type(3, node::max_id))));
 
                AssertThat(out_nodes.can_pull(), Is().True()); // 4
                AssertThat(out_nodes.pull(),
@@ -4108,7 +4108,7 @@ go_bandit([]() {
                AssertThat(out_nodes.can_pull(), Is().True()); // 3
                AssertThat(out_nodes.pull(),
                           Is().EqualTo(node(
-                            2, node::max_id - 2, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+                            2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
 
                AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -4129,15 +4129,15 @@ go_bandit([]() {
 
                AssertThat(out_pq.can_pull(), Is().True());
                AssertThat(out_pq.pull(),
-                          Is().EqualTo(arc(n2, true, ptr_uint64(2, ptr_uint64::max_id))));
+                          Is().EqualTo(arc(n2, true, arc::pointer_type(2, arc::max_id))));
 
                AssertThat(out_pq.can_pull(), Is().True());
                AssertThat(out_pq.pull(),
-                          Is().EqualTo(arc(n2, false, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                          Is().EqualTo(arc(n2, false, arc::pointer_type(2, arc::max_id - 1))));
 
                AssertThat(out_pq.can_pull(), Is().True());
                AssertThat(out_pq.pull(),
-                          Is().EqualTo(arc(n1, true, ptr_uint64(2, ptr_uint64::max_id - 2))));
+                          Is().EqualTo(arc(n1, true, arc::pointer_type(2, arc::max_id - 2))));
 
                AssertThat(out_pq.can_pull(), Is().False());
              });
@@ -4161,16 +4161,16 @@ go_bandit([]() {
           //          T F
           */
 
-          const uid_uint64 terminal_F(false);
-          const uid_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const uid_uint64 n0(0, 0);
-          const uid_uint64 n1(1, 0);
-          const uid_uint64 n2(1, 1);
-          const uid_uint64 n3(2, 0);
-          const uid_uint64 n4(2, 1);
-          const uid_uint64 n5(2, 2);
-          const uid_uint64 n6(3, 0);
+          const arc::uid_type n0(0, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(1, 1);
+          const arc::uid_type n3(2, 0);
+          const arc::uid_type n4(2, 1);
+          const arc::uid_type n5(2, 2);
+          const arc::uid_type n6(3, 0);
 
           shared_levelized_file<arc> in_outer;
           { // Garbage collect writer to free write-lock
@@ -4265,12 +4265,12 @@ go_bandit([]() {
           AssertThat(out_nodes.can_pull(), Is().True()); // 4
           AssertThat(
             out_nodes.pull(),
-            Is().EqualTo(node(2, node::max_id - 1, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+            Is().EqualTo(node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
 
           AssertThat(out_nodes.can_pull(), Is().True()); // 3
           AssertThat(
             out_nodes.pull(),
-            Is().EqualTo(node(2, node::max_id - 2, terminal_T, ptr_uint64(3, ptr_uint64::max_id))));
+            Is().EqualTo(node(2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
 
           AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -4290,15 +4290,15 @@ go_bandit([]() {
           out_pq.setup_next_level();
 
           AssertThat(out_pq.can_pull(), Is().True());
-          AssertThat(out_pq.pull(), Is().EqualTo(arc(n2, true, ptr_uint64(2, ptr_uint64::max_id))));
+          AssertThat(out_pq.pull(), Is().EqualTo(arc(n2, true, arc::pointer_type(2, arc::max_id))));
 
           AssertThat(out_pq.can_pull(), Is().True());
           AssertThat(out_pq.pull(),
-                     Is().EqualTo(arc(n2, false, ptr_uint64(2, ptr_uint64::max_id - 1))));
+                     Is().EqualTo(arc(n2, false, arc::pointer_type(2, arc::max_id - 1))));
 
           AssertThat(out_pq.can_pull(), Is().True());
           AssertThat(out_pq.pull(),
-                     Is().EqualTo(arc(n1, true, ptr_uint64(2, ptr_uint64::max_id - 2))));
+                     Is().EqualTo(arc(n1, true, arc::pointer_type(2, arc::max_id - 2))));
 
           AssertThat(out_pq.can_pull(), Is().False());
         });
@@ -4313,11 +4313,11 @@ go_bandit([]() {
           //    |  / \
           //    F  F T
            */
-          const uid_uint64 terminal_F(false);
-          const uid_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const uid_uint64 n1(1, 0);
-          const uid_uint64 n2(3, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(3, 0);
 
           shared_levelized_file<arc> in_outer;
           { // Garbage collect writer to free write-lock
@@ -4406,7 +4406,7 @@ go_bandit([]() {
           out_pq.setup_next_level();
 
           AssertThat(out_pq.can_pull(), Is().True());
-          AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, true, ptr_uint64(3, ptr_uint64::max_id))));
+          AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, true, arc::pointer_type(3, arc::max_id))));
 
           AssertThat(out_pq.can_pull(), Is().True());
           AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, false, terminal_F)));
@@ -4424,11 +4424,11 @@ go_bandit([]() {
           //       / \
           //       F T
            */
-          const uid_uint64 terminal_F(false);
-          const uid_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const uid_uint64 n1(1, 0);
-          const uid_uint64 n2(3, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(3, 0);
 
           shared_levelized_file<arc> in_outer;
           { // Garbage collect writer to free write-lock
@@ -4519,7 +4519,7 @@ go_bandit([]() {
           out_pq.setup_next_level();
 
           AssertThat(out_pq.can_pull(), Is().True());
-          AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, true, ptr_uint64(3, ptr_uint64::max_id))));
+          AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, true, arc::pointer_type(3, arc::max_id))));
 
           AssertThat(out_pq.can_pull(), Is().False());
         });
@@ -4536,12 +4536,12 @@ go_bandit([]() {
           //        / \
           //        T T
           */
-          const uid_uint64 terminal_F(false);
-          const uid_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const uid_uint64 n1(1, 0);
-          const uid_uint64 n2(3, 0);
-          const uid_uint64 n3(4, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(3, 0);
+          const arc::uid_type n3(4, 0);
 
           shared_levelized_file<arc> in_outer;
           { // Garbage collect writer to free write-lock
@@ -4630,7 +4630,7 @@ go_bandit([]() {
           out_pq.setup_next_level();
 
           AssertThat(out_pq.can_pull(), Is().True());
-          AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, true, ptr_uint64(3, ptr_uint64::max_id))));
+          AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, true, arc::pointer_type(3, arc::max_id))));
 
           AssertThat(out_pq.can_pull(), Is().False());
         });
@@ -4742,11 +4742,11 @@ go_bandit([]() {
           //    |  / \
           //    F  F T
           */
-          const uid_uint64 terminal_F(false);
-          const uid_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const uid_uint64 n1(1, 0);
-          const uid_uint64 n2(3, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(3, 0);
 
           shared_levelized_file<arc> in_outer;
           { // Garbage collect writer to free write-lock
@@ -4834,7 +4834,7 @@ go_bandit([]() {
 
           AssertThat(out_pq.can_pull(), Is().True()); // Edge is tainted by reduction rule 1
           AssertThat(out_pq.pull(),
-                     Is().EqualTo(arc(n1, true, node::pointer_type(3, node::max_id))));
+                     Is().EqualTo(arc(n1, true, node::pointer_type(3, arc::max_id))));
           AssertThat(out_pq.can_pull(), Is().True()); // Edge is tainted by reduction rule 1
           AssertThat(out_pq.pull(), Is().EqualTo(arc(n1, false, terminal_F)));
 
@@ -4871,13 +4871,13 @@ go_bandit([]() {
         //     / \ / \
         //     T T F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(3, 0);
-        const ptr_uint64 n4(3, 1);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(3, 0);
+        const arc::uid_type n4(3, 1);
 
         shared_levelized_file<arc> in;
 
@@ -4964,14 +4964,14 @@ go_bandit([]() {
         //     / \ / \
         //     F T T T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(2, 1);
-        const ptr_uint64 n4(3, 0);
-        const ptr_uint64 n5(3, 1);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(2, 1);
+        const arc::uid_type n4(3, 0);
+        const arc::uid_type n5(3, 1);
 
         shared_levelized_file<arc> in;
 
@@ -5021,7 +5021,7 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(
           out_nodes.pull(),
-          Is().EqualTo(node(1, node::max_id, ptr_uint64(3, ptr_uint64::max_id), terminal_T)));
+          Is().EqualTo(node(1, node::max_id, node::pointer_type(3, node::max_id), terminal_T)));
 
         AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -5065,11 +5065,11 @@ go_bandit([]() {
         //          / \
         //          F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -5145,17 +5145,17 @@ go_bandit([]() {
         //       / \/ \
         //       F  T F
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(2, 1);
-        const ptr_uint64 n4(3, 0);
-        const ptr_uint64 n5(3, 1);
-        const ptr_uint64 n6(4, 0);
-        const ptr_uint64 n7(5, 0);
-        const ptr_uint64 n8(5, 1);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(2, 1);
+        const arc::uid_type n4(3, 0);
+        const arc::uid_type n5(3, 1);
+        const arc::uid_type n6(4, 0);
+        const arc::uid_type n7(5, 0);
+        const arc::uid_type n8(5, 1);
 
         shared_levelized_file<arc> in;
 
@@ -5222,15 +5222,15 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(
           out_nodes.pull(),
-          Is().EqualTo(node(3, node::max_id, terminal_T, ptr_uint64(5, ptr_uint64::max_id))));
+          Is().EqualTo(node(3, node::max_id, terminal_T, node::pointer_type(5, node::max_id))));
 
         // n1
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(),
                    Is().EqualTo(node(1,
                                      node::max_id,
-                                     ptr_uint64(3, ptr_uint64::max_id),
-                                     ptr_uint64(5, ptr_uint64::max_id - 1))));
+                                     node::pointer_type(3, node::max_id),
+                                     node::pointer_type(5, node::max_id - 1))));
 
         AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -5278,15 +5278,15 @@ go_bandit([]() {
         //           / \
         //           F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(1, 0);
-        const ptr_uint64 n3(1, 1);
-        const ptr_uint64 n4(2, 0);
-        const ptr_uint64 n5(2, 1);
-        const ptr_uint64 n6(3, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -5376,8 +5376,8 @@ go_bandit([]() {
         // See 'accumulates multiple nested sweeps [excl. root]' above but with
         // (5) removed since it would realistically be reduced away.
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const node::uid_type terminal_F(false);
+        const node::uid_type terminal_T(true);
 
         // In canonical order (realistic output from Reduce)
         const node n7(5, node::max_id, terminal_F, terminal_T);
@@ -5422,15 +5422,15 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(
           out_nodes.pull(),
-          Is().EqualTo(node(3, node::max_id, terminal_T, ptr_uint64(5, ptr_uint64::max_id))));
+          Is().EqualTo(node(3, node::max_id, terminal_T, node::pointer_type(5, node::max_id))));
 
         // n1
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(),
                    Is().EqualTo(node(1,
                                      node::max_id,
-                                     ptr_uint64(3, ptr_uint64::max_id),
-                                     ptr_uint64(5, ptr_uint64::max_id - 1))));
+                                     node::pointer_type(3, node::max_id),
+                                     node::pointer_type(5, node::max_id - 1))));
 
         AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -5484,14 +5484,14 @@ go_bandit([]() {
         //           F T
         */
 
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(3, 0);
-        const ptr_uint64 n4(4, 0);
-        const ptr_uint64 n5(5, 0);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(3, 0);
+        const arc::uid_type n4(4, 0);
+        const arc::uid_type n5(5, 0);
 
         shared_levelized_file<arc> in;
 
@@ -5627,14 +5627,14 @@ go_bandit([]() {
         //           F T
         */
 
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(3, 0);
-        const ptr_uint64 n4(4, 0);
-        const ptr_uint64 n5(5, 0);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(3, 0);
+        const arc::uid_type n4(4, 0);
+        const arc::uid_type n5(5, 0);
 
         shared_levelized_file<arc> in;
 
@@ -5748,15 +5748,15 @@ go_bandit([]() {
         //      / \   / \
         //      T F   F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(2, 1);
-        const ptr_uint64 n4(3, 0);
-        const ptr_uint64 n5(5, 0);
-        const ptr_uint64 n6(5, 1);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(2, 1);
+        const arc::uid_type n4(3, 0);
+        const arc::uid_type n5(5, 0);
+        const arc::uid_type n6(5, 1);
 
         shared_levelized_file<arc> in;
 
@@ -5841,13 +5841,13 @@ go_bandit([]() {
         //           / \
         //           F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(2, 0);
-        const ptr_uint64 n2(3, 0);
-        const ptr_uint64 n3(4, 0);
-        const ptr_uint64 n4(5, 0);
+        const arc::uid_type n1(2, 0);
+        const arc::uid_type n2(3, 0);
+        const arc::uid_type n3(4, 0);
+        const arc::uid_type n4(5, 0);
 
         shared_levelized_file<arc> in;
 
@@ -5937,12 +5937,12 @@ go_bandit([]() {
         //    / \
         //    F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(3, 0);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6014,12 +6014,12 @@ go_bandit([]() {
         //    / \
         //    T T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(3, 0);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6089,10 +6089,10 @@ go_bandit([]() {
         //    / \
         //    T T
         */
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6158,17 +6158,17 @@ go_bandit([]() {
         //    /| |\
         //    TF FT
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
-        const ptr_uint64 n3(2, 1);
-        const ptr_uint64 n4(3, 0);
-        const ptr_uint64 n5(3, 1);
-        const ptr_uint64 n6(3, 2);
-        const ptr_uint64 n7(4, 0);
-        const ptr_uint64 n8(4, 1);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(2, 1);
+        const arc::uid_type n4(3, 0);
+        const arc::uid_type n5(3, 1);
+        const arc::uid_type n6(3, 2);
+        const arc::uid_type n7(4, 0);
+        const arc::uid_type n8(4, 1);
 
         shared_levelized_file<arc> in;
 
@@ -6276,11 +6276,11 @@ go_bandit([]() {
         //         F T
         */
 
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6347,11 +6347,11 @@ go_bandit([]() {
         //    / \
         //    F T
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6413,11 +6413,11 @@ go_bandit([]() {
         //    / \
         //    T F
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(1, 0);
-        const ptr_uint64 n2(2, 0);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6479,11 +6479,11 @@ go_bandit([]() {
         //    / \
         //    T F
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6547,11 +6547,11 @@ go_bandit([]() {
         //    / \
         //    T F
         */
-        const ptr_uint64 terminal_F(false);
-        const ptr_uint64 terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
-        const ptr_uint64 n1(0, 0);
-        const ptr_uint64 n2(2, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(2, 0);
 
         shared_levelized_file<arc> in;
 
@@ -6621,16 +6621,16 @@ go_bandit([]() {
           //            / \
           //            F T
           */
-          const ptr_uint64 terminal_F(false);
-          const ptr_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const ptr_uint64 n1(1, 0);
-          const ptr_uint64 n2(2, 0);
-          const ptr_uint64 n3(2, 1);
-          const ptr_uint64 n4(3, 0);
-          const ptr_uint64 n5(3, 1);
-          const ptr_uint64 n6(4, 0);
-          const ptr_uint64 n7(5, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(2, 0);
+          const arc::uid_type n3(2, 1);
+          const arc::uid_type n4(3, 0);
+          const arc::uid_type n5(3, 1);
+          const arc::uid_type n6(4, 0);
+          const arc::uid_type n7(5, 0);
 
           shared_levelized_file<arc> in;
 
@@ -6756,17 +6756,17 @@ go_bandit([]() {
           //          / \
           //          F T
           */
-          const ptr_uint64 terminal_F(false);
-          const ptr_uint64 terminal_T(true);
+          const arc::uid_type terminal_F(false);
+          const arc::uid_type terminal_T(true);
 
-          const ptr_uint64 n1(1, 0);
-          const ptr_uint64 n2(2, 0);
-          const ptr_uint64 n3(2, 1);
-          const ptr_uint64 n4(3, 0);
-          const ptr_uint64 n5(3, 1);
-          const ptr_uint64 n6(4, 0);
-          const ptr_uint64 n7(4, 1);
-          const ptr_uint64 n8(5, 0);
+          const arc::uid_type n1(1, 0);
+          const arc::uid_type n2(2, 0);
+          const arc::uid_type n3(2, 1);
+          const arc::uid_type n4(3, 0);
+          const arc::uid_type n5(3, 1);
+          const arc::uid_type n6(4, 0);
+          const arc::uid_type n7(4, 1);
+          const arc::uid_type n8(5, 0);
 
           shared_levelized_file<arc> in;
 
@@ -6904,20 +6904,20 @@ go_bandit([]() {
         //       /  \ /  \
         //       F  T T  F
         */
-        const node::pointer_type n1(1, 0);
-        const node::pointer_type n2(2, 0);
-        const node::pointer_type n3(3, 0);
-        const node::pointer_type n4(3, 1);
-        const node::pointer_type n5(5, 0);
-        const node::pointer_type n6(5, 1);
-        const node::pointer_type n7(5, 2);
-        const node::pointer_type n8(6, 0);
-        const node::pointer_type n9(6, 1);
-        const node::pointer_type n10(7, 0);
-        const node::pointer_type n11(7, 1);
+        const arc::uid_type n1(1, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(3, 0);
+        const arc::uid_type n4(3, 1);
+        const arc::uid_type n5(5, 0);
+        const arc::uid_type n6(5, 1);
+        const arc::uid_type n7(5, 2);
+        const arc::uid_type n8(6, 0);
+        const arc::uid_type n9(6, 1);
+        const arc::uid_type n10(7, 0);
+        const arc::uid_type n11(7, 1);
 
-        const node::pointer_type terminal_F(false);
-        const node::pointer_type terminal_T(true);
+        const arc::uid_type terminal_F(false);
+        const arc::uid_type terminal_T(true);
 
         shared_levelized_file<arc> in;
 

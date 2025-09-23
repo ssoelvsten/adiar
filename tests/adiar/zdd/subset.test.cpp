@@ -13,8 +13,8 @@ go_bandit([]() {
       nw_T << node(true);
     }
 
-    ptr_uint64 terminal_T = ptr_uint64(true);
-    ptr_uint64 terminal_F = ptr_uint64(false);
+    zdd::pointer_type terminal_T = zdd::pointer_type(true);
+    zdd::pointer_type terminal_F = zdd::pointer_type(false);
 
     // { {3}, {0,3}, {3,4}, {0,3,4}, {1,2,4}, {1,2,3}, {1,3,4}, {0,1,2,4}, {0,1,2,3}, {0,1,3,4} }
     /*
@@ -32,12 +32,12 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_1;
 
-    node n1_6 = node(4, node::max_id, terminal_T, terminal_T);
-    node n1_5 = node(3, node::max_id, n1_6.uid(), terminal_T);
-    node n1_4 = node(3, node::max_id - 1, terminal_F, n1_6.uid());
-    node n1_3 = node(2, node::max_id, n1_4.uid(), n1_5.uid());
-    node n1_2 = node(1, node::max_id, n1_4.uid(), n1_3.uid());
-    node n1_1 = node(0, node::max_id, n1_2.uid(), n1_2.uid());
+    node n1_6 = node(4, zdd::max_id, terminal_T, terminal_T);
+    node n1_5 = node(3, zdd::max_id, n1_6.uid(), terminal_T);
+    node n1_4 = node(3, zdd::max_id - 1, terminal_F, n1_6.uid());
+    node n1_3 = node(2, zdd::max_id, n1_4.uid(), n1_5.uid());
+    node n1_2 = node(1, zdd::max_id, n1_4.uid(), n1_3.uid());
+    node n1_1 = node(0, zdd::max_id, n1_2.uid(), n1_2.uid());
 
     { // Garbage collect writer to free write-lock
       node_ofstream w(zdd_1);
@@ -58,10 +58,10 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_2;
 
-    const node n2_4 = node(3, node::max_id, terminal_F, terminal_T);
-    const node n2_3 = node(2, node::max_id, terminal_T, n2_4.uid());
-    const node n2_2 = node(1, node::max_id, terminal_T, n2_3.uid());
-    const node n2_1 = node(0, node::max_id, n2_2.uid(), n2_3.uid());
+    const node n2_4 = node(3, zdd::max_id, terminal_F, terminal_T);
+    const node n2_3 = node(2, zdd::max_id, terminal_T, n2_4.uid());
+    const node n2_2 = node(1, zdd::max_id, terminal_T, n2_3.uid());
+    const node n2_1 = node(0, zdd::max_id, n2_2.uid(), n2_3.uid());
 
     { // Garbage collect writer to free write-lock
       node_ofstream w(zdd_2);
@@ -82,10 +82,10 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_2_mirror;
 
-    const node n2m_4 = node(3, node::max_id, terminal_F, terminal_T);
-    const node n2m_3 = node(2, node::max_id, n2m_4.uid(), terminal_T);
-    const node n2m_2 = node(1, node::max_id, n2m_3.uid(), terminal_T);
-    const node n2m_1 = node(0, node::max_id, n2m_3.uid(), n2m_2.uid());
+    const node n2m_4 = node(3, zdd::max_id, terminal_F, terminal_T);
+    const node n2m_3 = node(2, zdd::max_id, n2m_4.uid(), terminal_T);
+    const node n2m_2 = node(1, zdd::max_id, n2m_3.uid(), terminal_T);
+    const node n2m_1 = node(0, zdd::max_id, n2m_3.uid(), n2m_2.uid());
 
     { // Garbage collect writer to free write-lock
       node_ofstream w(zdd_2_mirror);
@@ -104,9 +104,9 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_3;
 
-    const node n3_3(3, node::max_id, terminal_F, terminal_T);
-    const node n3_2(2, node::max_id, terminal_T, n3_3.uid());
-    const node n3_1(1, node::max_id, n3_2.uid(), terminal_T);
+    const node n3_3(3, zdd::max_id, terminal_F, terminal_T);
+    const node n3_2(2, zdd::max_id, terminal_T, n3_3.uid());
+    const node n3_1(1, zdd::max_id, n3_2.uid(), terminal_T);
 
     {
       node_ofstream w(zdd_3);
@@ -123,8 +123,8 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_4;
 
-    const node n4_2(2, node::max_id, terminal_F, terminal_T);
-    const node n4_1(1, node::max_id, terminal_T, n4_2.uid());
+    const node n4_2(2, zdd::max_id, terminal_F, terminal_T);
+    const node n4_1(1, zdd::max_id, terminal_T, n4_2.uid());
 
     {
       node_ofstream nw(zdd_4);
@@ -141,8 +141,8 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_5;
 
-    const node n5_2(2, node::max_id, terminal_T, terminal_T);
-    const node n5_1(1, node::max_id, n5_2.uid(), n5_2.uid());
+    const node n5_2(2, zdd::max_id, terminal_T, terminal_T);
+    const node n5_1(1, zdd::max_id, n5_2.uid(), n5_2.uid());
     ;
 
     {
@@ -160,8 +160,8 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_6;
 
-    const node n6_2(2, node::max_id, terminal_T, terminal_T);
-    const node n6_1(0, node::max_id, terminal_T, n6_2.uid());
+    const node n6_2(2, zdd::max_id, terminal_T, terminal_T);
+    const node n6_1(0, zdd::max_id, terminal_T, n6_2.uid());
 
     {
       node_ofstream w(zdd_6);
@@ -176,7 +176,7 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_7;
 
-    const node n7_1(0, node::max_id, terminal_T, terminal_T);
+    const node n7_1(0, zdd::max_id, terminal_T, terminal_T);
 
     {
       node_ofstream w(zdd_7);
@@ -1073,12 +1073,12 @@ go_bandit([]() {
         */
         shared_levelized_file<zdd::node_type> in;
 
-        node n6 = node(3, node::max_id, terminal_T, terminal_T);
-        node n5 = node(3, node::max_id - 1, terminal_F, terminal_T);
-        node n4 = node(2, node::max_id, n5.uid(), n6.uid());
-        node n3 = node(1, node::max_id, n5.uid(), n4.uid());
-        node n2 = node(1, node::max_id - 1, terminal_T, n5.uid());
-        node n1 = node(0, node::max_id, n2.uid(), n3.uid());
+        node n6 = node(3, zdd::max_id, terminal_T, terminal_T);
+        node n5 = node(3, zdd::max_id - 1, terminal_F, terminal_T);
+        node n4 = node(2, zdd::max_id, n5.uid(), n6.uid());
+        node n3 = node(1, zdd::max_id, n5.uid(), n4.uid());
+        node n2 = node(1, zdd::max_id - 1, terminal_T, n5.uid());
+        node n1 = node(0, zdd::max_id, n2.uid(), n3.uid());
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
@@ -1287,8 +1287,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(2, node::max_id, terminal_T, terminal_T)
-            << node(0, node::max_id, terminal_T, ptr_uint64(2, ptr_uint64::max_id));
+          w << node(2, zdd::max_id, terminal_T, terminal_T)
+            << node(0, zdd::max_id, terminal_T, zdd::pointer_type(2, zdd::max_id));
         }
 
         __zdd out = zdd_onset(in, 1);
@@ -1331,9 +1331,9 @@ go_bandit([]() {
         */
         shared_levelized_file<zdd::node_type> in;
 
-        const node n3 = node(2, node::max_id, terminal_F, terminal_T);
-        const node n2 = node(1, node::max_id, n3.uid(), n3.uid());
-        const node n1 = node(0, node::max_id, n3.uid(), n2.uid());
+        const node n3 = node(2, zdd::max_id, terminal_F, terminal_T);
+        const node n2 = node(1, zdd::max_id, n3.uid(), n3.uid());
+        const node n1 = node(0, zdd::max_id, n3.uid(), n2.uid());
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
@@ -1403,9 +1403,9 @@ go_bandit([]() {
         */
         shared_levelized_file<zdd::node_type> in;
 
-        const node n3 = node(2, node::max_id, terminal_F, terminal_T);
-        const node n2 = node(1, node::max_id, n3.uid(), terminal_T);
-        const node n1 = node(0, node::max_id, n3.uid(), n2.uid());
+        const node n3 = node(2, zdd::max_id, terminal_F, terminal_T);
+        const node n2 = node(1, zdd::max_id, n3.uid(), terminal_T);
+        const node n1 = node(0, zdd::max_id, n3.uid(), n2.uid());
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);

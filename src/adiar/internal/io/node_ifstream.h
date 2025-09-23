@@ -113,10 +113,10 @@ namespace adiar::internal
     /// \pre     `can_pull() == true`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     const node
-    seek(const node::uid_type& u)
+    seek(const node::pointer_type& p)
     {
-      const node::uid_type u_unshifted = shift_replace(u.as_ptr(), -this->_shift);
-      const node n_raw                 = parent_type::_ifstreams[0].seek(std::move(u_unshifted));
+      const node::pointer_type p_unshifted = shift_replace(p, -this->_shift);
+      const node n_raw                     = parent_type::_ifstreams[0].seek(std::move(p_unshifted));
       return shift_replace(cnot(std::move(n_raw), this->_negate), this->_shift);
     }
   };
