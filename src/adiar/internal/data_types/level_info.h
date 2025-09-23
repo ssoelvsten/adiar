@@ -36,9 +36,8 @@ namespace adiar::internal
 
     /* ========================================== VARIABLES ===================================== */
   private:
-    level_type _level;
-
-    size_t _width;
+    level_type _level; // cppcheck-suppress [uninitMemberVar]
+    size_t _width;     // cppcheck-suppress [uninitMemberVar]
 
     /* ======================================== CONSTRUCTORS ==================================== */
   public:
