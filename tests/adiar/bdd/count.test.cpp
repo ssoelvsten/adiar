@@ -2,8 +2,8 @@
 
 go_bandit([]() {
   describe("adiar/bdd/count.cpp", []() {
-    ptr_uint64 terminal_T = ptr_uint64(true);
-    ptr_uint64 terminal_F = ptr_uint64(false);
+    bdd::pointer_type terminal_T = bdd::pointer_type(true);
+    bdd::pointer_type terminal_F = bdd::pointer_type(false);
 
     shared_levelized_file<bdd::node_type> bdd_1;
     /*
@@ -276,7 +276,7 @@ go_bandit([]() {
     describe("bdd_satcount(f) [non-empty dom]", [&]() {
       shared_file<bdd::label_type> dom;
       {
-        ofstream<ptr_uint64::label_type> lw(dom);
+        ofstream<bdd::pointer_type::label_type> lw(dom);
         lw << 0 << 1 << 2 << 3 << 4 << 5 << 6;
       }
       domain_set(dom);

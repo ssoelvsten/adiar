@@ -8,11 +8,10 @@
 
 namespace adiar::internal
 {
-
   // TODO (ADD (32-bit)):
   //   Template 'ptr_uint64' with 'terminal_t' of how to interpret the bits of a terminal. To this
   //   end, one wants to use 'std::bit_cast' (C++20) in the internal logic. Use 'static_assert' to
-  //   ensure the desired type indeed fits into 62 bits of memory.
+  //   ensure the desired type indeed fits into 32 bits of memory.
 
   // TODO (ADD (64-bit)):
   // TODO (10+ TiB Decision Diagrams):

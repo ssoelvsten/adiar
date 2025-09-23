@@ -83,7 +83,7 @@ namespace adiar::internal
     /// \brief Obtain the node with the given uid.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     const value_type&
-    at(uid_type u) const
+    at(pointer_type u) const
     {
       adiar_assert(static_cast<signed_label_type>(u.label()) == current_level());
       return parent_type::at(static_cast<idx_type>(u.id()));

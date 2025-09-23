@@ -8,6 +8,11 @@
 
 namespace adiar::internal
 {
+  // TODO (ADD, EVBDD, QMDD, ...):
+  //   The templated overloads below, `cnot`, `replace`, ..., will clash with the templated
+  //   `ptr_...` functions. In this case, add `static const bool is_uid = true` here and `false` on
+  //   the pointer implementation. With this, the overload resoultion can be done using SFINAE.
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief   A unique identifier a decision diagram node.
   ///
@@ -74,12 +79,30 @@ namespace adiar::internal
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Constructor for a uid of an internal node (label, id).
+    /// \brief Constructor for a uid from a (non-NIL) pointer.
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    explicit
     __uid(const pointer_type& p)
       : pointer_type(essential(p))
     {
       adiar_assert(!p.is_nil(), "UID must be created from non-nil value");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Unsafe construction of a uid from a (non-NIL) pointer.
+    ///
+    /// \details This is to be used in the cases one is very, very sure that the given pointer
+    ///          already satisfies all requirements to be a UID.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static inline __uid
+    unsafe(const pointer_type& p)
+    {
+      adiar_assert(!p.is_nil(),                         "UID cannot be nil");
+      adiar_assert(!p.is_flagged(),                     "UID cannot be flagged");
+      adiar_assert(p.is_terminal() || p.out_idx() == 0, "UID has no out-index");
+
+      // Evil type hack to reinterpret `p` as a `__uid<...>` (Thanks, Quake III)
+      return *static_cast<const __uid*>(&p);
     }
 
     /* ======================================= ATTRIBUTES ======================================= */
@@ -102,6 +125,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Constructor for a pointer to an internal node (label, id).
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    explicit
     __uid(const typename pointer_type::label_type label, const typename pointer_type::id_type id)
       : pointer_type(label, id)
     {}
@@ -116,6 +140,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Constructor for a uid of a terminal node (v).
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    explicit
     __uid(typename pointer_type::terminal_type v)
       : pointer_type(v)
     {}
@@ -124,12 +149,24 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Whether this uid identifies a terminal node.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // This functions is overwritten, such that we can provide a specialization for
-    // '__uid<ptr_uint64>'.
+    // cppcheck-suppress-begin [duplInheritedMember]
+    //   This functions is overwritten, such that we can provide a specialization for
+    //   '__uid<ptr_uint64>'.
     inline bool
     is_terminal() const
     {
-      return this->is_terminal();
+      return this->as_ptr().is_terminal();
+    }
+    // cppcheck-suppress-end
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Obtain a pointer where terminal values (if any) are negated.
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // cppcheck-suppress-begin [duplInheritedMember]
+    __uid<pointer_type>
+    operator!() const
+    {
+      return unsafe(!this->as_ptr());
     }
     // cppcheck-suppress-end
 
@@ -155,8 +192,55 @@ namespace adiar::internal
     }
   };
 
+  /* ========================================= TERMINAL ========================================= */
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Specialization for the single-integer pointer `ptr_uint64`.
+  /// \brief Negates the content of `p` if it is a terminal and the `negate` flag is set to true.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template<typename Uid>
+  inline Uid
+  cnot(const Uid& u, const bool negate)
+  {
+    return Uid::unsafe(cnot(static_cast<typename Uid::pointer_type>(u), negate));
+  }
+
+  /* =========================================== LEVEL ========================================== */
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the level with the one given.
+  ///
+  /// \pre `u.is_node()`
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template<typename Uid>
+  inline Uid
+  replace(const Uid& u, const typename Uid::level_type new_level)
+  {
+    return Uid::unsafe(replace(static_cast<typename Uid::pointer_type>(u), new_level));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the level with the one given.
+  ///
+  /// \pre `u.is_node()`
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template<typename Uid>
+  inline Uid
+  essential_replace(const Uid& u, const typename Uid::level_type new_level)
+  {
+    return replace(u, new_level);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Shift the level by given amount.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template<typename Uid>
+  inline Uid
+  shift_replace(const Uid& u, const typename Uid::signed_level_type levels)
+  {
+    return Uid::unsafe(shift_replace(static_cast<typename Uid::pointer_type>(u), levels));
+  }
+
+  /* ============================= SPECIALIZATION FOR `ptr_uint64` ============================== */
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Obtain the `ptr` for this node uid with the given `out_idx` as auxiliary information.

@@ -19,7 +19,7 @@ namespace adiar
   bdd_policy::reduction_rule(const bdd::node_type& n)
   {
     // If adding attributed edges, i.e. complement edges:
-    //    remove the 'unflag' below. Currently, it removes any forwarding of
+    //    remove the 'essential' below. Currently, it removes any forwarding of
     //    applying Reduction Rule.
     if (essential(n.low()) == essential(n.high())) { return n.low(); }
     return n.uid();

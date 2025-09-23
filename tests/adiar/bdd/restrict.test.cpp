@@ -2,8 +2,8 @@
 
 go_bandit([]() {
   describe("adiar/bdd/restrict.cpp", []() {
-    const ptr_uint64 terminal_T(true);
-    const ptr_uint64 terminal_F(false);
+    const bdd::pointer_type terminal_T(true);
+    const bdd::pointer_type terminal_F(false);
 
     shared_levelized_file<bdd::node_type> bdd_F;
     /*
@@ -59,8 +59,8 @@ go_bandit([]() {
     */
 
     { // Garbage collect writer to free write-lock
-      const node n2_2(2, node::max_id, terminal_F, terminal_T);
-      const node n2_1(1, node::max_id, n2_2.uid(), terminal_F);
+      const node n2_2(2, bdd::max_id, terminal_F, terminal_T);
+      const node n2_1(1, bdd::max_id, n2_2.uid(), terminal_F);
 
       node_ofstream nw(bdd_2_high_F);
       nw << n2_2 << n2_1;
@@ -78,8 +78,8 @@ go_bandit([]() {
     */
 
     { // Garbage collect writer to free write-lock
-      const node n2_2(2, node::max_id, terminal_F, terminal_T);
-      const node n2_1(0, node::max_id, terminal_T, n2_2.uid());
+      const node n2_2(2, bdd::max_id, terminal_F, terminal_T);
+      const node n2_1(0, bdd::max_id, terminal_T, n2_2.uid());
 
       node_ofstream nw(bdd_2_low_T);
       nw << n2_2 << n2_1;
@@ -291,29 +291,29 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(2, 0), false, bdd::pointer_type(3, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), false, bdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(2, 0), true, bdd::pointer_type(3, 1) }));
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), true, bdd::pointer_type(3, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 1), false, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 1), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 1), true, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 1), true, terminal_F }));
 
         level_info_test_ifstream meta_arcs(out);
 
@@ -793,21 +793,21 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(1, 0), false, bdd::pointer_type(3, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(1, 0), false, bdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(1, 0), true, bdd::pointer_type(3, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(1, 0), true, bdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), true, terminal_T }));
 
         level_info_test_ifstream meta_arcs(out);
 
@@ -981,37 +981,37 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(2, 0), false, bdd::pointer_type(3, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), false, bdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(2, 0), true, bdd::pointer_type(3, 1) }));
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), true, bdd::pointer_type(3, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 1), true, bdd::pointer_type(4, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 1), true, bdd::pointer_type(4, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 1), false, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 1), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1350,11 +1350,11 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1520,37 +1520,37 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), false, bdd::pointer_type(4, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), false, bdd::pointer_type(4, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(3, 0), true, bdd::pointer_type(4, 1) }));
+                   Is().EqualTo(arc{ bdd::uid_type(3, 0), true, bdd::pointer_type(4, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 1), true, bdd::pointer_type(5, 0) }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 1), true, bdd::pointer_type(5, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(4, 1), false, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(4, 1), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(5, 0), false, terminal_F }));
+                   Is().EqualTo(arc{ bdd::uid_type(5, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
         AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::pointer_type(5, 0), true, terminal_T }));
+                   Is().EqualTo(arc{ bdd::uid_type(5, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
