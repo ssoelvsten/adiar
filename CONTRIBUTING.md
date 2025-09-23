@@ -20,9 +20,9 @@ contributing to Adiar.
     - [§2 Interoperability with Users' Data Structures](#2-interoperability-with-users-data-structures)
     - [§3 Run-time over Compilation-time](#3-run-time-over-compilation-time)
     - [§4 Naming Scheme](#4-naming-scheme)
-    - [§5 No Almost Always Auto!](#5-no-almost-always-auto)
-    - [§6 Documentation Comments Everywhere](#6-documentation-comments-everywhere)
-    - [§7 Test Everything Thoroughly](#7-test-everything-thoroughly)
+    - [§5 Documentation Comments Everywhere](#5-documentation-comments-everywhere)
+    - [§6 Test Everything Thoroughly](#6-test-everything-thoroughly)
+    - [§7 C++ Style](#7-c++-style)
 
 <!-- markdown-toc end -->
 
@@ -271,7 +271,29 @@ clash too much with the use of *snake_case*:
 - Private class member variables are prefixed with a single `_`; non-static
   public ones may also be prefixed as such.
 
-### §5 No Almost Always Auto!
+### §5 Documentation Comments Everywhere
+
+As Adiar grows larger and more complex, one submodule is the foundation on which
+others are built. Hence, **all** functions, data structures, classes, and
+variables - even the ones in *adiar::internal* that are not part of the public
+API - should be well documented for both the *end users* and especially also the
+*developers*.
+
+### §6 Test Everything Thoroughly
+
+Adiar's Decision Diagrams are to be used in the context of verification of
+critical software. At the same time, Adiar's algorithms are much more complex
+than other BDD implementations and have multiple layers from which an error
+could originate. Hence, it is vital we can ensure correctness of Adiar by having
+as thorough unit testing as possible.
+
+This also applies to everything within *adiar::internal* that is not part of the
+public API. Similar to *§6*, this also helps us pin down the origin of a bug
+since each level of the code-hierarchy is covered.
+
+### §7 C++ Style
+
+#### §7.A No Almost Always Auto!
 
 Some C++ developers prefer to use the `auto` keyword as much as possible to let
 the compiler derive the type. Yet, we want to **not** do so for multiple
@@ -286,22 +308,8 @@ reasons:
    way it is derived.
 4. We provide the information necessary to debug the code while reading it.
 
-### §6 Documentation Comments Everywhere
+#### §7.B (Almost) Always Explicit Constructors!
 
-As Adiar grows larger and more complex, one submodule is the foundation on which
-others are built. Hence, **all** functions, data structures, classes, and
-variables - even the ones in *adiar::internal* that are not part of the public
-API - should be well documented for both the *end users* and especially also the
-*developers*.
-
-### §7 Test Everything Thoroughly
-
-Adiar's Decision Diagrams are to be used in the context of verification of
-critical software. At the same time, Adiar's algorithms are much more complex
-than other BDD implementations and have multiple layers from which an error
-could originate. Hence, it is vital we can ensure correctness of Adiar by having
-as thorough unit testing as possible.
-
-This also applies to everything within *adiar::internal* that is not part of the
-public API. Similar to *§6*, this also helps us pin down the origin of a bug
-since each level of the code-hierarchy is covered.
+Every constructor (except *default*, *copy*, and *move*) should be marked as `explicit` to mitigate
+unintended implicit conversions. The only exception to this rule are if implicit conversions are
+intended, e.g. `bdd` and `__bdd`.
