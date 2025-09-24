@@ -252,12 +252,9 @@ namespace adiar::internal
     adiar_assert(pointer_type::is_node());
 
     // Based on the bit-layout, we can do this much faster than decode and
-    // re-encode all three values.
-    constexpr pointer_type::raw_type out_idx_mask = ~(max_out_idx << pointer_type::data_shift);
-
-    return pointer_type(
-      (this->_raw & out_idx_mask)
-      | (static_cast<pointer_type::raw_type>(out_idx) << pointer_type::data_shift));
+    // re-encode all three values. We especially can abuse the fact, that
+    // the uid already has 0's where the `out_idx` has to go.
+    return pointer_type(this->_raw | (static_cast<pointer_type::raw_type>(out_idx) << pointer_type::data_shift));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
