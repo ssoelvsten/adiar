@@ -59,8 +59,8 @@ namespace adiar
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The unique identifier of a prior node.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: rename to 'ptr ptr' when using complement edges
-    /*const*/ internal::node::uid_type uid;
+    // TODO (Complement Edges): Turn this into a `Policy::pointer_type`?
+    /*const*/ typename Policy::uid_type uid;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Unique shared reference for the parent builder object.
@@ -112,7 +112,7 @@ namespace adiar
     /// \param sp
     ///    Reference (read-only) to the builder's shared information.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    builder_ptr(const internal::node::uid_type& p, const shared_ptr<const builder_shared>& sp)
+    builder_ptr(const typename Policy::uid_type& p, const shared_ptr<const builder_shared>& sp)
       : uid(p)
       , builder_ref(sp)
     {}
@@ -267,15 +267,16 @@ namespace adiar
       const node_type n(label, current_id, low.uid, high.uid);
 
       // Check whether this node is 'redundant'
-      const typename node_type::uid_type res_uid = Policy::reduction_rule(n);
+      // TODO (Complement Edges): Turn this into a `Policy::pointer_type`?
+      const typename Policy::uid_type n_ptr = typename Policy::uid_type(Policy::reduction_rule(n));
 
-      if (res_uid.is_terminal()) {
+      if (n_ptr.is_terminal()) {
         created_terminal = true;
-        terminal_val     = res_uid.value();
+        terminal_val     = n_ptr.value();
       }
 
-      if (res_uid == low.uid) { return low; }
-      if (res_uid == high.uid) { return high; }
+      if (n_ptr == low.uid) { return low; }
+      if (n_ptr == high.uid) { return high; }
 
       // Push node to file
       nw.push(n);
@@ -295,7 +296,7 @@ namespace adiar
         unref_nodes--;
       }
 
-      return make_ptr(res_uid);
+      return make_ptr(n_ptr);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,7 +323,7 @@ namespace adiar
     {
       attach_if_needed();
 
-      builder_ptr<Policy> low_ptr = make_ptr(typename node_type::pointer_type(low));
+      builder_ptr<Policy> low_ptr = make_ptr(typename Policy::uid_type(low));
       return add_node(label, low_ptr, high);
     }
 
@@ -350,7 +351,7 @@ namespace adiar
     {
       attach_if_needed();
 
-      builder_ptr<Policy> high_ptr = make_ptr(typename node_type::pointer_type(high));
+      builder_ptr<Policy> high_ptr = make_ptr(typename Policy::uid_type(high));
       return add_node(label, low, high_ptr);
     }
 
@@ -375,8 +376,8 @@ namespace adiar
     {
       attach_if_needed();
 
-      builder_ptr<Policy> low_ptr  = make_ptr(typename node_type::pointer_type(low));
-      builder_ptr<Policy> high_ptr = make_ptr(typename node_type::pointer_type(high));
+      builder_ptr<Policy> low_ptr  = make_ptr(typename Policy::uid_type(low));
+      builder_ptr<Policy> high_ptr = make_ptr(typename Policy::uid_type(high));
       return add_node(label, low_ptr, high_ptr);
     }
 
@@ -397,7 +398,7 @@ namespace adiar
       created_terminal = true;
       terminal_val     = terminal_value;
 
-      return make_ptr(typename node_type::pointer_type(terminal_value));
+      return make_ptr(typename node_type::uid_type(terminal_value));
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -490,7 +491,7 @@ namespace adiar
     /// \brief Create a builder_ptr with 'this' builder as its parent.
     /////////////////////////////////////////////////////////////////////////////////////////////////
     builder_ptr<Policy>
-    make_ptr(const typename node_type::pointer_type& p) noexcept
+    make_ptr(const typename Policy::uid_type& p) noexcept
     {
       return builder_ptr<Policy>(p, builder_ref);
     }

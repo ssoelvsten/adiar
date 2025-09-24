@@ -14,8 +14,8 @@ go_bandit([]() {
       nw_T << node(true);
     }
 
-    const ptr_uint64 terminal_T = ptr_uint64(true);
-    const ptr_uint64 terminal_F = ptr_uint64(false);
+    const zdd::pointer_type terminal_T = zdd::pointer_type(true);
+    const zdd::pointer_type terminal_F = zdd::pointer_type(false);
 
     shared_levelized_file<zdd::node_type> zdd_1;
     // { { 0 }, { 1 }, { 0,2 }, { 1,2 } }
@@ -30,9 +30,9 @@ go_bandit([]() {
     */
 
     {
-      const node n3 = node(2, node::max_id, terminal_T, terminal_T);
-      const node n2 = node(1, node::max_id, terminal_F, n3.uid());
-      const node n1 = node(0, node::max_id, n2.uid(), n3.uid());
+      const node n3 = node(2, zdd::max_id, terminal_T, terminal_T);
+      const node n2 = node(1, zdd::max_id, terminal_F, n3.uid());
+      const node n1 = node(0, zdd::max_id, n2.uid(), n3.uid());
 
       node_ofstream nw(zdd_1);
       nw << n3 << n2 << n1;
@@ -51,9 +51,9 @@ go_bandit([]() {
      */
 
     {
-      const node n3 = node(3, node::max_id, terminal_T, terminal_T);
-      const node n2 = node(2, node::max_id, terminal_T, n3.uid());
-      const node n1 = node(1, node::max_id, n2.uid(), terminal_T);
+      const node n3 = node(3, zdd::max_id, terminal_T, terminal_T);
+      const node n2 = node(2, zdd::max_id, terminal_T, n3.uid());
+      const node n1 = node(1, zdd::max_id, n2.uid(), terminal_T);
 
       node_ofstream nw(zdd_2);
       nw << n3 << n2 << n1;
@@ -71,10 +71,10 @@ go_bandit([]() {
     //      F T
     */
     {
-      const node n4 = node(4, node::max_id, terminal_F, terminal_T);
-      const node n3 = node(2, node::max_id, n4.uid(), terminal_T);
-      const node n2 = node(2, node::max_id - 1, terminal_F, n4.uid());
-      const node n1 = node(1, node::max_id, n2.uid(), n3.uid());
+      const node n4 = node(4, zdd::max_id, terminal_F, terminal_T);
+      const node n3 = node(2, zdd::max_id, n4.uid(), terminal_T);
+      const node n2 = node(2, zdd::max_id - 1, terminal_F, n4.uid());
+      const node n1 = node(1, zdd::max_id, n2.uid(), n3.uid());
 
       node_ofstream nw(zdd_3);
       nw << n4 << n3 << n2 << n1;
@@ -90,8 +90,8 @@ go_bandit([]() {
     //     F T
     */
     {
-      const node n2 = node(1, node::max_id, terminal_F, terminal_T);
-      const node n1 = node(0, node::max_id, n2.uid(), n2.uid());
+      const node n2 = node(1, zdd::max_id, terminal_F, terminal_T);
+      const node n1 = node(0, zdd::max_id, n2.uid(), n2.uid());
 
       node_ofstream nw(zdd_4);
       nw << n2 << n1;

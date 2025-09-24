@@ -13,8 +13,8 @@ go_bandit([]() {
       nw_T << node(true);
     }
 
-    const ptr_uint64 terminal_F = ptr_uint64(false);
-    const ptr_uint64 terminal_T = ptr_uint64(true);
+    const zdd::pointer_type terminal_F = zdd::pointer_type(false);
+    const zdd::pointer_type terminal_T = zdd::pointer_type(true);
 
     shared_levelized_file<zdd::node_type> zdd_x0;
     /*
@@ -24,7 +24,7 @@ go_bandit([]() {
     */
     { // Garbage collect writers to free write-lock
       node_ofstream nw_0(zdd_x0);
-      nw_0 << node(0, node::max_id, terminal_F, terminal_T);
+      nw_0 << node(0, zdd::max_id, terminal_F, terminal_T);
     }
 
     shared_levelized_file<zdd::node_type> zdd_x1;
@@ -36,7 +36,7 @@ go_bandit([]() {
 
     { // Garbage collect writers to free write-lock
       node_ofstream nw_1(zdd_x1);
-      nw_1 << node(1, node::max_id, terminal_F, terminal_T);
+      nw_1 << node(1, zdd::max_id, terminal_F, terminal_T);
     }
 
     /*
@@ -52,11 +52,11 @@ go_bandit([]() {
     */
     shared_levelized_file<zdd::node_type> zdd_1;
 
-    const node n1_5 = node(3, node::max_id, terminal_F, terminal_T);
-    const node n1_4 = node(2, node::max_id, terminal_T, terminal_T);
-    const node n1_3 = node(2, node::max_id - 1, n1_5.uid(), terminal_T);
-    const node n1_2 = node(1, node::max_id, n1_3.uid(), n1_4.uid());
-    const node n1_1 = node(0, node::max_id, n1_2.uid(), n1_4.uid());
+    const node n1_5 = node(3, zdd::max_id, terminal_F, terminal_T);
+    const node n1_4 = node(2, zdd::max_id, terminal_T, terminal_T);
+    const node n1_3 = node(2, zdd::max_id - 1, n1_5.uid(), terminal_T);
+    const node n1_2 = node(1, zdd::max_id, n1_3.uid(), n1_4.uid());
+    const node n1_1 = node(0, zdd::max_id, n1_2.uid(), n1_4.uid());
 
     { // Garbage collect writers to free write-lock
       node_ofstream nw(zdd_1);
@@ -104,12 +104,12 @@ go_bandit([]() {
         node_test_ifstream ns(out);
 
         AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(2, node::max_id, terminal_F, terminal_T)));
+        AssertThat(ns.pull(), Is().EqualTo(node(2, zdd::max_id, terminal_F, terminal_T)));
 
         AssertThat(ns.can_pull(), Is().True());
         AssertThat(
           ns.pull(),
-          Is().EqualTo(node(1, node::max_id, terminal_F, ptr_uint64(2, ptr_uint64::max_id))));
+          Is().EqualTo(node(1, zdd::max_id, terminal_F, zdd::pointer_type(2, zdd::max_id))));
 
         AssertThat(ns.can_pull(), Is().False());
 
@@ -149,18 +149,18 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -190,7 +190,7 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(2, node::max_id, terminal_T, terminal_T);
+          w << node(2, zdd::max_id, terminal_T, terminal_T);
         }
 
         const std::vector<int> vars = { 0, 1 };
@@ -201,25 +201,25 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -256,25 +256,25 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 0), true, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 0), true, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -311,25 +311,25 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -364,32 +364,32 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 0), true, ptr_uint64(4, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 0), true, zdd::pointer_type(4, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(4, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(4, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(4, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(4, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -425,8 +425,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(3, node::max_id, terminal_F, terminal_T)
-            << node(1, node::max_id, ptr_uint64(3, ptr_uint64::max_id), terminal_T);
+          w << node(3, zdd::max_id, terminal_F, terminal_T)
+            << node(1, zdd::max_id, zdd::pointer_type(3, zdd::max_id), terminal_T);
         }
 
         const std::vector<int> vars = { 2 };
@@ -437,32 +437,32 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), false, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), false, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 0), true, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 0), true, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 1), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 1), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 1), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 1), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -561,8 +561,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(1, node::max_id, terminal_F, terminal_T)
-            << node(0, node::max_id, terminal_F, ptr_uint64(1, ptr_uint64::max_id));
+          w << node(1, zdd::max_id, terminal_F, terminal_T)
+            << node(0, zdd::max_id, terminal_F, zdd::pointer_type(1, zdd::max_id));
         }
 
         const std::vector<int> vars = { 0 };
@@ -574,10 +574,10 @@ go_bandit([]() {
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -604,8 +604,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(2, node::max_id, terminal_F, terminal_T)
-            << node(0, node::max_id, terminal_F, ptr_uint64(2, ptr_uint64::max_id));
+          w << node(2, zdd::max_id, terminal_F, terminal_T)
+            << node(0, zdd::max_id, terminal_F, zdd::pointer_type(2, zdd::max_id));
         }
 
         const std::vector<int> vars = { 0, 1 };
@@ -616,18 +616,18 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -657,9 +657,9 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(3, node::max_id, terminal_T, terminal_T)
-            << node(2, node::max_id, terminal_F, ptr_uint64(3, ptr_uint64::max_id))
-            << node(0, node::max_id, terminal_F, ptr_uint64(2, ptr_uint64::max_id));
+          w << node(3, zdd::max_id, terminal_T, terminal_T)
+            << node(2, zdd::max_id, terminal_F, zdd::pointer_type(3, zdd::max_id))
+            << node(0, zdd::max_id, terminal_F, zdd::pointer_type(2, zdd::max_id));
         }
 
         std::vector<int> vars = { 0, 2 };
@@ -671,10 +671,10 @@ go_bandit([]() {
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), false, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -701,7 +701,7 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(0, node::max_id, terminal_T, terminal_T);
+          w << node(0, zdd::max_id, terminal_T, terminal_T);
         }
 
         const std::vector<int> vars = { 0 };
@@ -713,10 +713,10 @@ go_bandit([]() {
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -743,8 +743,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(1, node::max_id, terminal_F, terminal_T)
-            << node(0, node::max_id, ptr_uint64(1, ptr_uint64::max_id), terminal_T);
+          w << node(1, zdd::max_id, terminal_F, terminal_T)
+            << node(0, zdd::max_id, zdd::pointer_type(1, zdd::max_id), terminal_T);
         }
 
         const std::vector<int> vars = { 0 };
@@ -755,18 +755,18 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -800,40 +800,40 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), false, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), false, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 0), false, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 0), false, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 1), false, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 1), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 1), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 1), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -869,9 +869,9 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(2, node::max_id, terminal_F, terminal_T)
-            << node(1, node::max_id, terminal_T, ptr_uint64(2, ptr_uint64::max_id))
-            << node(0, node::max_id, ptr_uint64(1, ptr_uint64::max_id), terminal_T);
+          w << node(2, zdd::max_id, terminal_F, terminal_T)
+            << node(1, zdd::max_id, terminal_T, zdd::pointer_type(2, zdd::max_id))
+            << node(0, zdd::max_id, zdd::pointer_type(1, zdd::max_id), terminal_T);
         }
 
         const std::vector<int> vars = { 1 };
@@ -882,32 +882,32 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), false, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), false, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 1), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 1), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 1), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 1), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -944,47 +944,47 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), false, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), false, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 1), true, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 1), true, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 0), false, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 0), false, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 1), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 1), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 1), false, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 1), false, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 1), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 1), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1020,8 +1020,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(1, node::max_id, terminal_F, terminal_T)
-            << node(0, node::max_id, terminal_F, ptr_uint64(1, ptr_uint64::max_id));
+          w << node(1, zdd::max_id, terminal_F, terminal_T)
+            << node(0, zdd::max_id, terminal_F, zdd::pointer_type(1, zdd::max_id));
         }
 
         const std::vector<int> vars = { 0, 1 };
@@ -1061,9 +1061,9 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(2, node::max_id, terminal_F, terminal_T)
-            << node(1, node::max_id, terminal_F, ptr_uint64(2, ptr_uint64::max_id))
-            << node(0, node::max_id, terminal_F, ptr_uint64(1, ptr_uint64::max_id));
+          w << node(2, zdd::max_id, terminal_F, terminal_T)
+            << node(1, zdd::max_id, terminal_F, zdd::pointer_type(2, zdd::max_id))
+            << node(0, zdd::max_id, terminal_F, zdd::pointer_type(1, zdd::max_id));
         }
 
         const std::vector<int> vars = { 1 };
@@ -1074,18 +1074,18 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1115,12 +1115,12 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(2, node::max_id, terminal_F, terminal_T)
-            << node(1, node::max_id, terminal_F, ptr_uint64(2, ptr_uint64::max_id))
+          w << node(2, zdd::max_id, terminal_F, terminal_T)
+            << node(1, zdd::max_id, terminal_F, zdd::pointer_type(2, zdd::max_id))
             << node(0,
-                    node::max_id,
-                    ptr_uint64(1, ptr_uint64::max_id),
-                    ptr_uint64(1, ptr_uint64::max_id));
+                    zdd::max_id,
+                    zdd::pointer_type(1, zdd::max_id),
+                    zdd::pointer_type(1, zdd::max_id));
         }
 
         const std::vector<int> vars = { 1 };
@@ -1131,19 +1131,19 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1174,11 +1174,11 @@ go_bandit([]() {
 
           { // Garbage collect writer to free write-lock
             node_ofstream w(in);
-            w << node(2, node::max_id, terminal_F, terminal_T)
+            w << node(2, zdd::max_id, terminal_F, terminal_T)
               << node(0,
-                      node::max_id,
-                      ptr_uint64(2, ptr_uint64::max_id),
-                      ptr_uint64(2, ptr_uint64::max_id));
+                      zdd::max_id,
+                      zdd::pointer_type(2, zdd::max_id),
+                      zdd::pointer_type(2, zdd::max_id));
           }
 
           const std::vector<int> vars = { 1 };
@@ -1189,28 +1189,28 @@ go_bandit([]() {
 
           AssertThat(arcs.can_pull_internal(), Is().True());
           AssertThat(arcs.pull_internal(),
-                     Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(1, 0) }));
+                     Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(1, 0) }));
 
           AssertThat(arcs.can_pull_internal(), Is().True());
           AssertThat(arcs.pull_internal(),
-                     Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) }));
+                     Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(1, 0) }));
 
           AssertThat(arcs.can_pull_internal(), Is().True());
           AssertThat(arcs.pull_internal(),
-                     Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 0) }));
+                     Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 0) }));
 
           AssertThat(arcs.can_pull_internal(), Is().False());
 
           AssertThat(arcs.can_pull_terminal(), Is().True());
           AssertThat(arcs.pull_terminal(),
-                     Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+                     Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
           AssertThat(arcs.can_pull_terminal(), Is().True());
           AssertThat(arcs.pull_terminal(),
-                     Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+                     Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
           AssertThat(arcs.can_pull_terminal(), Is().True());
-          AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+          AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
           AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1255,8 +1255,8 @@ go_bandit([]() {
 
         { // Garbage collect writer to free write-lock
           node_ofstream w(in);
-          w << node(1, node::max_id, terminal_F, terminal_T)
-            << node(0, node::max_id, ptr_uint64(1, ptr_uint64::max_id), terminal_T);
+          w << node(1, zdd::max_id, terminal_F, terminal_T)
+            << node(0, zdd::max_id, zdd::pointer_type(1, zdd::max_id), terminal_T);
         }
 
         const std::vector<int> vars = { 0, 1 };
@@ -1267,18 +1267,18 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(0, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(0, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1326,42 +1326,42 @@ go_bandit([]() {
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), false, ptr_uint64(1, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(1, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), false, ptr_uint64(2, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), false, zdd::pointer_type(2, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(1, 0), true, ptr_uint64(2, 1) }));
+                   Is().EqualTo(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(2, 1) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 0), false, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 0), false, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 1), false, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 1), false, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().True());
         AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ ptr_uint64(2, 1), true, ptr_uint64(3, 0) }));
+                   Is().EqualTo(arc{ zdd::uid_type(2, 1), true, zdd::pointer_type(3, 0) }));
 
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(3, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(3, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1403,8 +1403,8 @@ go_bandit([]() {
            //          T T
            */
 
-           const node n2 = node(2, node::max_id, terminal_T, terminal_T);
-           const node n1 = node(1, node::max_id, terminal_F, n2.uid());
+           const node n2 = node(2, zdd::max_id, terminal_T, terminal_T);
+           const node n1 = node(1, zdd::max_id, terminal_F, n2.uid());
 
            {
              node_ofstream nw(in);
@@ -1419,21 +1419,21 @@ go_bandit([]() {
 
            AssertThat(arcs.can_pull_internal(), Is().True());
            AssertThat(arcs.pull_internal(),
-                      Is().EqualTo(arc{ ptr_uint64(0, 0), true, ptr_uint64(2, 0) }));
+                      Is().EqualTo(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(2, 0) }));
 
            AssertThat(arcs.can_pull_internal(), Is().False());
 
            AssertThat(arcs.can_pull_terminal(), Is().True());
            AssertThat(arcs.pull_terminal(),
-                      Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+                      Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
            AssertThat(arcs.can_pull_terminal(), Is().True());
            AssertThat(arcs.pull_terminal(),
-                      Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_T }));
+                      Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_T }));
 
            AssertThat(arcs.can_pull_terminal(), Is().True());
            AssertThat(arcs.pull_terminal(),
-                      Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+                      Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
            AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1467,7 +1467,7 @@ go_bandit([]() {
         */
         { // Garbage collect writer to free write-lock
           node_ofstream nw(in);
-          nw << node(0, node::max_id, terminal_F, terminal_T);
+          nw << node(0, zdd::max_id, terminal_F, terminal_T);
         }
 
         const std::vector<int> vars = { 0, 1 };
@@ -1479,10 +1479,10 @@ go_bandit([]() {
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(1, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(1, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1513,8 +1513,8 @@ go_bandit([]() {
         */
         { // Garbage collect writer to free write-lock
           node_ofstream nw(in);
-          nw << node(1, node::max_id, terminal_F, terminal_T)
-             << node(0, node::max_id, terminal_F, ptr_uint64(1, ptr_uint64::max_id));
+          nw << node(1, zdd::max_id, terminal_F, terminal_T)
+             << node(0, zdd::max_id, terminal_F, zdd::pointer_type(1, zdd::max_id));
         }
 
         const std::vector<int> vars = { 0, 1, 2 };
@@ -1526,10 +1526,10 @@ go_bandit([]() {
         AssertThat(arcs.can_pull_internal(), Is().False());
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), false, terminal_F }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), false, terminal_F }));
 
         AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ ptr_uint64(2, 0), true, terminal_T }));
+        AssertThat(arcs.pull_terminal(), Is().EqualTo(arc{ zdd::uid_type(2, 0), true, terminal_T }));
 
         AssertThat(arcs.can_pull_terminal(), Is().False());
 
@@ -1559,7 +1559,7 @@ go_bandit([]() {
            */
            { // Garbage collect writer to free write-lock
              node_ofstream nw(in);
-             nw << node(1, node::max_id, terminal_F, terminal_T);
+             nw << node(1, zdd::max_id, terminal_F, terminal_T);
            }
 
            const std::vector<int> vars = { 0, 1 };
@@ -1572,11 +1572,11 @@ go_bandit([]() {
 
            AssertThat(arcs.can_pull_terminal(), Is().True());
            AssertThat(arcs.pull_terminal(),
-                      Is().EqualTo(arc{ ptr_uint64(0, 0), false, terminal_F }));
+                      Is().EqualTo(arc{ zdd::uid_type(0, 0), false, terminal_F }));
 
            AssertThat(arcs.can_pull_terminal(), Is().True());
            AssertThat(arcs.pull_terminal(),
-                      Is().EqualTo(arc{ ptr_uint64(0, 0), true, terminal_T }));
+                      Is().EqualTo(arc{ zdd::uid_type(0, 0), true, terminal_T }));
 
            AssertThat(arcs.can_pull_terminal(), Is().False());
 

@@ -5,7 +5,7 @@ go_bandit([]() {
     shared_levelized_file<zdd::node_type> x0_nf;
     {
       node_ofstream nw_0(x0_nf);
-      nw_0 << node(0, node::max_id, ptr_uint64(false), ptr_uint64(true));
+      nw_0 << node(0, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true));
     }
 
     zdd x0(x0_nf);
@@ -13,7 +13,7 @@ go_bandit([]() {
     shared_levelized_file<zdd::node_type> x1_nf;
     {
       node_ofstream nw_1(x1_nf);
-      nw_1 << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true));
+      nw_1 << node(1, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true));
     }
 
     zdd x1(x1_nf);
@@ -22,9 +22,9 @@ go_bandit([]() {
     {
       node_ofstream nw_01(x0_or_x1_nf);
 
-      nw_01 << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true));
+      nw_01 << node(1, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true));
 
-      nw_01 << node(0, node::max_id, ptr_uint64(1, ptr_uint64::max_id), ptr_uint64(true));
+      nw_01 << node(0, zdd::max_id, zdd::pointer_type(1, zdd::max_id), zdd::pointer_type(true));
     }
 
     zdd x0_or_x1(x0_or_x1_nf);
@@ -49,11 +49,11 @@ go_bandit([]() {
 
     {
       arc_ofstream aw(x0_or_x1_af);
-      aw.push_internal(arc{ ptr_uint64(0, 0), false, ptr_uint64(1, 0) });
+      aw.push_internal(arc{ zdd::uid_type(0, 0), false, zdd::pointer_type(1, 0) });
 
-      aw.push_terminal(arc{ ptr_uint64(0, 0), true, ptr_uint64(true) });
-      aw.push_terminal(arc{ ptr_uint64(1, 0), false, ptr_uint64(false) });
-      aw.push_terminal(arc{ ptr_uint64(1, 0), true, ptr_uint64(true) });
+      aw.push_terminal(arc{ zdd::uid_type(0, 0), true, zdd::pointer_type(true) });
+      aw.push_terminal(arc{ zdd::uid_type(1, 0), false, zdd::pointer_type(false) });
+      aw.push_terminal(arc{ zdd::uid_type(1, 0), true, zdd::pointer_type(true) });
 
       aw.push(level_info(0, 1u));
       aw.push(level_info(1, 1u));
@@ -174,7 +174,7 @@ go_bandit([]() {
           shared_levelized_file<zdd::node_type> other_nf;
           {
             node_ofstream nw(other_nf);
-            nw << node(0, node::max_id, ptr_uint64(false), ptr_uint64(true));
+            nw << node(0, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true));
           }
           zdd other(other_nf);
 
@@ -194,8 +194,8 @@ go_bandit([]() {
           shared_levelized_file<zdd::node_type> expected;
           {
             node_ofstream nw(expected);
-            nw << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true))
-               << node(0, node::max_id, ptr_uint64(true), ptr_uint64(1, ptr_uint64::max_id));
+            nw << node(1, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true))
+               << node(0, zdd::max_id, zdd::pointer_type(true), zdd::pointer_type(1, zdd::max_id));
           }
           AssertThat(~x0_or_x1 == zdd(expected), Is().True());
         });
@@ -266,8 +266,8 @@ go_bandit([]() {
           shared_levelized_file<zdd::node_type> expected;
           {
             node_ofstream nw(expected);
-            nw << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true))
-               << node(0, node::max_id, ptr_uint64(true), ptr_uint64(1, ptr_uint64::max_id));
+            nw << node(1, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true))
+               << node(0, zdd::max_id, zdd::pointer_type(true), zdd::pointer_type(1, zdd::max_id));
           }
           AssertThat(-x0_or_x1 == zdd(expected), Is().True());
         });
@@ -279,8 +279,8 @@ go_bandit([]() {
           shared_levelized_file<zdd::node_type> expected;
           {
             node_ofstream nw(expected);
-            nw << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true))
-               << node(0, node::max_id, ptr_uint64(true), ptr_uint64(1, ptr_uint64::max_id));
+            nw << node(1, zdd::max_id, zdd::pointer_type(false), zdd::pointer_type(true))
+               << node(0, zdd::max_id, zdd::pointer_type(true), zdd::pointer_type(1, zdd::max_id));
           }
           AssertThat(-(x0 | x1) == zdd(expected), Is().True());
         });

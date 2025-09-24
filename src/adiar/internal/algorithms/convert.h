@@ -125,7 +125,6 @@ namespace adiar::internal
     {
       adiar_unreachable();
     }
-
     // LCOV_EXCL_STOP
   };
 }

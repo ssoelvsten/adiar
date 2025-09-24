@@ -121,8 +121,8 @@ go_bandit([]() {
 
       describe("equality (== / !=)", [&] {
         it("should be equal by their content [idx = 0]", [&]() {
-          const ptr_uint64 s = ptr_uint64(4, 2);
-          const ptr_uint64 t = ptr_uint64(42, 3);
+          const arc::uid_type s(4, 2);
+          const arc::uid_type t(42, 3);
 
           const arc arc_1 = { s, false, t };
           const arc arc_2 = { s, false, t };
@@ -132,8 +132,8 @@ go_bandit([]() {
         });
 
         it("should be equal by their content [idx = 1]", [&]() {
-          const ptr_uint64 s = ptr_uint64(0, 0);
-          const ptr_uint64 t = ptr_uint64(1, 0);
+          const arc::uid_type s(0, 0);
+          const arc::uid_type t(1, 0);
 
           const arc arc_1 = { s, true, t };
           const arc arc_2 = { s, true, t };
@@ -143,9 +143,9 @@ go_bandit([]() {
         });
 
         it("should unequal by their source", [&]() {
-          const uid_uint64 u1 = ptr_uint64(4, 2);
-          const uid_uint64 u2 = ptr_uint64(4, 3);
-          const uid_uint64 u3 = ptr_uint64(3, 2);
+          const uid_uint64 u1(4, 2);
+          const uid_uint64 u2(4, 3);
+          const uid_uint64 u3(3, 2);
 
           const arc arc_1 = { u1, u2 };
           const arc arc_2 = { u3, u2 };
@@ -155,8 +155,8 @@ go_bandit([]() {
         });
 
         it("should unequal based on out index by their content", [&]() {
-          const uid_uint64 u1 = ptr_uint64(4, 2);
-          const uid_uint64 u2 = ptr_uint64(4, 3);
+          const uid_uint64 u1(4, 2);
+          const uid_uint64 u2(4, 3);
 
           const arc arc_1 = { u1.as_ptr(false), u2 };
           const arc arc_2 = { u1.as_ptr(true), u2 };
@@ -166,9 +166,9 @@ go_bandit([]() {
         });
 
         it("should unequal by their target", [&]() {
-          const uid_uint64 u1 = ptr_uint64(4, 2);
-          const uid_uint64 u2 = ptr_uint64(4, 3);
-          const uid_uint64 u3 = ptr_uint64(3, 2);
+          const uid_uint64 u1(4, 2);
+          const uid_uint64 u2(4, 3);
+          const uid_uint64 u3(3, 2);
 
           const arc arc_1 = { u1, u2 };
           const arc arc_2 = { u1, u3 };
