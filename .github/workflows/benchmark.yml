@@ -1,4 +1,4 @@
-name: 'benchmark (pull request)'
+name: 'Benchmark [PR]'
 
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
       remote: ${{ steps.identify.outputs.remote }}
 
   run_picotrav:
-    name: 'Performance Regression: Picotrav ${{ matrix.circuit }}'
+    name: 'Picotrav ${{ matrix.circuit }}'
     runs-on: ubuntu-latest
 
     needs: [fetch-branch, fetch-remote]
@@ -93,7 +93,7 @@ jobs:
           message-id: 'benchmark_picotrav_${{ matrix.circuit }}'
 
   run_qbf:
-    name: 'Performance Regression: QBF ${{ matrix.category }}/${{ matrix.circuit }}'
+    name: 'QBF ${{ matrix.category }}/${{ matrix.circuit }}'
     runs-on: ubuntu-latest
 
     needs: [fetch-branch, fetch-remote]
@@ -159,7 +159,7 @@ jobs:
           message-id: 'benchmark_qbf_${{ matrix.circuit }}'
 
   run_queens:
-    name: 'Performance Regression: ${{ matrix.N }}-Queens'
+    name: '${{ matrix.N }}-Queens'
     runs-on: ubuntu-latest
 
     needs: [fetch-branch, fetch-remote]
