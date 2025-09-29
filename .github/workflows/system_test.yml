@@ -1,4 +1,4 @@
-name: 'system test'
+name: 'System Test'
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
       branch: ${{ steps.identify.outputs.branch }}
 
   run-n:
-    name: 'System Test: ${{ matrix.name }}'
+    name: '${{ matrix.name }} (${{ matrix.N }})'
     runs-on: ubuntu-latest
 
     needs: [fetch-branch]
@@ -91,7 +91,7 @@ jobs:
       run: for n in ${{ matrix.N }}; do build/src/${{ matrix.exec }} -n $n -M 1024; done
 
   run-picotrav:
-    name: 'System Test: Picotrav (${{ matrix.name }})'
+    name: 'Picotrav (${{ matrix.name }})'
     runs-on: ubuntu-latest
 
     needs: [fetch-branch]
