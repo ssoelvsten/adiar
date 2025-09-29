@@ -1,4 +1,4 @@
-name: examples
+name: 'Examples'
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   run-minor:
-    name: 'Example: ${{ matrix.name }}'
+    name: '${{ matrix.name }}'
     runs-on: ubuntu-latest
 
     strategy:
@@ -49,7 +49,7 @@ jobs:
       run: ./examples/${{ matrix.target }} -M 1024
 
   run-queens:
-    name: 'Example: Queens'
+    name: 'Queens'
     runs-on: ubuntu-latest
 
     strategy:
