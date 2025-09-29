@@ -27,9 +27,7 @@ jobs:
         # - { cc: gcc,   v: 13, cxx: g++, xcode: latest }
 
           # Clang Compiler
-          - { cc: clang, cxx: clang++, xcode: 15.0 }
-          - { cc: clang, cxx: clang++, xcode: 15.4 }
-          - { cc: clang, cxx: clang++, xcode: 16.1 }
+          - { cc: clang, cxx: clang++, xcode: 16.0 }
           - { cc: clang, cxx: clang++, xcode: latest }
 
     steps:
