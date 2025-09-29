@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build_test:
-    name: 'Build + Test (${{matrix.cc.cc}}@${{matrix.cc.v || matrix.cc.xcode}})'
+    name: 'Build + Test (${{matrix.cc.cc}}@${{matrix.cc.xcode}})'
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -21,11 +21,6 @@ jobs:
       matrix:
         os: [macos-latest]
         cc:
-          # GNU Compiler
-        # - { cc: gcc,   v: 11, cxx: g++, xcode: latest } # oldest supported on Apple Silicon
-        # - { cc: gcc,   v: 12, cxx: g++, xcode: latest }
-        # - { cc: gcc,   v: 13, cxx: g++, xcode: latest }
-
           # Clang Compiler
           - { cc: clang, cxx: clang++, xcode: 16.0 }
           - { cc: clang, cxx: clang++, xcode: latest }
@@ -53,12 +48,6 @@ jobs:
       run: |
         brew cleanup --prune-prefix
 
-        if [ "${{matrix.cc.cc}}" = "gcc" ]; then
-          echo "================================"
-          echo GCC "Compiler"
-          brew install ${{matrix.cc.cc}}@${{matrix.cc.v}}
-        fi
-
         echo "================================"
         echo "Boost"
         brew install boost
@@ -71,13 +60,8 @@ jobs:
     - name: Build tests
       working-directory: ${{runner.workspace}}
       run: |
-        if [ "${{ matrix.cc.cc }}" = "gcc" ]; then
-          export CC=${{ matrix.cc.cc }}-${{ matrix.cc.v }}
-          export CXX=${{ matrix.cc.cxx }}-${{ matrix.cc.v }}
-        else
-          export CC=${{ matrix.cc.cc }}
-          export CXX=${{ matrix.cc.cxx }}
-        fi
+        export CC=${{ matrix.cc.cc }}
+        export CXX=${{ matrix.cc.cxx }}
 
         cmake -E make_directory ${{github.workspace}}/build
         cd ${{github.workspace}}/build
