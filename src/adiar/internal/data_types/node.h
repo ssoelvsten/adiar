@@ -158,7 +158,7 @@ namespace adiar::internal
     /// \brief Construct *terminal* node `(value, nil, nil)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node(const terminal_type value)
-      : _uid(pointer_type(value))
+      : _uid(value)
       , _children(ptr_uint64::nil())
     {}
 
@@ -168,7 +168,7 @@ namespace adiar::internal
     inline bool
     is_terminal() const
     {
-      return _uid.is_terminal();
+      return this->uid().is_terminal();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +180,7 @@ namespace adiar::internal
     value() const
     {
       adiar_assert(is_terminal());
-      return _uid.value();
+      return this->uid().value();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +191,7 @@ namespace adiar::internal
     inline bool
     is_false() const
     {
-      return uid().is_false();
+      return this->uid().is_false();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,7 @@ namespace adiar::internal
     inline bool
     is_true() const
     {
-      return uid().is_true();
+      return this->uid().is_true();
     }
 
     /* ======================================== INTERNAL NODE =================================== */
@@ -417,73 +417,73 @@ namespace adiar::internal
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator<(const node& n, const node::uid_type& u)
+  operator<(const node& n, const node::pointer_type& u)
   {
     return n.uid() < u;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator<(const node::uid_type& u, const node& n)
+  operator<(const node::pointer_type& u, const node& n)
   {
     return u < n.uid();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator<=(const node& n, const node::uid_type& u)
+  operator<=(const node& n, const node::pointer_type& u)
   {
     return n.uid() <= u;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator<=(const node::uid_type& u, const node& n)
+  operator<=(const node::pointer_type& u, const node& n)
   {
     return u <= n.uid();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator>(const node& n, const node::uid_type& u)
+  operator>(const node& n, const node::pointer_type& u)
   {
     return n.uid() > u;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator>(const node::uid_type& u, const node& n)
+  operator>(const node::pointer_type& u, const node& n)
   {
     return u > n.uid();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator>=(const node& n, const node::uid_type& u)
+  operator>=(const node& n, const node::pointer_type& u)
   {
     return n.uid() >= u;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering of node in comparison to a unique identifier.
+  /// \brief Ordering of node in comparison to a pointer.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline bool
-  operator>=(const node::uid_type& u, const node& n)
+  operator>=(const node::pointer_type& u, const node& n)
   {
     return u >= n.uid();
   }
@@ -492,22 +492,22 @@ namespace adiar::internal
   inline node
   cnot(const node& n, const bool negate)
   {
-    const node::uid_type n_uid      = cnot(n.uid().as_ptr(), negate);
-    const node::pointer_type n_low  = cnot(n.low(), negate);
-    const node::pointer_type n_high = cnot(n.high(), negate);
+    const node::uid_type     n_uid(cnot(n.uid().as_ptr(), negate));
+    const node::pointer_type n_low(cnot(n.low(), negate));
+    const node::pointer_type n_high(cnot(n.high(), negate));
 
-    return { n_uid, n_low, n_high };
+    return node(n_uid, n_low, n_high);
   }
 
   /* =========================================== LEVELS ========================================= */
   inline node
   shift_replace(const node& n, const node::signed_label_type levels)
   {
-    const node::uid_type n_uid      = shift_replace(n.uid().as_ptr(), levels);
-    const node::pointer_type n_low  = shift_replace(n.low(), levels);
-    const node::pointer_type n_high = shift_replace(n.high(), levels);
+    const node::uid_type     n_uid(shift_replace(n.uid().as_ptr(), levels));
+    const node::pointer_type n_low(shift_replace(n.low(), levels));
+    const node::pointer_type n_high(shift_replace(n.high(), levels));
 
-    return { n_uid, n_low, n_high };
+    return node(n_uid, n_low, n_high);
   }
 }
 

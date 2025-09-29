@@ -5,8 +5,8 @@ go_bandit([]() {
     // The reduce<dd_policy> function is used within the constructors of the BDD
     // and ZDD classes.
 
-    const arc::pointer_type terminal_F(false);
-    const arc::pointer_type terminal_T(true);
+    const arc::uid_type terminal_F(false);
+    const arc::uid_type terminal_T(true);
 
     shared_levelized_file<node> x0x1_node_file;
 
@@ -80,10 +80,10 @@ go_bandit([]() {
         //          F T               F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
 
         shared_levelized_file<arc> in;
 
@@ -183,11 +183,11 @@ go_bandit([]() {
         //          /| |\                      / \
         //          FT FT                      F T
         */
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(2, 0);
-        const arc::pointer_type n3(2, 1);
-        const arc::pointer_type n4(3, 0);
-        const arc::pointer_type n5(3, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(2, 0);
+        const arc::uid_type n3(2, 1);
+        const arc::uid_type n4(3, 0);
+        const arc::uid_type n5(3, 1);
 
         shared_levelized_file<arc> in;
 
@@ -290,12 +290,12 @@ go_bandit([]() {
         //          F T T F           F  T F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
-        const arc::pointer_type n5(3, 0);
-        const arc::pointer_type n6(3, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
+        const arc::uid_type n5(3, 0);
+        const arc::uid_type n6(3, 1);
 
         shared_levelized_file<arc> in;
 
@@ -416,11 +416,11 @@ go_bandit([]() {
         //          F T               F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
-        const arc::pointer_type n5(3, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
+        const arc::uid_type n5(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -538,13 +538,13 @@ go_bandit([]() {
         //             F T                      F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(2, 2);
-        const arc::pointer_type n7(3, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(2, 2);
+        const arc::uid_type n7(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -676,12 +676,12 @@ go_bandit([]() {
         //          F T F T T F         F T T F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(2, 2);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(2, 2);
 
         shared_levelized_file<arc> in;
 
@@ -789,12 +789,12 @@ go_bandit([]() {
         //          T F T F F T         T F F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(2, 2);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(2, 2);
 
         shared_levelized_file<arc> in;
 
@@ -903,10 +903,10 @@ go_bandit([]() {
         //          F  T                F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
 
         shared_levelized_file<arc> in;
 
@@ -1006,11 +1006,11 @@ go_bandit([]() {
         //              F T                F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
-        const arc::pointer_type n5(3, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
+        const arc::uid_type n5(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -1123,11 +1123,11 @@ go_bandit([]() {
         //         F T T F            F T T F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
 
         shared_levelized_file<arc> in;
 
@@ -1227,10 +1227,10 @@ go_bandit([]() {
         //          F T                F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
 
         shared_levelized_file<arc> in;
 
@@ -1323,12 +1323,12 @@ go_bandit([]() {
         //     F T                 F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(3, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -1450,10 +1450,10 @@ go_bandit([]() {
         //          F T                F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
 
         shared_levelized_file<arc> in;
 
@@ -1531,15 +1531,15 @@ go_bandit([]() {
         //        F T               F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(3, 0);
-        const arc::pointer_type n7(3, 1);
-        const arc::pointer_type n8(3, 2);
-        const arc::pointer_type n9(4, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(3, 0);
+        const arc::uid_type n7(3, 1);
+        const arc::uid_type n8(3, 2);
+        const arc::uid_type n9(4, 0);
 
         shared_levelized_file<arc> in;
 
@@ -1677,12 +1677,12 @@ go_bandit([]() {
         //    T F F T T T          T F F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(3, 0);
-        const arc::pointer_type n5(3, 1);
-        const arc::pointer_type n6(3, 2);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(3, 0);
+        const arc::uid_type n5(3, 1);
+        const arc::uid_type n6(3, 2);
 
         shared_levelized_file<arc> in;
 
@@ -1799,7 +1799,7 @@ go_bandit([]() {
         //          F F
         */
 
-        const arc::pointer_type n1(0, 0);
+        const arc::uid_type n1(0, 0);
 
         shared_levelized_file<arc> in;
 
@@ -1858,8 +1858,8 @@ go_bandit([]() {
         //          T  T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -1918,7 +1918,7 @@ go_bandit([]() {
         //          F T               F T
         */
 
-        const arc::pointer_type n1(0, 0);
+        const arc::uid_type n1(0, 0);
 
         shared_levelized_file<arc> in;
 
@@ -1986,17 +1986,17 @@ go_bandit([]() {
         //         T  F   T         T  F F  T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(3, 0);
-        const arc::pointer_type n7(3, 1);
-        const arc::pointer_type n8(4, 0);
-        const arc::pointer_type n9(4, 1);
-        const arc::pointer_type n10(5, 0);
-        const arc::pointer_type n11(5, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(3, 0);
+        const arc::uid_type n7(3, 1);
+        const arc::uid_type n8(4, 0);
+        const arc::uid_type n9(4, 1);
+        const arc::uid_type n10(5, 0);
+        const arc::uid_type n11(5, 1);
 
         shared_levelized_file<arc> in;
 
@@ -2154,20 +2154,20 @@ go_bandit([]() {
         //             T  F   T                  T  F    F  T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(2, 2);
-        const arc::pointer_type n7(3, 0);
-        const arc::pointer_type n8(3, 1);
-        const arc::pointer_type n9(3, 2);
-        const arc::pointer_type n10(4, 0);
-        const arc::pointer_type n11(4, 1);
-        const arc::pointer_type n12(4, 2);
-        const arc::pointer_type n13(5, 0);
-        const arc::pointer_type n14(5, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(2, 2);
+        const arc::uid_type n7(3, 0);
+        const arc::uid_type n8(3, 1);
+        const arc::uid_type n9(3, 2);
+        const arc::uid_type n10(4, 0);
+        const arc::uid_type n11(4, 1);
+        const arc::uid_type n12(4, 2);
+        const arc::uid_type n13(5, 0);
+        const arc::uid_type n14(5, 1);
 
         shared_levelized_file<arc> in;
 
@@ -2357,14 +2357,14 @@ go_bandit([]() {
         //            F T                  F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(2, 2);
-        const arc::pointer_type n7(3, 0);
-        const arc::pointer_type n8(4, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(2, 2);
+        const arc::uid_type n7(3, 0);
+        const arc::uid_type n8(4, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2500,10 +2500,10 @@ go_bandit([]() {
         //     T T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2576,8 +2576,8 @@ go_bandit([]() {
         //          T  F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2647,11 +2647,11 @@ go_bandit([]() {
         //             F T                 F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(2, 0);
-        const arc::pointer_type n4(2, 1);
-        const arc::pointer_type n5(3, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(2, 0);
+        const arc::uid_type n4(2, 1);
+        const arc::uid_type n5(3, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2769,10 +2769,10 @@ go_bandit([]() {
         //                T F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2863,7 +2863,7 @@ go_bandit([]() {
         //          T F
         */
 
-        const arc::pointer_type n1(0, 0);
+        const arc::uid_type n1(0, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2922,8 +2922,8 @@ go_bandit([]() {
         //          F T                F T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -2990,8 +2990,8 @@ go_bandit([]() {
         //          F  F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
 
         shared_levelized_file<arc> in;
 
@@ -3050,7 +3050,7 @@ go_bandit([]() {
         //          F T               F T
         */
 
-        const arc::pointer_type n1(42, 0);
+        const arc::uid_type n1(42, 0);
 
         shared_levelized_file<arc> in;
 
@@ -3109,7 +3109,7 @@ go_bandit([]() {
         //          T T               T T
         */
 
-        const arc::pointer_type n1(12, 0);
+        const arc::uid_type n1(12, 0);
 
         shared_levelized_file<arc> in;
 
@@ -3178,17 +3178,17 @@ go_bandit([]() {
         //       F T T T             F T T T
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
-        const arc::pointer_type n5(2, 1);
-        const arc::pointer_type n6(3, 0);
-        const arc::pointer_type n7(3, 1);
-        const arc::pointer_type n8(4, 0);
-        const arc::pointer_type n9(4, 1);
-        const arc::pointer_type n10(5, 0);
-        const arc::pointer_type n11(5, 1);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
+        const arc::uid_type n5(2, 1);
+        const arc::uid_type n6(3, 0);
+        const arc::uid_type n7(3, 1);
+        const arc::uid_type n8(4, 0);
+        const arc::uid_type n9(4, 1);
+        const arc::uid_type n10(5, 0);
+        const arc::uid_type n11(5, 1);
 
         shared_levelized_file<arc> in;
 
@@ -3340,10 +3340,10 @@ go_bandit([]() {
         //       T F
         */
 
-        const arc::pointer_type n1(0, 0);
-        const arc::pointer_type n2(1, 0);
-        const arc::pointer_type n3(1, 1);
-        const arc::pointer_type n4(2, 0);
+        const arc::uid_type n1(0, 0);
+        const arc::uid_type n2(1, 0);
+        const arc::uid_type n3(1, 1);
+        const arc::uid_type n4(2, 0);
 
         shared_levelized_file<arc> in;
 

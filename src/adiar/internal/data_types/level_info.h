@@ -36,9 +36,8 @@ namespace adiar::internal
 
     /* ========================================== VARIABLES ===================================== */
   private:
-    level_type _level;
-
-    size_t _width;
+    level_type _level; // cppcheck-suppress [uninitMemberVar]
+    size_t _width;     // cppcheck-suppress [uninitMemberVar]
 
     /* ======================================== CONSTRUCTORS ==================================== */
   public:
@@ -78,6 +77,7 @@ namespace adiar::internal
     /// \brief Create a level_info for a variable and a certain width when using the identity
     ///        variable ordering.
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    explicit
     level_info(level_type level, size_t width)
       : _level(level)
       , _width(width)
@@ -179,7 +179,7 @@ namespace adiar::internal
     const level_type new_level =
       static_cast<level_type>(static_cast<signed_level_type>(li.level()) + levels);
 
-    return { new_level, li.width() };
+    return level_info(new_level, li.width());
   }
 }
 

@@ -6,7 +6,7 @@ go_bandit([]() {
 
     {
       node_ofstream nw(x0_nf);
-      nw << node(0, node::max_id, ptr_uint64(false), ptr_uint64(true));
+      nw << node(0, bdd::max_id, bdd::pointer_type(false), bdd::pointer_type(true));
     }
 
     bdd x0(x0_nf);
@@ -15,7 +15,7 @@ go_bandit([]() {
 
     {
       node_ofstream nw(x1_nf);
-      nw << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true));
+      nw << node(1, bdd::max_id, bdd::pointer_type(false), bdd::pointer_type(true));
     }
 
     bdd x1(x1_nf);
@@ -24,8 +24,8 @@ go_bandit([]() {
 
     {
       node_ofstream nw(x0_and_x1_nf);
-      nw << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true))
-         << node(0, node::max_id, ptr_uint64(false), ptr_uint64(1, ptr_uint64::max_id));
+      nw << node(1, bdd::max_id, bdd::pointer_type(false), bdd::pointer_type(true))
+         << node(0, bdd::max_id, bdd::pointer_type(false), bdd::pointer_type(1, bdd::max_id));
     }
 
     bdd x0_and_x1(x0_and_x1_nf);
@@ -51,11 +51,11 @@ go_bandit([]() {
 
     {
       arc_ofstream aw(x0_af);
-      aw.push_internal(arc{ ptr_uint64(0, 0), true, ptr_uint64(1, 0) });
+      aw.push_internal(arc{ bdd::uid_type(0, 0), true, bdd::pointer_type(1, 0) });
 
-      aw.push_terminal(arc{ ptr_uint64(0, 0), false, ptr_uint64(false) });
-      aw.push_terminal(arc{ ptr_uint64(1, 0), false, ptr_uint64(true) });
-      aw.push_terminal(arc{ ptr_uint64(1, 0), true, ptr_uint64(true) });
+      aw.push_terminal(arc{ bdd::uid_type(0, 0), false, bdd::pointer_type(false) });
+      aw.push_terminal(arc{ bdd::uid_type(1, 0), false, bdd::pointer_type(true) });
+      aw.push_terminal(arc{ bdd::uid_type(1, 0), true, bdd::pointer_type(true) });
 
       aw.push(level_info(0, 1u));
       aw.push(level_info(1, 1u));
@@ -227,8 +227,8 @@ go_bandit([]() {
           shared_levelized_file<bdd::node_type> other_nf;
           {
             node_ofstream nw(other_nf);
-            nw << node(1, node::max_id, ptr_uint64(false), ptr_uint64(true))
-               << node(0, node::max_id, ptr_uint64(false), ptr_uint64(1, ptr_uint64::max_id));
+            nw << node(1, bdd::max_id, bdd::pointer_type(false), bdd::pointer_type(true))
+               << node(0, bdd::max_id, bdd::pointer_type(false), bdd::pointer_type(1, bdd::max_id));
           }
           const bdd other(other_nf);
           AssertThat(x0_and_x1, Is().EqualTo(other));

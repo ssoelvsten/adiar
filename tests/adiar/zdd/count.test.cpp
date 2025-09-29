@@ -2,8 +2,8 @@
 
 go_bandit([]() {
   describe("adiar/zdd/count.cpp", [&]() {
-    ptr_uint64 terminal_T = ptr_uint64(true);
-    ptr_uint64 terminal_F = ptr_uint64(false);
+    zdd::pointer_type terminal_T = zdd::pointer_type(true);
+    zdd::pointer_type terminal_F = zdd::pointer_type(false);
 
     shared_levelized_file<zdd::node_type> zdd_1;
     /*
