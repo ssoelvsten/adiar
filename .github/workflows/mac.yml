@@ -1,4 +1,4 @@
-name: macOS
+name: 'MacOS'
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build_test:
-    name: 'Build + Test (Mac OS, ${{matrix.cc.cc}}@${{matrix.cc.v || matrix.cc.xcode}})'
+    name: 'Build + Test (${{matrix.cc.cc}}@${{matrix.cc.v || matrix.cc.xcode}})'
     runs-on: ${{ matrix.os }}
 
     strategy:

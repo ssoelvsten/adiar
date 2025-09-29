@@ -1,4 +1,4 @@
-name: windows
+name: 'Windows'
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build_test:
-    name: 'Build + Test (Windows)'
+    name: 'Build + Test'
     runs-on: windows-latest
 
     strategy:
