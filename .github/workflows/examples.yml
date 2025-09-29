@@ -3,34 +3,19 @@ name: examples
 on:
   push:
     branches: [ main ]
+    paths: [ 'examples/**', 'src/adiar/**' ]
   pull_request:
     branches: [ main ]
+    paths: [ 'examples/**', 'src/adiar/**' ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  skip_duplicate:
-    name: 'Skip Job?'
-    continue-on-error: true
-    runs-on: ubuntu-latest
-
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          paths: '["src/adiar/**", "examples/**"]'
-
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-
   run-minor:
     name: 'Example: ${{ matrix.name }}'
     runs-on: ubuntu-latest
-
-    needs: skip_duplicate
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
 
     strategy:
       fail-fast: false
@@ -63,13 +48,9 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       run: ./examples/${{ matrix.target }} -M 1024
 
-
   run-queens:
     name: 'Example: Queens'
     runs-on: ubuntu-latest
-
-    needs: skip_duplicate
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
 
     strategy:
       fail-fast: false
@@ -96,21 +77,3 @@ jobs:
     - name: Run | queens
       working-directory: ${{runner.workspace}}/build
       run: for n in ${{ matrix.N }}; do ./examples/adiar_example-queens -N $n -M 1024; done
-
-  run-dummy:
-    name: 'Example: ${{ matrix.name }}'
-    runs-on: ubuntu-latest
-
-    needs: skip_duplicate
-    if: ${{ needs.skip_duplicate.outputs.should_skip == 'true' }}
-
-    strategy:
-      matrix:
-        include:
-          - name: 'Queens'
-
-    steps:
-    - name: Echo skip
-      run: |
-        echo "Running examples is skipped"
-

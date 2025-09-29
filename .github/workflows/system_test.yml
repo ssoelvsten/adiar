@@ -1,8 +1,11 @@
 name: 'system test'
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
+    paths: [ 'src/adiar/**', '.github/workflow/system_test.yml' ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,26 +23,11 @@ jobs:
     outputs:
       branch: ${{ steps.identify.outputs.branch }}
 
-  skip_duplicate:
-    name: 'Skip Job?'
-    continue-on-error: true
-    runs-on: ubuntu-latest
-
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          paths: '["src/adiar/**", ".github/workflows/system_test.yml"]'
-
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-
   run-n:
     name: 'System Test: ${{ matrix.name }}'
     runs-on: ubuntu-latest
 
-    needs: [fetch-branch, skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' && github.event.pull_request.draft != true }}
+    needs: [fetch-branch]
 
     strategy:
       fail-fast: false
@@ -106,8 +94,7 @@ jobs:
     name: 'System Test: Picotrav (${{ matrix.name }})'
     runs-on: ubuntu-latest
 
-    needs: [fetch-branch, skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
+    needs: [fetch-branch]
 
     strategy:
       fail-fast: false
@@ -166,26 +153,3 @@ jobs:
             build/src/adiar_picotrav_bdd -f ../epfl/${{ matrix.name }}/$spec.blif -f $opt -o ${{ matrix.order }} -M 1024 ; \
           done ; \
         done
-
-  run-dummy:
-    name: 'System Test: ${{ matrix.name }}'
-    runs-on: ubuntu-latest
-
-    needs: [fetch-branch, skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip == 'true' || github.event.pull_request.draft == true }}
-
-    strategy:
-      matrix:
-        include:
-          - name: 'Knights Tour (ZDD)'
-          - name: 'Queens (BDD)'
-          - name: 'Queens (ZDD)'
-          - name: 'Tic-Tac-Toe (BDD)'
-          - name: 'Tic-Tac-Toe (ZDD)'
-          - name: 'Picotrav (arithmetic)'
-          - name: 'Picotrav (random_control)'
-
-    steps:
-    - name: Echo skip
-      run: |
-        echo "Running benchmark is skipped"
