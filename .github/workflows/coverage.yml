@@ -5,28 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+    paths: [ 'src/adiar/**', 'tests/**' ]
 
 jobs:
-  skip_duplicate:
-    name: 'Skip Job?'
-    continue-on-error: true
-    runs-on: ubuntu-latest
-
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          paths: '["src/adiar/**", "tests/**"]'
-
-    outputs:
-      should_skip: ${{ github.event_name == 'pull_request' && steps.skip_check.outputs.should_skip == 'true' }}
-
   test:
     name: 'Build + Test (incl. code coverage)'
     runs-on: ubuntu-latest
-
-    needs: skip_duplicate
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' && (github.event.type != 'PullRequestEvent' || github.event.pull_request.draft != true) }}
 
     steps:
     - uses: actions/checkout@v5
@@ -67,15 +51,3 @@ jobs:
       working-directory: ${{runner.workspace}}
       if: always()
       run: bash <(curl -s https://codecov.io/bash) -f coverage.info -t ${{ secrets.CODECOV_TOKEN }} || echo "Codecov did not collect coverage reports"
-
-  test_dummy:
-    name: 'Unit test (incl. code coverage)'
-    runs-on: ubuntu-latest
-
-    needs: skip_duplicate
-    if: ${{ needs.skip_duplicate.outputs.should_skip == 'true' || (github.event.type == 'PullRequestEvent' && github.event.pull_request.draft == true) }}
-
-    steps:
-    - name: Echo skip
-      run: |
-        echo "Running unit tests is skipped"

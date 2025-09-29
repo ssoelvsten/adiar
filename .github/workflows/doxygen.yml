@@ -2,11 +2,11 @@ name: documentation
 
 on:
   push:
-    branches:
-    - main
+    branches: [ main ]
+    paths: [ 'docs/**', 'examples/**', 'src/adiar/*.h' ]
   pull_request:
-    branches:
-    - main
+    branches: [ main ]
+    paths: [ 'docs/**', 'examples/**', 'src/adiar/*.h' ]
 
 jobs:
   run_doxygen:

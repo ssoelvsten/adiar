@@ -3,6 +3,7 @@ name: 'benchmark (pull request)'
 on:
   pull_request:
     branches: [ main ]
+    paths: [ 'src/adiar/**' ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,26 +32,11 @@ jobs:
     outputs:
       remote: ${{ steps.identify.outputs.remote }}
 
-  skip_duplicate:
-    name: 'Skip Job?'
-    continue-on-error: true
-    runs-on: ubuntu-latest
-
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          paths: '["src/adiar/**"]'
-
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-
   run_picotrav:
     name: 'Performance Regression: Picotrav ${{ matrix.circuit }}'
     runs-on: ubuntu-latest
 
-    needs: [fetch-branch, fetch-remote, skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
+    needs: [fetch-branch, fetch-remote]
 
     strategy:
       fail-fast: false
@@ -110,8 +96,7 @@ jobs:
     name: 'Performance Regression: QBF ${{ matrix.category }}/${{ matrix.circuit }}'
     runs-on: ubuntu-latest
 
-    needs: [fetch-branch, fetch-remote, skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
+    needs: [fetch-branch, fetch-remote]
 
     strategy:
       fail-fast: false
@@ -177,8 +162,7 @@ jobs:
     name: 'Performance Regression: ${{ matrix.N }}-Queens'
     runs-on: ubuntu-latest
 
-    needs: [fetch-branch, fetch-remote, skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip != 'true' }}
+    needs: [fetch-branch, fetch-remote]
 
     strategy:
       fail-fast: false
@@ -231,32 +215,3 @@ jobs:
         with:
           message-path: ./regression_adiar.out
           message-id: 'benchmark_queens_${{ matrix.N }}'
-
-  run_dummy:
-    name: 'Performance Regression: ${{ matrix.title }}'
-    runs-on: ubuntu-latest
-
-    needs: [skip_duplicate]
-    if: ${{ needs.skip_duplicate.outputs.should_skip == 'true' }}
-
-    strategy:
-      matrix:
-        include:
-          - title: 'Picotrav adder'
-          - title: 'Picotrav arbiter'
-          - title: 'Picotrav mem_ctrl'
-          - title: '12-Queens'
-          - title: '14-Queens'
-          - title: 'QBF breakthrough/3x4_19_bwnib'
-          - title: 'QBF breakthrough_dual/3x6_10_bwnib'
-          - title: 'QBF connect4/6x6_11_connect4_bwnib'
-          - title: 'QBF domineering/5x5_13_bwnib'
-          - title: 'QBF ep/8x8_7_e-8-1_p-3-4_bwnib'
-          - title: 'QBF ep_dual/8x8_6_e-8-1_p-2-3_bwnib'
-          - title: 'QBF hex/hein_08_5x5-11_bwnib'
-          - title: 'QBF httt/4x4_9_tippy_bwnib'
-
-    steps:
-    - name: Echo skip
-      run: |
-        echo "Running benchmarks is skipped"
