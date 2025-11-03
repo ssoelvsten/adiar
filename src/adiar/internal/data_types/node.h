@@ -492,7 +492,7 @@ namespace adiar::internal
   inline node
   cnot(const node& n, const bool negate)
   {
-    const node::uid_type     n_uid(cnot(n.uid().as_ptr(), negate));
+    const node::uid_type n_uid(cnot(n.uid().as_ptr(), negate));
     const node::pointer_type n_low(cnot(n.low(), negate));
     const node::pointer_type n_high(cnot(n.high(), negate));
 
@@ -503,7 +503,7 @@ namespace adiar::internal
   inline node
   shift_replace(const node& n, const node::signed_label_type levels)
   {
-    const node::uid_type     n_uid(shift_replace(n.uid().as_ptr(), levels));
+    const node::uid_type n_uid(shift_replace(n.uid().as_ptr(), levels));
     const node::pointer_type n_low(shift_replace(n.low(), levels));
     const node::pointer_type n_high(shift_replace(n.high(), levels));
 

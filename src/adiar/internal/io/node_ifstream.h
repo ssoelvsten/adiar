@@ -116,7 +116,7 @@ namespace adiar::internal
     seek(const node::pointer_type& p)
     {
       const node::pointer_type p_unshifted = shift_replace(p, -this->_shift);
-      const node n_raw                     = parent_type::_ifstreams[0].seek(std::move(p_unshifted));
+      const node n_raw = parent_type::_ifstreams[0].seek(std::move(p_unshifted));
       return shift_replace(cnot(std::move(n_raw), this->_negate), this->_shift);
     }
   };

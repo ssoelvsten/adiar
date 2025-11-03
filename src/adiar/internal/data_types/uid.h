@@ -81,8 +81,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Constructor for a uid from a (non-NIL) pointer.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit
-    __uid(const pointer_type& p)
+    explicit __uid(const pointer_type& p)
       : pointer_type(essential(p))
     {
       adiar_assert(!p.is_nil(), "UID must be created from non-nil value");
@@ -97,8 +96,8 @@ namespace adiar::internal
     static inline __uid
     unsafe(const pointer_type& p)
     {
-      adiar_assert(!p.is_nil(),                         "UID cannot be nil");
-      adiar_assert(!p.is_flagged(),                     "UID cannot be flagged");
+      adiar_assert(!p.is_nil(), "UID cannot be nil");
+      adiar_assert(!p.is_flagged(), "UID cannot be flagged");
       adiar_assert(p.is_terminal() || p.out_idx() == 0, "UID has no out-index");
 
       // Evil type hack to reinterpret `p` as a `__uid<...>` (Thanks, Quake III)
@@ -125,8 +124,8 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Constructor for a pointer to an internal node (label, id).
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit
-    __uid(const typename pointer_type::label_type label, const typename pointer_type::id_type id)
+    explicit __uid(const typename pointer_type::label_type label,
+                   const typename pointer_type::id_type id)
       : pointer_type(label, id)
     {}
 
@@ -140,8 +139,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Constructor for a uid of a terminal node (v).
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit
-    __uid(typename pointer_type::terminal_type v)
+    explicit __uid(typename pointer_type::terminal_type v)
       : pointer_type(v)
     {}
 
@@ -157,6 +155,7 @@ namespace adiar::internal
     {
       return this->as_ptr().is_terminal();
     }
+
     // cppcheck-suppress-end
 
     //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,6 +167,7 @@ namespace adiar::internal
     {
       return unsafe(!this->as_ptr());
     }
+
     // cppcheck-suppress-end
 
     /* ==================================== POINTER CONVERSION ================================== */
@@ -197,7 +197,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Negates the content of `p` if it is a terminal and the `negate` flag is set to true.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template<typename Uid>
+  template <typename Uid>
   inline Uid
   cnot(const Uid& u, const bool negate)
   {
@@ -211,7 +211,7 @@ namespace adiar::internal
   ///
   /// \pre `u.is_node()`
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template<typename Uid>
+  template <typename Uid>
   inline Uid
   replace(const Uid& u, const typename Uid::level_type new_level)
   {
@@ -223,7 +223,7 @@ namespace adiar::internal
   ///
   /// \pre `u.is_node()`
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template<typename Uid>
+  template <typename Uid>
   inline Uid
   essential_replace(const Uid& u, const typename Uid::level_type new_level)
   {
@@ -233,7 +233,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Shift the level by given amount.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template<typename Uid>
+  template <typename Uid>
   inline Uid
   shift_replace(const Uid& u, const typename Uid::signed_level_type levels)
   {
@@ -254,7 +254,8 @@ namespace adiar::internal
     // Based on the bit-layout, we can do this much faster than decode and
     // re-encode all three values. We especially can abuse the fact, that
     // the uid already has 0's where the `out_idx` has to go.
-    return pointer_type(this->_raw | (static_cast<pointer_type::raw_type>(out_idx) << pointer_type::data_shift));
+    return pointer_type(
+      this->_raw | (static_cast<pointer_type::raw_type>(out_idx) << pointer_type::data_shift));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
