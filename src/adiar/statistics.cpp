@@ -9,7 +9,7 @@
 #include <adiar/internal/algorithms/intercut.h>
 #include <adiar/internal/algorithms/nested_sweeping.h>
 #include <adiar/internal/algorithms/pred.h>
-#include <adiar/internal/algorithms/prod2.h>
+#include <adiar/internal/algorithms/prod2b.h>
 #include <adiar/internal/algorithms/prod2u.h>
 #include <adiar/internal/algorithms/quantify.h>
 #include <adiar/internal/algorithms/reduce.h>
@@ -44,7 +44,7 @@ namespace adiar
              internal::stats_equality,
              internal::stats_intercut,
              internal::stats_optmin,
-             internal::stats_prod2,
+             internal::stats_prod2b,
              internal::stats_prod2u,
              stats_prod3,
              internal::stats_quantify,
@@ -74,7 +74,7 @@ namespace adiar
     internal::stats_equality = {};
     internal::stats_intercut = {};
     internal::stats_optmin   = {};
-    internal::stats_prod2    = {};
+    internal::stats_prod2b   = {};
     stats_prod3              = {};
     internal::stats_quantify = {};
     internal::stats_select   = {};
@@ -401,14 +401,14 @@ namespace adiar
   }
 
   void
-  __printstat_prod2(std::ostream& o)
+  __printstat_prod2b(std::ostream& o)
   {
-    uintwide total_runs = internal::stats_prod2.trivial_file
-      + internal::stats_prod2.trivial_terminal + internal::stats_prod2.ra.runs
-      + internal::stats_prod2.pq.runs;
+    uintwide total_runs = internal::stats_prod2b.trivial_file
+      + internal::stats_prod2b.trivial_terminal + internal::stats_prod2b.ra.runs
+      + internal::stats_prod2b.pq.runs;
 
-    o << indent << bold_on << label << "Product Construction (2-ary) <binary>" << bold_off << total_runs
-      << endl;
+    o << indent << bold_on << label << "Product Construction (2-ary) <binary>" << bold_off
+      << total_runs << endl;
 
     indent_level++;
     if (total_runs == 0u) {
@@ -418,26 +418,26 @@ namespace adiar
     }
 
     o << indent << bold_on << label << "case [same file]" << bold_off
-      << internal::stats_prod2.trivial_file << " = "
-      << internal::percent_frac(internal::stats_prod2.trivial_file, total_runs) << percent << endl;
+      << internal::stats_prod2b.trivial_file << " = "
+      << internal::percent_frac(internal::stats_prod2b.trivial_file, total_runs) << percent << endl;
 
     o << indent << endl;
 
     o << indent << bold_on << label << "case [terminal]" << bold_off
-      << internal::stats_prod2.trivial_terminal << " = "
-      << internal::percent_frac(internal::stats_prod2.trivial_terminal, total_runs) << percent
+      << internal::stats_prod2b.trivial_terminal << " = "
+      << internal::percent_frac(internal::stats_prod2b.trivial_terminal, total_runs) << percent
       << endl;
 
     o << indent << endl;
 
     o << indent << bold_on << label << "case [random access]" << bold_off
-      << internal::stats_prod2.ra.runs << " = "
-      << internal::percent_frac(internal::stats_prod2.ra.runs, total_runs) << percent << endl;
-    if (internal::stats_prod2.ra.runs > 0u) {
+      << internal::stats_prod2b.ra.runs << " = "
+      << internal::percent_frac(internal::stats_prod2b.ra.runs, total_runs) << percent << endl;
+    if (internal::stats_prod2b.ra.runs > 0u) {
       indent_level++;
-      o << indent << label << "used narrowest:" << internal::stats_prod2.ra.used_narrowest << " = "
-        << internal::percent_frac(internal::stats_prod2.ra.used_narrowest,
-                                  internal::stats_prod2.ra.runs)
+      o << indent << label << "used narrowest:" << internal::stats_prod2b.ra.used_narrowest << " = "
+        << internal::percent_frac(internal::stats_prod2b.ra.used_narrowest,
+                                  internal::stats_prod2b.ra.runs)
         << percent << endl;
 
       o << indent << endl;
@@ -445,13 +445,13 @@ namespace adiar
       o << indent << bold_on << label << "width:" << bold_off << endl;
       indent_level++;
 
-      o << indent << label << "minimum:" << internal::stats_prod2.ra.min_width << endl;
+      o << indent << label << "minimum:" << internal::stats_prod2b.ra.min_width << endl;
 
-      o << indent << label << "maximum:" << internal::stats_prod2.ra.max_width << endl;
+      o << indent << label << "maximum:" << internal::stats_prod2b.ra.max_width << endl;
 
-      o << indent << label << "accumulated:" << internal::stats_prod2.ra.acc_width << " (avg = "
-        << internal::frac(internal::stats_prod2.ra.acc_width, internal::stats_prod2.ra.runs) << ")"
-        << endl;
+      o << indent << label << "accumulated:" << internal::stats_prod2b.ra.acc_width << " (avg = "
+        << internal::frac(internal::stats_prod2b.ra.acc_width, internal::stats_prod2b.ra.runs)
+        << ")" << endl;
 
       indent_level -= 2;
     }
@@ -459,17 +459,17 @@ namespace adiar
     o << indent << endl;
 
     o << indent << bold_on << label << "case [priority queue]" << bold_off
-      << internal::stats_prod2.pq.runs << " = "
-      << internal::percent_frac(internal::stats_prod2.pq.runs, total_runs) << percent << endl;
-    if (internal::stats_prod2.pq.runs > 0u) {
+      << internal::stats_prod2b.pq.runs << " = "
+      << internal::percent_frac(internal::stats_prod2b.pq.runs, total_runs) << percent << endl;
+    if (internal::stats_prod2b.pq.runs > 0u) {
       indent_level++;
-      o << indent << label << "pq2 elements:" << internal::stats_prod2.pq.pq_2_elems << endl;
+      o << indent << label << "pq2 elements:" << internal::stats_prod2b.pq.pq_2_elems << endl;
 
       indent_level--;
     }
 
     o << indent << endl;
-    __printstat_alg_base(o, internal::stats_prod2);
+    __printstat_alg_base(o, internal::stats_prod2b);
     indent_level--;
   }
 
@@ -1099,7 +1099,7 @@ namespace adiar
     __printstat_optmin(o);
     o << endl;
 
-    __printstat_prod2(o);
+    __printstat_prod2b(o);
     o << endl;
 
     __printstat_prod2u(o);

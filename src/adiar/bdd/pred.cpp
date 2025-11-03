@@ -1,6 +1,7 @@
 #include <adiar/bdd.h>
 
 #include <adiar/internal/algorithms/pred.h>
+#include <adiar/internal/dd_func.h>
 #include <adiar/internal/io/node_ifstream.h>
 
 namespace adiar

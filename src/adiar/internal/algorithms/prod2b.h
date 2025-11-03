@@ -1,5 +1,5 @@
-#ifndef ADIAR_INTERNAL_ALGORITHMS_PROD2_H
-#define ADIAR_INTERNAL_ALGORITHMS_PROD2_H
+#ifndef ADIAR_INTERNAL_ALGORITHMS_PROD2B_H
+#define ADIAR_INTERNAL_ALGORITHMS_PROD2B_H
 
 #include <variant>
 
@@ -42,16 +42,16 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// Struct to hold statistics
-  extern statistics::prod2_t stats_prod2;
+  extern statistics::prod2b_t stats_prod2b;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Data structures
   template <uint8_t nodes_carried>
-  using prod2_request = request_data<2, with_parent, nodes_carried>;
+  using prod2b_request = request_data<2, with_parent, nodes_carried>;
 
   template <size_t look_ahead, memory_mode mem_mode>
-  using prod_priority_queue_t = levelized_node_priority_queue<prod2_request<0>,
-                                                              request_data_lt<prod2_request<0>>,
+  using prod_priority_queue_t = levelized_node_priority_queue<prod2b_request<0>,
+                                                              request_data_lt<prod2b_request<0>>,
                                                               look_ahead,
                                                               mem_mode,
                                                               2,
@@ -59,8 +59,8 @@ namespace adiar::internal
 
   template <size_t look_ahead, memory_mode mem_mode>
   using prod_priority_queue_1_t =
-    levelized_node_priority_queue<prod2_request<0>,
-                                  request_data_first_lt<prod2_request<0>>,
+    levelized_node_priority_queue<prod2b_request<0>,
+                                  request_data_first_lt<prod2b_request<0>>,
                                   look_ahead,
                                   mem_mode,
                                   2,
@@ -68,18 +68,18 @@ namespace adiar::internal
 
   template <memory_mode mem_mode>
   using prod_priority_queue_2_t =
-    priority_queue<mem_mode, prod2_request<1>, request_data_second_lt<prod2_request<1>>>;
+    priority_queue<mem_mode, prod2b_request<1>, request_data_second_lt<prod2b_request<1>>>;
 
   // TODO: turn into 'tuple<tuple<node::pointer_type>>'
-  struct prod2_rec_output
+  struct prod2b_rec_output
   {
     tuple<dd::pointer_type> low;
     tuple<dd::pointer_type> high;
   };
 
-  using prod2_rec_skipto = tuple<dd::pointer_type>;
+  using prod2b_rec_skipto = tuple<dd::pointer_type>;
 
-  using prod2_rec = std::variant<prod2_rec_output, prod2_rec_skipto>;
+  using prod2b_rec = std::variant<prod2b_rec_output, prod2b_rec_skipto>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Helper functions
@@ -94,11 +94,11 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy, typename PriorityQueue>
   inline void
-  __prod2_recurse_out(PriorityQueue& pq,
-                      arc_ofstream& aw,
-                      const Policy& policy,
-                      const ptr_uint64& source,
-                      const typename PriorityQueue::value_type::target_t& target)
+  __prod2b_recurse_out(PriorityQueue& pq,
+                       arc_ofstream& aw,
+                       const Policy& policy,
+                       const ptr_uint64& source,
+                       const typename PriorityQueue::value_type::target_t& target)
   {
     if (target[0].is_terminal() && target[1].is_terminal()) {
       const arc out_arc = { source, policy(target[0], target[1]) };
@@ -115,15 +115,15 @@ namespace adiar::internal
   /// \brief Policy for `request_foreach` for an arc to an internal node.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  struct __prod2_recurse_in__output_node
+  struct __prod2b_recurse_in__output_node
   {
   private:
     arc_ofstream& _aw;
     const typename Policy::node_type::uid_type& _out_uid;
 
   public:
-    __prod2_recurse_in__output_node(arc_ofstream& aw,
-                                    const typename Policy::node_type::uid_type& out_uid)
+    __prod2b_recurse_in__output_node(arc_ofstream& aw,
+                                     const typename Policy::node_type::uid_type& out_uid)
       : _aw(aw)
       , _out_uid(out_uid)
     {}
@@ -143,14 +143,14 @@ namespace adiar::internal
   /// \brief Policy for `request_foreach` for an arc to a terminal.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Pointer>
-  struct __prod2_recurse_in__output_terminal
+  struct __prod2b_recurse_in__output_terminal
   {
   private:
     arc_ofstream& _aw;
     const Pointer& _out_terminal;
 
   public:
-    __prod2_recurse_in__output_terminal(arc_ofstream& aw, const Pointer& out_terminal)
+    __prod2b_recurse_in__output_terminal(arc_ofstream& aw, const Pointer& out_terminal)
       : _aw(aw)
       , _out_terminal(out_terminal)
     {}
@@ -168,14 +168,14 @@ namespace adiar::internal
   ///        an internal node.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename PriorityQueue, typename Target>
-  struct __prod2_recurse_in__forward
+  struct __prod2b_recurse_in__forward
   {
   private:
     PriorityQueue& _pq;
     const Target& _t;
 
   public:
-    __prod2_recurse_in__forward(PriorityQueue& pq, const Target& t)
+    __prod2b_recurse_in__forward(PriorityQueue& pq, const Target& t)
       : _pq(pq)
       , _t(t)
     {}
@@ -193,7 +193,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   inline shared_levelized_file<node>
-  __prod2_terminal(const tuple<typename Policy::pointer_type>& rp, const Policy& policy)
+  __prod2b_terminal(const tuple<typename Policy::pointer_type>& rp, const Policy& policy)
   {
     return build_terminal<Policy>(policy(rp[0], rp[1]).value());
   }
@@ -201,15 +201,15 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief   Common logic for reconstructing nodes forwarded across a level.
   ///
-  /// \details The policy for `prod2` should provide a `merge` function which. Inherit from this
+  /// \details The policy for `prod2b` should provide a `merge` function which. Inherit from this
   ///          class, if you can guarantee all requests are to pairs of nodes on the same level.
   ///
   /// \pre All requests are assumed to only be for nodes on the same level
   ///
-  /// \see prod2_mixed_level_merger
+  /// \see prod2b_mixed_level_merger
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename DdPolicy>
-  class prod2_same_level_merger
+  class prod2b_same_level_merger
   {
   public:
     template <typename Request>
@@ -229,15 +229,15 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief   Logic for reconstructing nodes forwarded across a level.
   ///
-  /// \details The policy for `prod2` should provide a `merge` function which. Inherit from this
+  /// \details The policy for `prod2b` should provide a `merge` function which. Inherit from this
   ///          class, if you cannot guarantee all requests are to pairs of nodes on the same level.
   ///
   /// \pre Requests may be for nodes on different levels.
   ///
-  /// \see prod2_same_level_merger
+  /// \see prod2b_same_level_merger
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename DdPolicy>
-  class prod2_mixed_level_merger
+  class prod2b_mixed_level_merger
   {
   public:
     template <typename Request>
@@ -262,7 +262,7 @@ namespace adiar::internal
 
         return { pair_0, pair_1 };
       } else {
-        return prod2_same_level_merger<DdPolicy>::merge(r, t_seek, v0, v1);
+        return prod2b_same_level_merger<DdPolicy>::merge(r, t_seek, v0, v1);
       }
     }
   };
@@ -270,18 +270,18 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief 2-ary Product Construction Algorithm where Random Access is used to get nodes from the
   ///        one of the two decision diagrams; this removes the need for the secondary priority
-  ///        queue in `__prod2_pq`.
+  ///        queue in `__prod2b_pq`.
   ///
   /// \pre `in_ra` is the input to random access
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy, typename PriorityQueue_1>
   typename Policy::__dd_type
-  __prod2_ra(const exec_policy& ep,
-             const typename Policy::dd_type& in_pq,
-             const typename Policy::dd_type& in_ra,
-             Policy& policy,
-             const size_t pq_memory,
-             const size_t max_pq_size)
+  __prod2b_ra(const exec_policy& ep,
+              const typename Policy::dd_type& in_pq,
+              const typename Policy::dd_type& in_ra,
+              Policy& policy,
+              const size_t pq_memory,
+              const size_t max_pq_size)
   {
     constexpr size_t pq_idx = 0;
     constexpr size_t ra_idx = 1;
@@ -297,7 +297,7 @@ namespace adiar::internal
     node v_pq = in_nodes_pq.pull();
 
     // Set up cross-level priority queue
-    PriorityQueue_1 prod_pq({ in_pq, in_ra }, pq_memory, max_pq_size, stats_prod2.lpq);
+    PriorityQueue_1 prod_pq({ in_pq, in_ra }, pq_memory, max_pq_size, stats_prod2b.lpq);
     prod_pq.push({ { v_pq.uid(), in_nodes_ra.root() }, {}, { ptr_uint64::nil() } });
     // TODO: Allow using 'Policy::no_skip' when pushing; the ptr_uint64::nil() above breaks this!
 
@@ -319,7 +319,7 @@ namespace adiar::internal
 
       // Process all requests for this level
       while (!prod_pq.empty_level()) {
-        const prod2_request<0> req = prod_pq.top();
+        const prod2b_request<0> req = prod_pq.top();
 
         // Seek request partially in stream
         if (req.target[pq_idx].is_node() && req.target[pq_idx].label() == out_label) {
@@ -347,34 +347,34 @@ namespace adiar::internal
                                                                   children_ra[true] };
 
         // Obtain new recursion targets
-        const prod2_rec rec_res = policy.resolve_request(rec_pair_0, rec_pair_1);
+        const prod2b_rec rec_res = policy.resolve_request(rec_pair_0, rec_pair_1);
 
         // Forward recursion targets
-        if (Policy::no_skip || std::holds_alternative<prod2_rec_output>(rec_res)) {
-          const prod2_rec_output r = std::get<prod2_rec_output>(rec_res);
+        if (Policy::no_skip || std::holds_alternative<prod2b_rec_output>(rec_res)) {
+          const prod2b_rec_output r = std::get<prod2b_rec_output>(rec_res);
 
           adiar_assert(out_id < Policy::max_id, "Has run out of ids");
           const node::uid_type out_uid(out_label, out_id++);
 
-          __prod2_recurse_out(prod_pq, aw, policy, out_uid.as_ptr(false), r.low);
-          __prod2_recurse_out(prod_pq, aw, policy, out_uid.as_ptr(true), r.high);
+          __prod2b_recurse_out(prod_pq, aw, policy, out_uid.as_ptr(false), r.low);
+          __prod2b_recurse_out(prod_pq, aw, policy, out_uid.as_ptr(true), r.high);
 
-          const __prod2_recurse_in__output_node<Policy> handler(aw, out_uid);
+          const __prod2b_recurse_in__output_node<Policy> handler(aw, out_uid);
           request_foreach(prod_pq, req.target, handler);
 
-        } else { // std::holds_alternative<prod2_rec_skipto>(root_rec)
-          const prod2_rec_skipto r = std::get<prod2_rec_skipto>(rec_res);
+        } else { // std::holds_alternative<prod2b_rec_skipto>(root_rec)
+          const prod2b_rec_skipto r = std::get<prod2b_rec_skipto>(rec_res);
           if (r[0].is_terminal() && r[1].is_terminal()) {
             if (req.data.source.is_nil()) {
               // Skipped in both DAGs all the way from the root until a pair of terminals.
-              return __prod2_terminal<Policy>(r, policy);
+              return __prod2b_terminal<Policy>(r, policy);
             }
 
             const typename Policy::pointer_type result = policy(r[0], r[1]);
-            const __prod2_recurse_in__output_terminal handler(aw, result);
+            const __prod2b_recurse_in__output_terminal handler(aw, result);
             request_foreach(prod_pq, req.target, handler);
           } else {
-            const __prod2_recurse_in__forward handler(prod_pq, r);
+            const __prod2b_recurse_in__forward handler(prod_pq, r);
             request_foreach(prod_pq, req.target, handler);
           }
         }
@@ -399,14 +399,14 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy, typename PriorityQueue_1, typename PriorityQueue_2>
   typename Policy::__dd_type
-  __prod2_pq(const exec_policy& ep,
-             const typename Policy::dd_type& in_0,
-             const typename Policy::dd_type& in_1,
-             Policy& policy,
-             const size_t pq_1_memory,
-             const size_t max_pq_1_size,
-             const size_t pq_2_memory,
-             const size_t max_pq_2_size)
+  __prod2b_pq(const exec_policy& ep,
+              const typename Policy::dd_type& in_0,
+              const typename Policy::dd_type& in_1,
+              Policy& policy,
+              const size_t pq_1_memory,
+              const size_t max_pq_1_size,
+              const size_t pq_2_memory,
+              const size_t max_pq_2_size)
   {
     // Set up output
     shared_levelized_file<arc> out_arcs;
@@ -422,7 +422,7 @@ namespace adiar::internal
     node v1 = in_nodes_1.pull();
 
     // Set up cross-level priority queue
-    PriorityQueue_1 prod_pq_1({ in_0, in_1 }, pq_1_memory, max_pq_1_size, stats_prod2.lpq);
+    PriorityQueue_1 prod_pq_1({ in_0, in_1 }, pq_1_memory, max_pq_1_size, stats_prod2b.lpq);
     prod_pq_1.push({ { v0.uid(), v1.uid() }, {}, { ptr_uint64::nil() } });
     // TODO: Allow using 'Policy::no_skip' when pushing; the ptr_uint64::nil() above breaks this!
 
@@ -444,7 +444,7 @@ namespace adiar::internal
 
       // Process all requests for this level
       while (!prod_pq_1.empty_level() || !prod_pq_2.empty()) {
-        prod2_request<1> req;
+        prod2b_request<1> req;
 
         // Merge requests from prod_pq_1 or prod_pq_2
         if (prod_pq_1.can_pull()
@@ -478,7 +478,7 @@ namespace adiar::internal
 
           while (prod_pq_1.can_pull() && prod_pq_1.top().target == req.target) {
 #ifdef ADIAR_STATS
-            stats_prod2.pq.pq_2_elems += 1u;
+            stats_prod2b.pq.pq_2_elems += 1u;
 #endif
             prod_pq_2.push({ req.target, { children }, prod_pq_1.pull().data });
           }
@@ -496,34 +496,34 @@ namespace adiar::internal
                                                                   children[1][true] };
 
         // Obtain new recursion targets
-        const prod2_rec rec_res = policy.resolve_request(rec_pair_0, rec_pair_1);
+        const prod2b_rec rec_res = policy.resolve_request(rec_pair_0, rec_pair_1);
 
         // Forward recursion targets
-        if (Policy::no_skip || std::holds_alternative<prod2_rec_output>(rec_res)) {
-          const prod2_rec_output r = std::get<prod2_rec_output>(rec_res);
+        if (Policy::no_skip || std::holds_alternative<prod2b_rec_output>(rec_res)) {
+          const prod2b_rec_output r = std::get<prod2b_rec_output>(rec_res);
 
           adiar_assert(out_id < Policy::max_id, "Has run out of ids");
           const node::uid_type out_uid(out_label, out_id++);
 
-          __prod2_recurse_out(prod_pq_1, aw, policy, out_uid.as_ptr(false), r.low);
-          __prod2_recurse_out(prod_pq_1, aw, policy, out_uid.as_ptr(true), r.high);
+          __prod2b_recurse_out(prod_pq_1, aw, policy, out_uid.as_ptr(false), r.low);
+          __prod2b_recurse_out(prod_pq_1, aw, policy, out_uid.as_ptr(true), r.high);
 
-          const __prod2_recurse_in__output_node<Policy> handler(aw, out_uid);
+          const __prod2b_recurse_in__output_node<Policy> handler(aw, out_uid);
           request_foreach(prod_pq_1, prod_pq_2, req.target, handler);
 
-        } else { // std::holds_alternative<prod2_rec_skipto>(root_rec)
-          const prod2_rec_skipto r = std::get<prod2_rec_skipto>(rec_res);
+        } else { // std::holds_alternative<prod2b_rec_skipto>(root_rec)
+          const prod2b_rec_skipto r = std::get<prod2b_rec_skipto>(rec_res);
           if (r[0].is_terminal() && r[1].is_terminal()) {
             if (req.data.source.is_nil()) {
               // Skipped in both DAGs all the way from the root until a pair of terminals.
-              return __prod2_terminal<Policy>(r, policy);
+              return __prod2b_terminal<Policy>(r, policy);
             }
 
             const typename Policy::pointer_type result = policy(r[0], r[1]);
-            const __prod2_recurse_in__output_terminal handler(aw, result);
+            const __prod2b_recurse_in__output_terminal handler(aw, result);
             request_foreach(prod_pq_1, prod_pq_2, req.target, handler);
           } else {
-            const __prod2_recurse_in__forward handler(prod_pq_1, r);
+            const __prod2b_recurse_in__forward handler(prod_pq_1, r);
             request_foreach(prod_pq_1, prod_pq_2, req.target, handler);
           }
         }
@@ -548,9 +548,9 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename cut, size_t const_size_inc, typename Policy>
   size_t
-  __prod2_ilevel_upper_bound(const typename Policy::dd_type& in_0,
-                             const typename Policy::dd_type& in_1,
-                             const Policy& policy)
+  __prod2b_ilevel_upper_bound(const typename Policy::dd_type& in_0,
+                              const typename Policy::dd_type& in_1,
+                              const Policy& policy)
   {
     // Cuts for left-hand side
     const safe_size_t left_cut_internal = cut::get(in_0, cut::type::Internal);
@@ -575,9 +575,9 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   size_t
-  __prod2_2level_upper_bound(const typename Policy::dd_type& in_0,
-                             const typename Policy::dd_type& in_1,
-                             const Policy& policy)
+  __prod2b_2level_upper_bound(const typename Policy::dd_type& in_0,
+                              const typename Policy::dd_type& in_1,
+                              const Policy& policy)
   {
     // Left-hand side
     const safe_size_t left_2level_cut = in_0.max_2level_cut(cut::Internal);
@@ -609,9 +609,9 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   size_t
-  __prod2_ilevel_upper_bound(const typename Policy::dd_type& in_0,
-                             const typename Policy::dd_type& in_1,
-                             const Policy& policy)
+  __prod2b_ilevel_upper_bound(const typename Policy::dd_type& in_0,
+                              const typename Policy::dd_type& in_1,
+                              const Policy& policy)
   {
     const cut left_ct                    = policy.left_cut();
     const safe_size_t left_terminal_vals = left_ct.number_of_terminals();
@@ -627,10 +627,10 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   typename Policy::__dd_type
-  __prod2_ra(const exec_policy& ep,
-             const typename Policy::dd_type& in_0,
-             const typename Policy::dd_type& in_1,
-             Policy& policy)
+  __prod2b_ra(const exec_policy& ep,
+              const typename Policy::dd_type& in_0,
+              const typename Policy::dd_type& in_1,
+              Policy& policy)
   {
     adiar_assert(in_0->indexable || in_1->indexable, "At least one input must be indexable");
 
@@ -640,12 +640,12 @@ namespace adiar::internal
       ep.template get<exec_policy::memory>() == exec_policy::memory::External;
 
     const size_t pq_bound =
-      std::min({ __prod2_ilevel_upper_bound<get_2level_cut, 2u>(in_0, in_1, policy),
-                 __prod2_2level_upper_bound(in_0, in_1, policy),
-                 __prod2_ilevel_upper_bound(in_0, in_1, policy) });
+      std::min({ __prod2b_ilevel_upper_bound<get_2level_cut, 2u>(in_0, in_1, policy),
+                 __prod2b_2level_upper_bound(in_0, in_1, policy),
+                 __prod2b_ilevel_upper_bound(in_0, in_1, policy) });
 
     // Possibly flip inputs (and operator) such that 'in_ra' is always the second argument to
-    // `__prod2_ra(...)` algorithm.
+    // `__prod2b_ra(...)` algorithm.
     const bool flip_in = in_0->indexable && (!in_1->indexable || in_0.width() <= in_1.width());
 
     const typename Policy::dd_type& in_pq = flip_in ? in_1 : in_0;
@@ -656,12 +656,12 @@ namespace adiar::internal
     if (flip_in) { policy.flip(); }
 
 #ifdef ADIAR_STATS
-    stats_prod2.ra.used_narrowest +=
+    stats_prod2b.ra.used_narrowest +=
       static_cast<size_t>(in_ra.width() == std::min(in_pq.width(), in_ra.width()));
 
-    stats_prod2.ra.acc_width += in_ra.width();
-    stats_prod2.ra.min_width = std::min(stats_prod2.ra.min_width, in_ra.width());
-    stats_prod2.ra.max_width = std::max(stats_prod2.ra.max_width, in_ra.width());
+    stats_prod2b.ra.acc_width += in_ra.width();
+    stats_prod2b.ra.min_width = std::min(stats_prod2b.ra.min_width, in_ra.width());
+    stats_prod2b.ra.max_width = std::max(stats_prod2b.ra.max_width, in_ra.width());
 #endif
 
     const size_t pq_available_memory = memory_available()
@@ -680,31 +680,31 @@ namespace adiar::internal
 
     if (!external_only && max_pq_size <= no_lookahead_bound(2)) {
 #ifdef ADIAR_STATS
-      stats_prod2.lpq.unbucketed += 1u;
+      stats_prod2b.lpq.unbucketed += 1u;
 #endif
-      return __prod2_ra<Policy, prod_priority_queue_t<0, memory_mode::Internal>>(
+      return __prod2b_ra<Policy, prod_priority_queue_t<0, memory_mode::Internal>>(
         ep, in_pq, in_ra, policy, pq_available_memory, max_pq_size);
     } else if (!external_only && max_pq_size <= pq_memory_fits) {
 #ifdef ADIAR_STATS
-      stats_prod2.lpq.internal += 1u;
+      stats_prod2b.lpq.internal += 1u;
 #endif
-      return __prod2_ra<Policy, prod_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>>(
+      return __prod2b_ra<Policy, prod_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>>(
         ep, in_pq, in_ra, policy, pq_available_memory, max_pq_size);
     } else {
 #ifdef ADIAR_STATS
-      stats_prod2.lpq.external += 1u;
+      stats_prod2b.lpq.external += 1u;
 #endif
-      return __prod2_ra<Policy, prod_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>>(
+      return __prod2b_ra<Policy, prod_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>>(
         ep, in_pq, in_ra, policy, pq_available_memory, max_pq_size);
     }
   }
 
   template <typename Policy>
   typename Policy::__dd_type
-  __prod2_pq(const exec_policy& ep,
-             const typename Policy::dd_type& in_0,
-             const typename Policy::dd_type& in_1,
-             Policy& policy)
+  __prod2b_pq(const exec_policy& ep,
+              const typename Policy::dd_type& in_0,
+              const typename Policy::dd_type& in_1,
+              Policy& policy)
   {
     const bool internal_only =
       ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
@@ -712,9 +712,9 @@ namespace adiar::internal
       ep.template get<exec_policy::memory>() == exec_policy::memory::External;
 
     const size_t pq_1_bound =
-      std::min({ __prod2_ilevel_upper_bound<get_2level_cut, 2u>(in_0, in_1, policy),
-                 __prod2_2level_upper_bound(in_0, in_1, policy),
-                 __prod2_ilevel_upper_bound(in_0, in_1, policy) });
+      std::min({ __prod2b_ilevel_upper_bound<get_2level_cut, 2u>(in_0, in_1, policy),
+                 __prod2b_2level_upper_bound(in_0, in_1, policy),
+                 __prod2b_ilevel_upper_bound(in_0, in_1, policy) });
 
     // Compute amount of memory available for auxiliary data structures after having opened all
     // streams.
@@ -749,45 +749,45 @@ namespace adiar::internal
     const size_t max_pq_1_size =
       internal_only ? std::min(pq_1_memory_fits, pq_1_bound) : pq_1_bound;
 
-    const size_t pq_2_bound = __prod2_ilevel_upper_bound<get_1level_cut, 0u>(in_0, in_1, policy);
+    const size_t pq_2_bound = __prod2b_ilevel_upper_bound<get_1level_cut, 0u>(in_0, in_1, policy);
 
     const size_t max_pq_2_size =
       internal_only ? std::min(pq_2_memory_fits, pq_2_bound) : pq_2_bound;
 
     if (!external_only && max_pq_1_size <= no_lookahead_bound(2)) {
 #ifdef ADIAR_STATS
-      stats_prod2.lpq.unbucketed += 1u;
+      stats_prod2b.lpq.unbucketed += 1u;
 #endif
       using pq_1_type = prod_priority_queue_1_t<0, memory_mode::Internal>;
       using pq_2_type = prod_priority_queue_2_t<memory_mode::Internal>;
 
-      return __prod2_pq<Policy, pq_1_type, pq_2_type>(ep,
-                                                      in_0,
-                                                      in_1,
-                                                      policy,
-                                                      pq_1_internal_memory,
-                                                      max_pq_1_size,
-                                                      pq_2_internal_memory,
-                                                      max_pq_2_size);
+      return __prod2b_pq<Policy, pq_1_type, pq_2_type>(ep,
+                                                       in_0,
+                                                       in_1,
+                                                       policy,
+                                                       pq_1_internal_memory,
+                                                       max_pq_1_size,
+                                                       pq_2_internal_memory,
+                                                       max_pq_2_size);
     } else if (!external_only && max_pq_1_size <= pq_1_memory_fits
                && max_pq_2_size <= pq_2_memory_fits) {
 #ifdef ADIAR_STATS
-      stats_prod2.lpq.internal += 1u;
+      stats_prod2b.lpq.internal += 1u;
 #endif
       using pq_1_type = prod_priority_queue_1_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
       using pq_2_type = prod_priority_queue_2_t<memory_mode::Internal>;
 
-      return __prod2_pq<Policy, pq_1_type, pq_2_type>(ep,
-                                                      in_0,
-                                                      in_1,
-                                                      policy,
-                                                      pq_1_internal_memory,
-                                                      max_pq_1_size,
-                                                      pq_2_internal_memory,
-                                                      max_pq_2_size);
+      return __prod2b_pq<Policy, pq_1_type, pq_2_type>(ep,
+                                                       in_0,
+                                                       in_1,
+                                                       policy,
+                                                       pq_1_internal_memory,
+                                                       max_pq_1_size,
+                                                       pq_2_internal_memory,
+                                                       max_pq_2_size);
     } else {
 #ifdef ADIAR_STATS
-      stats_prod2.lpq.external += 1u;
+      stats_prod2b.lpq.external += 1u;
 #endif
       using pq_1_type = prod_priority_queue_1_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
       const size_t pq_1_memory = aux_available_memory / 2;
@@ -795,7 +795,7 @@ namespace adiar::internal
       using pq_2_type          = prod_priority_queue_2_t<memory_mode::External>;
       const size_t pq_2_memory = pq_1_memory;
 
-      return __prod2_pq<Policy, pq_1_type, pq_2_type>(
+      return __prod2b_pq<Policy, pq_1_type, pq_2_type>(
         ep, in_0, in_1, policy, pq_1_memory, max_pq_1_size, pq_2_memory, max_pq_2_size);
     }
   }
@@ -807,16 +807,16 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   typename Policy::__dd_type
-  prod2(const exec_policy& ep,
-        const typename Policy::dd_type& in_0,
-        const typename Policy::dd_type& in_1,
-        Policy& policy)
+  prod2b(const exec_policy& ep,
+         const typename Policy::dd_type& in_0,
+         const typename Policy::dd_type& in_1,
+         Policy& policy)
   {
     // ---------------------------------------------------------------------------------------------
     // Case: Same file with a matching shift, i.e. exactly the same DAG.
     if (in_0.file_ptr() == in_1.file_ptr() && in_0.shift() == in_1.shift()) {
 #ifdef ADIAR_STATS
-      stats_prod2.trivial_file += 1u;
+      stats_prod2b.trivial_file += 1u;
 #endif
       return policy.resolve_same_file(in_0, in_1);
     }
@@ -828,7 +828,7 @@ namespace adiar::internal
 
       if (!(maybe_resolved.template has<no_file>())) {
 #ifdef ADIAR_STATS
-        stats_prod2.trivial_terminal += 1u;
+        stats_prod2b.trivial_terminal += 1u;
 #endif
         return maybe_resolved;
       }
@@ -857,25 +857,25 @@ namespace adiar::internal
     const size_t width_1   = in_1->indexable ? in_1.width() : Policy::max_id;
     const size_t min_width = std::min(width_0, width_1);
 
-    if ( // Use `__prod2_ra` if user has forced Random Access
+    if ( // Use `__prod2b_ra` if user has forced Random Access
       ep.template get<exec_policy::access>() == exec_policy::access::Random_Access
       || ( // Heuristically, if the narrowest canonical fits
         ep.template get<exec_policy::access>() == exec_policy::access::Auto
         && (in_0->indexable || in_1->indexable)
         && (node_raccess::memory_usage(min_width) <= ra_threshold))) {
 #ifdef ADIAR_STATS
-      stats_prod2.ra.runs += 1u;
+      stats_prod2b.ra.runs += 1u;
 #endif
-      return __prod2_ra<Policy>(ep, in_0, in_1, policy);
+      return __prod2b_ra<Policy>(ep, in_0, in_1, policy);
     }
 
     // ---------------------------------------------------------------------------------------------
     // Case: Do the product construction (with priority queues)
 #ifdef ADIAR_STATS
-    stats_prod2.pq.runs += 1u;
+    stats_prod2b.pq.runs += 1u;
 #endif
-    return __prod2_pq<Policy>(ep, in_0, in_1, policy);
+    return __prod2b_pq<Policy>(ep, in_0, in_1, policy);
   }
 }
 
-#endif // ADIAR_INTERNAL_ALGORITHMS_PROD2_H
+#endif // ADIAR_INTERNAL_ALGORITHMS_PROD2B_H

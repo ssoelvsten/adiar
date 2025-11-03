@@ -4,7 +4,7 @@
 #include <adiar/zdd.h>
 #include <adiar/zdd/zdd_policy.h>
 
-#include <adiar/internal/algorithms/prod2.h>
+#include <adiar/internal/algorithms/prod2b.h>
 #include <adiar/internal/assert.h>
 #include <adiar/internal/bool_op.h>
 #include <adiar/internal/data_types/tuple.h>
@@ -15,9 +15,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // ZDD product construction policy
   template <typename BinaryOp = internal::binary_op<predicate<bool, bool>>>
-  class zdd_prod2_policy
+  class zdd_prod2b_policy
     : public zdd_policy
-    , public internal::prod2_mixed_level_merger<zdd_policy>
+    , public internal::prod2b_mixed_level_merger<zdd_policy>
   {
   private:
     /// \brief Operator
@@ -46,8 +46,8 @@ namespace adiar
     static std::array<bool, 2>
     can_left_shortcut(const BinaryOp& op)
     {
-      return { zdd_prod2_policy::can_left_shortcut(op, false),
-               zdd_prod2_policy::can_left_shortcut(op, true) };
+      return { zdd_prod2b_policy::can_left_shortcut(op, false),
+               zdd_prod2b_policy::can_left_shortcut(op, true) };
     }
 
     /// \brief Computes an entry in `_can_right_shortcut`
@@ -64,21 +64,21 @@ namespace adiar
     static std::array<bool, 2>
     can_right_shortcut(const BinaryOp& op)
     {
-      return { zdd_prod2_policy::can_right_shortcut(op, false),
-               zdd_prod2_policy::can_right_shortcut(op, true) };
+      return { zdd_prod2b_policy::can_right_shortcut(op, false),
+               zdd_prod2b_policy::can_right_shortcut(op, true) };
     }
 
   public:
-    zdd_prod2_policy()
+    zdd_prod2b_policy()
       : _op()
-      , _can_left_shortcut{ zdd_prod2_policy::can_left_shortcut(this->_op) }
-      , _can_right_shortcut{ zdd_prod2_policy::can_right_shortcut(this->_op) }
+      , _can_left_shortcut{ zdd_prod2b_policy::can_left_shortcut(this->_op) }
+      , _can_right_shortcut{ zdd_prod2b_policy::can_right_shortcut(this->_op) }
     {}
 
-    zdd_prod2_policy(const BinaryOp& op)
+    zdd_prod2b_policy(const BinaryOp& op)
       : _op(op)
-      , _can_left_shortcut{ zdd_prod2_policy::can_left_shortcut(op) }
-      , _can_right_shortcut{ zdd_prod2_policy::can_right_shortcut(op) }
+      , _can_left_shortcut{ zdd_prod2b_policy::can_left_shortcut(op) }
+      , _can_right_shortcut{ zdd_prod2b_policy::can_right_shortcut(op) }
     {}
 
   public:
@@ -164,7 +164,7 @@ namespace adiar
 
   public:
     /// \brief Hook for changing the targets of a new node's children.
-    internal::prod2_rec
+    internal::prod2b_rec
     resolve_request(const internal::tuple<zdd::pointer_type>& r_low,
                     const internal::tuple<zdd::pointer_type>& r_high) const
     {
@@ -179,11 +179,11 @@ namespace adiar
       // creating it in the first place and just forward the edge to r_low.
       if (skippable) {
         // TODO: 'r_low' => '__resolve_request(r_low)' ?
-        return internal::prod2_rec_skipto(r_low);
+        return internal::prod2b_rec_skipto(r_low);
       }
 
       // Otherwise, create a node with children r_low and r_high
-      return internal::prod2_rec_output{ __resolve_request(r_low), __resolve_request(r_high) };
+      return internal::prod2b_rec_output{ __resolve_request(r_low), __resolve_request(r_high) };
     }
 
     /// \brief Hook for applying an operator to a pair of terminals.
@@ -224,8 +224,8 @@ namespace adiar
   __zdd
   zdd_binop(const exec_policy& ep, const zdd& A, const zdd& B, const predicate<bool, bool>& op)
   {
-    zdd_prod2_policy<internal::binary_op<predicate<bool, bool>>> policy(op);
-    return internal::prod2(ep, A, B, policy);
+    zdd_prod2b_policy<internal::binary_op<predicate<bool, bool>>> policy(op);
+    return internal::prod2b(ep, A, B, policy);
   }
 
   __zdd
@@ -237,8 +237,8 @@ namespace adiar
   __zdd
   zdd_union(const exec_policy& ep, const zdd& A, const zdd& B)
   {
-    zdd_prod2_policy<internal::or_op> policy;
-    return internal::prod2(ep, A, B, policy);
+    zdd_prod2b_policy<internal::or_op> policy;
+    return internal::prod2b(ep, A, B, policy);
   }
 
   __zdd
@@ -250,8 +250,8 @@ namespace adiar
   __zdd
   zdd_intsec(const exec_policy& ep, const zdd& A, const zdd& B)
   {
-    zdd_prod2_policy<internal::and_op> policy;
-    return internal::prod2(ep, A, B, policy);
+    zdd_prod2b_policy<internal::and_op> policy;
+    return internal::prod2b(ep, A, B, policy);
   }
 
   __zdd

@@ -1,7 +1,7 @@
 #include <adiar/bdd.h>
 #include <adiar/bdd/bdd_policy.h>
 
-#include <adiar/internal/algorithms/prod2.h>
+#include <adiar/internal/algorithms/prod2b.h>
 #include <adiar/internal/assert.h>
 #include <adiar/internal/bool_op.h>
 #include <adiar/internal/cut.h>
@@ -14,9 +14,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // BDD product construction policy
   template <typename BinaryOp = internal::binary_op<predicate<bool, bool>>>
-  class apply_prod2_policy
+  class apply_prod2b_policy
     : public bdd_policy
-    , public internal::prod2_mixed_level_merger<bdd_policy>
+    , public internal::prod2b_mixed_level_merger<bdd_policy>
   {
   private:
     /// \brief Operator
@@ -24,10 +24,10 @@ namespace adiar
 
   public:
     /// \brief Constructor for binary operators known at compile-time.
-    apply_prod2_policy() = default;
+    apply_prod2b_policy() = default;
 
     /// \brief Constructor for wrapping an unknown binary operator.
-    apply_prod2_policy(const predicate<bool, bool>& op)
+    apply_prod2b_policy(const predicate<bool, bool>& op)
       : _op(op)
     {}
 
@@ -100,11 +100,11 @@ namespace adiar
 
   public:
     /// \brief Hook for changing the targets of a new node's children.
-    internal::prod2_rec
+    internal::prod2b_rec
     resolve_request(const internal::tuple<bdd::pointer_type>& r_low,
                     const internal::tuple<bdd::pointer_type>& r_high) const
     {
-      return internal::prod2_rec_output{ __resolve_request(r_low), __resolve_request(r_high) };
+      return internal::prod2b_rec_output{ __resolve_request(r_low), __resolve_request(r_high) };
     }
 
     /// \brief Hook for applying an operator to a pair of terminals.
@@ -145,8 +145,8 @@ namespace adiar
   __bdd
   bdd_apply(const exec_policy& ep, const bdd& f, const bdd& g, const predicate<bool, bool>& op)
   {
-    apply_prod2_policy<internal::binary_op<predicate<bool, bool>>> policy(op);
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::binary_op<predicate<bool, bool>>> policy(op);
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -159,8 +159,8 @@ namespace adiar
   __bdd
   bdd_and(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::and_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::and_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -172,8 +172,8 @@ namespace adiar
   __bdd
   bdd_nand(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::nand_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::nand_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -185,8 +185,8 @@ namespace adiar
   __bdd
   bdd_or(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::or_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::or_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -198,8 +198,8 @@ namespace adiar
   __bdd
   bdd_nor(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::nor_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::nor_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -211,8 +211,8 @@ namespace adiar
   __bdd
   bdd_xor(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::xor_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::xor_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -224,8 +224,8 @@ namespace adiar
   __bdd
   bdd_xnor(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::xnor_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::xnor_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd
@@ -261,8 +261,8 @@ namespace adiar
   __bdd
   bdd_equiv(const exec_policy& ep, const bdd& f, const bdd& g)
   {
-    apply_prod2_policy<internal::equiv_op> policy;
-    return internal::prod2(ep, f, g, policy);
+    apply_prod2b_policy<internal::equiv_op> policy;
+    return internal::prod2b(ep, f, g, policy);
   }
 
   __bdd

@@ -3,7 +3,6 @@
 
 #include <adiar/exec_policy.h>
 
-#include <adiar/internal/algorithms/prod2.h>
 #include <adiar/internal/data_structures/levelized_priority_queue.h>
 #include <adiar/internal/data_types/node.h>
 #include <adiar/internal/data_types/request.h>
