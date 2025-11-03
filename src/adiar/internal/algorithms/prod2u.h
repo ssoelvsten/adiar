@@ -227,52 +227,42 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   inline tuple<typename Policy::pointer_type, 2, true>
-  __prod2u_resolve_request(std::array<typename Policy::pointer_type, 2> ts)
+  __prod2u_resolve_request(const typename Policy::pointer_type& t1,
+                           const typename Policy::pointer_type& t2)
   {
-    // TODO: Simplify based on list always being of length 2.
+    using tuple_t = tuple<typename Policy::pointer_type, 2, true>;
 
-    // Sort array with pointers
-    std::sort(ts.begin(), ts.end(), std::less<>());
+    // Collapse to a single value, if `t1` and `t2` are equal
+    if (t1 == t2) { return tuple_t(t1, Policy::pointer_type::nil()); }
 
-    // Remove duplicate pointers from array (abusing sorting). The policy may also prune some
-    // terminals.
-    size_t ts_max_idx = 0;
-    for (size_t i = ts_max_idx + 1; i < ts.size(); ++i) {
-      adiar_assert(ts_max_idx < i, "i is always ahead of 'ts_max_idx'");
+    // Sort the two values
+    const tuple_t ts = t1 < t2 ? tuple_t(t1, t2) : tuple_t(t2, t1);
 
-      // Stop early at maximum value of 'nil'
-      if (ts[i].is_nil()) { break; }
+    // Skip remainder, if only one value is not nil
+    if (ts[1].is_nil()) { return ts; }
 
-      // Move new unique element at next spot for 'ts_max_idx'
-      if (ts[ts_max_idx] != ts[i] && (!ts[i].is_terminal() || Policy::keep_terminal(ts[i]))) {
-        ts[++ts_max_idx] = ts[i];
-      }
+    // Prune terminals.
+    if (ts[0].is_terminal() && !Policy::keep_terminal(ts[0])) {
+      return tuple_t(ts[1], Policy::pointer_type::nil());
     }
 
-    // Set remaining values to nil
-    for (size_t i = ts_max_idx + 1; i < ts.size(); ++i) { ts[i] = Policy::pointer_type::nil(); }
-
-    // Is the last surviving element a collapsing terminal?
-    const bool max_shortcuts =
-      ts[ts_max_idx].is_terminal() && Policy::collapse_to_terminal(ts[ts_max_idx]);
-
-    // Are there only terminals left? These should be combined with the operator
-    const bool resolve_terminals =
-      // Are there only terminals left
-      ts[0].is_terminal() /* sorted => ts[1].is_terminal() */
-      // Are there more than one of them?
-      && 0u < ts_max_idx;
-
-    if (max_shortcuts || resolve_terminals) {
-      ts[0] = max_shortcuts ? ts[ts_max_idx] : Policy::resolve_terminals(ts[0], ts[1]);
-
-      for (size_t i = 1u; i <= ts_max_idx; ++i) {
-        adiar_assert(!ts[i].is_nil(), "Cannot be nil at i <= ts_max_elem");
-        ts[i] = Policy::pointer_type::nil();
-      }
+    if (ts[1].is_terminal() && !Policy::keep_terminal(ts[1])) {
+      return tuple_t(ts[0], Policy::pointer_type::nil());
     }
 
-    // Return final (sorted and pruned) set of targets.
+    // Collapse to terminal. Due to sorting and the above pruning, this value has to be the last.
+    if (ts[1].is_terminal() && Policy::collapse_to_terminal(ts[1])) {
+      return tuple_t(ts[1], Policy::pointer_type::nil());
+    }
+
+    // Are there only terminals left that should be combined with the operator?
+    //
+    // TODO (optimisation): disable based on policy
+    if (ts[0].is_terminal() && ts[1].is_terminal()) {
+      return tuple_t(Policy::resolve_terminals(ts[0], ts[1]), Policy::pointer_type::nil());
+    }
+
+    // Otherwise, return the sorted tuple.
     return ts;
   }
 
@@ -321,7 +311,7 @@ namespace adiar::internal
         // CASE: Split node into binary recursion request
         if (split) {
           const tuple<typename Policy::pointer_type, 2, true> rec_all =
-            __prod2u_resolve_request<Policy>({ children_fst[false], children_fst[true] });
+            __prod2u_resolve_request<Policy>(children_fst[false], children_fst[true]);
 
           // Collapsed to a terminal?
           if (req.data.source.is_nil() && rec_all[0].is_terminal()) {
@@ -352,12 +342,12 @@ namespace adiar::internal
         const node::uid_type out_uid(out_label, out_id++);
 
         prod2u_request<0>::target_t rec0 =
-          __prod2u_resolve_request<Policy>({ children_fst[false], children_snd[false] });
+          __prod2u_resolve_request<Policy>(children_fst[false], children_snd[false]);
 
         __prod2u_recurse_out<Policy>(pq, aw, out_uid.as_ptr(false), rec0);
 
         prod2u_request<0>::target_t rec1 =
-          __prod2u_resolve_request<Policy>({ children_fst[true], children_snd[true] });
+          __prod2u_resolve_request<Policy>(children_fst[true], children_snd[true]);
         __prod2u_recurse_out<Policy>(pq, aw, out_uid.as_ptr(true), rec1);
 
         const __prod2u_recurse_in__output_node handler(aw, out_uid);
@@ -478,8 +468,7 @@ namespace adiar::internal
         // CASE: Split node into binary recursion request
         if (split) {
           const tuple<typename Policy::pointer_type, 2, true> rec_all =
-            __prod2u_resolve_request<Policy>(
-              { children_fst[false], children_fst[true] });
+            __prod2u_resolve_request<Policy>(children_fst[false], children_fst[true]);
 
           // Collapsed to a terminal?
           if (req.data.source.is_nil() && rec_all[0].is_terminal()) {
@@ -510,12 +499,12 @@ namespace adiar::internal
         const node::uid_type out_uid(out_label, out_id++);
 
         prod2u_request<0>::target_t rec0 =
-          __prod2u_resolve_request<Policy>({ children_fst[false], children_snd[false] });
+          __prod2u_resolve_request<Policy>(children_fst[false], children_snd[false]);
 
         __prod2u_recurse_out<Policy>(pq_1, aw, out_uid.as_ptr(false), rec0);
 
         prod2u_request<0>::target_t rec1 =
-          __prod2u_resolve_request<Policy>({ children_fst[true], children_snd[true] });
+          __prod2u_resolve_request<Policy>(children_fst[true], children_snd[true]);
         __prod2u_recurse_out<Policy>(pq_1, aw, out_uid.as_ptr(true), rec1);
 
         const __prod2u_recurse_in__output_node handler(aw, out_uid);
