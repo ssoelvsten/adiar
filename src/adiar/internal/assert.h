@@ -17,13 +17,11 @@ namespace adiar
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit
-    assert_error(const std::string& what)
+    explicit assert_error(const std::string& what)
       : _what(what)
     {}
 
-    explicit
-    assert_error(const std::string& file, const int line)
+    explicit assert_error(const std::string& file, const int line)
     {
       std::stringstream s;
       s << file << "::" << line;
@@ -31,8 +29,7 @@ namespace adiar
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit
-    assert_error(const std::string& file, const int line, const std::string& what)
+    explicit assert_error(const std::string& file, const int line, const std::string& what)
     {
       std::stringstream s;
       s << file << "::" << line << ": " << what;

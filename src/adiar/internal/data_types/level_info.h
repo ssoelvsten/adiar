@@ -77,8 +77,7 @@ namespace adiar::internal
     /// \brief Create a level_info for a variable and a certain width when using the identity
     ///        variable ordering.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit
-    level_info(level_type level, size_t width)
+    explicit level_info(level_type level, size_t width)
       : _level(level)
       , _width(width)
     {
