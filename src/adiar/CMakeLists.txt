@@ -53,6 +53,7 @@ set(HEADERS
   internal/algorithms/optmin.h
   internal/algorithms/pred.h
   internal/algorithms/prod2.h
+  internal/algorithms/prod2u.h
   internal/algorithms/quantify.h
   internal/algorithms/reduce.h
   internal/algorithms/replace.h
@@ -147,6 +148,7 @@ set(SOURCES
   internal/algorithms/optmin.cpp
   internal/algorithms/pred.cpp
   internal/algorithms/prod2.cpp
+  internal/algorithms/prod2u.cpp
   internal/algorithms/quantify.cpp
   internal/algorithms/reduce.cpp
   internal/algorithms/replace.cpp

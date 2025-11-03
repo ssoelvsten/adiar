@@ -10,6 +10,7 @@
 #include <adiar/internal/algorithms/nested_sweeping.h>
 #include <adiar/internal/algorithms/pred.h>
 #include <adiar/internal/algorithms/prod2.h>
+#include <adiar/internal/algorithms/prod2u.h>
 #include <adiar/internal/algorithms/quantify.h>
 #include <adiar/internal/algorithms/reduce.h>
 #include <adiar/internal/algorithms/replace.h>
@@ -44,6 +45,7 @@ namespace adiar
              internal::stats_intercut,
              internal::stats_optmin,
              internal::stats_prod2,
+             internal::stats_prod2u,
              stats_prod3,
              internal::stats_quantify,
              internal::stats_select,
@@ -405,7 +407,7 @@ namespace adiar
       + internal::stats_prod2.trivial_terminal + internal::stats_prod2.ra.runs
       + internal::stats_prod2.pq.runs;
 
-    o << indent << bold_on << label << "Product Construction (2-ary)" << bold_off << total_runs
+    o << indent << bold_on << label << "Product Construction (2-ary) <binary>" << bold_off << total_runs
       << endl;
 
     indent_level++;
@@ -469,6 +471,111 @@ namespace adiar
     o << indent << endl;
     __printstat_alg_base(o, internal::stats_prod2);
     indent_level--;
+  }
+
+  void
+  __printstat_prod2u(std::ostream& o)
+  {
+    uintwide total_runs = internal::stats_prod2u.ra.runs + internal::stats_prod2u.pq.runs;
+    o << indent << bold_on << label << "Product Construction (2-ary) <unary>" << bold_off
+      << total_runs << endl;
+
+    indent_level++;
+    if (total_runs == 0u) {
+      o << indent << "Not used" << endl;
+      indent_level--;
+      return;
+    }
+
+    o << indent << bold_on << label << "case [random access]" << bold_off
+      << internal::stats_prod2u.ra.runs << " = "
+      << internal::percent_frac(internal::stats_prod2u.ra.runs, total_runs) << percent << endl;
+    if (internal::stats_prod2u.ra.runs > 0u) {
+      indent_level++;
+      o << indent << label << "used narrowest:" << internal::stats_prod2u.ra.used_narrowest << " = "
+        << internal::percent_frac(internal::stats_prod2u.ra.used_narrowest,
+                                  internal::stats_prod2u.ra.runs)
+        << percent << endl;
+
+      o << indent << endl;
+
+      o << indent << bold_on << label << "width:" << bold_off << endl;
+      indent_level++;
+
+      o << indent << label << "minimum:" << internal::stats_prod2u.ra.min_width << endl;
+
+      o << indent << label << "maximum:" << internal::stats_prod2u.ra.max_width << endl;
+
+      o << indent << label << "accumulated:" << internal::stats_prod2u.ra.acc_width << " (avg = "
+        << internal::frac(internal::stats_prod2u.ra.acc_width, internal::stats_prod2u.ra.runs)
+        << ")" << endl;
+
+      indent_level -= 2;
+    }
+
+    o << indent << endl;
+
+    o << indent << bold_on << label << "case [priority queue]" << bold_off
+      << internal::stats_prod2u.pq.runs << " = "
+      << internal::percent_frac(internal::stats_prod2u.pq.runs, total_runs) << percent << endl;
+    if (internal::stats_prod2u.pq.runs > 0u) {
+      indent_level++;
+      o << indent << label << "pq2 elements:" << internal::stats_prod2u.pq.pq_2_elems << endl;
+
+      indent_level--;
+    }
+
+    o << indent << endl;
+    __printstat_alg_base(o, internal::stats_prod2u);
+    indent_level--;
+
+    o << indent << endl;
+    {
+      o << indent << bold_on << label << "requests (excluding roots)" << bold_off << endl;
+
+      indent_level++;
+      {
+        const uintwide total_requests =
+          internal::stats_prod2u.requests[0] + internal::stats_prod2u.requests[1];
+
+        o << indent << label << "incl. duplicates" << total_requests << endl;
+
+        indent_level++;
+        for (int arity_idx = 0; arity_idx < 2; ++arity_idx) {
+          std::string t;
+          t += static_cast<char>('1' + arity_idx);
+          t += "-ary";
+
+          o << indent << label << t << internal::stats_prod2u.requests[arity_idx] << " = "
+            << internal::percent_frac(internal::stats_prod2u.requests[arity_idx], total_requests)
+            << percent << endl;
+        }
+        indent_level--;
+      }
+
+      o << indent << endl;
+
+      {
+        const uintwide total_unique =
+          internal::stats_prod2u.requests_unique[0] + internal::stats_prod2u.requests_unique[1];
+
+        o << indent << label << "excl. duplicates" << total_unique << endl;
+
+        indent_level++;
+        for (int arity_idx = 0; arity_idx < 2; ++arity_idx) {
+          std::string t;
+          t += static_cast<char>('1' + arity_idx);
+          t += "-ary";
+
+          o << indent << label << t << internal::stats_prod2u.requests_unique[arity_idx] << " = "
+            << internal::percent_frac(internal::stats_prod2u.requests_unique[arity_idx],
+                                      total_unique)
+            << percent << endl;
+        }
+        indent_level--;
+      }
+      indent_level--;
+    }
   }
 
   void
@@ -570,57 +677,6 @@ namespace adiar
         << percent << endl;
 
       indent_level -= 2;
-    }
-
-    o << indent << endl;
-    __printstat_alg_base(o, internal::stats_quantify);
-
-    o << indent << endl;
-    {
-      o << indent << bold_on << label << "requests (excluding roots)" << bold_off << endl;
-
-      indent_level++;
-      {
-        const uintwide total_requests =
-          internal::stats_quantify.requests[0] + internal::stats_quantify.requests[1];
-
-        o << indent << label << "incl. duplicates" << total_requests << endl;
-
-        indent_level++;
-        for (int arity_idx = 0; arity_idx < 2; ++arity_idx) {
-          std::string t;
-          t += static_cast<char>('1' + arity_idx);
-          t += "-ary";
-
-          o << indent << label << t << internal::stats_quantify.requests[arity_idx] << " = "
-            << internal::percent_frac(internal::stats_quantify.requests[arity_idx], total_requests)
-            << percent << endl;
-        }
-        indent_level--;
-      }
-
-      o << indent << endl;
-
-      {
-        const uintwide total_unique =
-          internal::stats_quantify.requests_unique[0] + internal::stats_quantify.requests_unique[1];
-
-        o << indent << label << "excl. duplicates" << total_unique << endl;
-
-        indent_level++;
-        for (int arity_idx = 0; arity_idx < 2; ++arity_idx) {
-          std::string t;
-          t += static_cast<char>('1' + arity_idx);
-          t += "-ary";
-
-          o << indent << label << t << internal::stats_quantify.requests_unique[arity_idx] << " = "
-            << internal::percent_frac(internal::stats_quantify.requests_unique[arity_idx],
-                                      total_unique)
-            << percent << endl;
-        }
-        indent_level--;
-      }
-      indent_level--;
     }
     indent_level--;
   }
@@ -1044,6 +1100,9 @@ namespace adiar
     o << endl;
 
     __printstat_prod2(o);
+    o << endl;
+
+    __printstat_prod2u(o);
     o << endl;
 
     __printstat_prod3(o);
