@@ -1,3 +1,5 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$structadiar_1_1statistics_1_1equality__t_1_1fast__t.html" title="Statistics from O(N) linear&#45;scan equality checking algorithm." alt="" coords="5,5,137,45"/>
+<area shape="rect" id="Node000000" href="$structadiar_1_1statistics_1_1levelized__priority__queue__t.html" title="Levelized Priority Queue statistics." alt="" coords="5,5,200,45"/>
+<area shape="rect" id="Node000001" href="$structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html" title="Type and usage of this algorithm&#39;s levelized priority queue." alt="" coords="248,5,396,45"/>
+<area shape="poly" id="edge16_Node000000_Node000001" title=" " alt="" coords="214,23,247,23,247,28,214,28"/>
 </map>

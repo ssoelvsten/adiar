@@ -11,10 +11,10 @@
 <!-- Node0 -->
 <g id="Node000000" class="node">
 <title>Node0</title>
-<g id="a_Node000000"><a xlink:href="structadiar_1_1statistics_1_1____pq2__base.html" target="_top" xlink:title="Common statistics for algorithms using a second priority queue.">
+<g id="a_Node000000"><a xlink:href="structadiar_1_1statistics_1_1arc__file__t.html" target="_top" xlink:title="Arc Files statistics.">
 <polygon fill="white" stroke="#666666" points="98,-30 0,-30 0,0 98,0 98,-30"/>
 <text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">adiar::statistics::</text>
-<text text-anchor="middle" x="49" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">__pq2_base</text>
+<text text-anchor="middle" x="49" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">arc_file_t</text>
 </a>
 </g>
 </g>

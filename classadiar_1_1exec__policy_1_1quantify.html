@@ -99,7 +99,6 @@ $(document).ready(function(){initNavTree('classadiar_1_1exec__policy_1_1quantify
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="classadiar_1_1exec__policy_1_1quantify-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">adiar::exec_policy::quantify Class Reference</div></div>
@@ -111,15 +110,6 @@ $(document).ready(function(){initNavTree('classadiar_1_1exec__policy_1_1quantify
 
 <p><code>#include &lt;<a class="el" href="exec__policy_8h_source.html">adiar/exec_policy.h</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html">transposition_growth</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiplicative value for the maximal growth of a BDD may during repeated transpostion before switching to Nested Sweeping.  <a href="classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classadiar_1_1exec__policy_1_1quantify_1_1transposition__max.html">transposition_max</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of repeated transpositions before switching to nested sweeping.  <a href="classadiar_1_1exec__policy_1_1quantify_1_1transposition__max.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:abee6d64d26c9ebc46e6c47a718e22197" id="r_abee6d64d26c9ebc46e6c47a718e22197"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197">algorithm</a> : char { <a class="el" href="classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197a44d2c93a61deb96d9309e5a35501fb83">Nested</a>
@@ -130,7 +120,9 @@ Public Types</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Strategies and settings for Adiar to use in quantify/project algorithms. </p>
-<p>Adiar’s supports multiple approaches to compute the quantification of multiple variables. While <code>Auto</code> heuristically uses one or more of the three options, one can choose to run the approach of particular interest</p>
+<p>Adiar’s supports multiple approaches to compute the quantification of multiple variables. While <code>Auto</code> heuristically uses one or more of the given options, one can choose to run the approach of particular interest.</p>
+<dl class="section note"><dt>Note</dt><dd>For more details, please read "Multi-variable Quantification of BDDs in External
+         Memory using Nested Sweeping" arXiv 2024.</dd></dl>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="group__module____bdd.html#gacf8f50868fb8eac4eff5587173ab703c" title="Existential quantification of a single variable.">bdd_exists</a> <a class="el" href="group__module____bdd.html#gaf7ae252bd0954ac6c63013b345ca30ee" title="Forall quantification of a single variable.">bdd_forall</a> <a class="el" href="group__module____bdd.html#gac2a28278086ebd64a086c8e087574632" title="Project family of sets onto a domain, i.e. remove from every set all variables not within the domain.">zdd_project</a> </dd></dl>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
 <a id="abee6d64d26c9ebc46e6c47a718e22197" name="abee6d64d26c9ebc46e6c47a718e22197"></a>

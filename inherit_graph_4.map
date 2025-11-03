@@ -1,3 +1,7 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html" title="Multiplicative value for the maximal growth of a BDD may during repeated transpostion before switchin..." alt="" coords="5,5,180,60"/>
+<area shape="rect" id="Node000000" href="$classadiar_1_1internal_1_1____dd.html" title=" " alt="" coords="5,31,156,56"/>
+<area shape="rect" id="Node000001" href="$classadiar_1_1____bdd.html" title="A (possibly) unreduced Binary Decision Diagram." alt="" coords="204,5,305,31"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="169,28,203,23,204,28,170,33"/>
+<area shape="rect" id="Node000002" href="$classadiar_1_1____zdd.html" title="A (possibly unreduced) Zero&#45;suppressed Decision Diagram." alt="" coords="205,55,305,80"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="170,53,205,58,204,63,169,58"/>
 </map>

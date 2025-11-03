@@ -1,5 +1,5 @@
-<map id="adiar::statistics::prod2_t" name="adiar::statistics::prod2_t">
-<area shape="rect" id="Node000001" title="2&#45;ary Product Construction algorithm for binary inputs." alt="" coords="671,69,801,109"/>
+<map id="adiar::statistics::prod2u_t" name="adiar::statistics::prod2u_t">
+<area shape="rect" id="Node000001" title="2&#45;ary Product Construction algorithm for unary inputs." alt="" coords="671,69,801,109"/>
 <area shape="rect" id="Node000002" href="$structadiar_1_1statistics_1_1____alg__base.html" title="Common statistics for all algorithms." alt="" coords="471,5,601,45"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="613,47,674,67,672,72,611,52"/>
 <area shape="rect" id="Node000003" href="$structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html" title="Type and usage of this algorithm&#39;s levelized priority queue." alt="" coords="249,5,397,45"/>

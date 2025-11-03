@@ -2,15 +2,6 @@ var group__module____adiar =
 [
     [ "adiar::exec_policy", "classadiar_1_1exec__policy.html", [
       [ "quantify", "classadiar_1_1exec__policy_1_1quantify.html", [
-        [ "transposition_growth", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html", [
-          [ "transposition_growth", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html#a012577b3cd4bb110c9617a593d7e547f", null ],
-          [ "operator float", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__growth.html#a6ed4b05448b8839cc8793ef6ae995b81", null ]
-        ] ],
-        [ "transposition_max", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__max.html", [
-          [ "transposition_max", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__max.html#a107dd5343dfa86276e3d62c4b7833462", null ],
-          [ "transposition_max", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__max.html#a26f38be819d10ee9bb917edc5f7cd6a4", null ],
-          [ "operator unsigned char", "classadiar_1_1exec__policy_1_1quantify_1_1transposition__max.html#a8a824a6b2760e28231ee3468c28df986", null ]
-        ] ],
         [ "algorithm", "classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197", [
           [ "Nested", "classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197a44d2c93a61deb96d9309e5a35501fb83", null ],
           [ "Singleton", "classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197acf233267597644b4c91a99f8f17cbe69", null ]
@@ -32,23 +23,17 @@ var group__module____adiar =
       [ "exec_policy", "classadiar_1_1exec__policy.html#a63c6aeb07dd93940fbfafa9bf83f6467", null ],
       [ "exec_policy", "classadiar_1_1exec__policy.html#a521ff716ed075c32422adad4f7df3906", null ],
       [ "exec_policy", "classadiar_1_1exec__policy.html#a919a1f682c06bf96061a748d6e40794e", null ],
-      [ "exec_policy", "classadiar_1_1exec__policy.html#a090e0a2c41e6f5c8c2c9f9d05e953365", null ],
-      [ "exec_policy", "classadiar_1_1exec__policy.html#ac9e5b743a8d4456edc8127fafc229e76", null ],
       [ "get", "classadiar_1_1exec__policy.html#a91e2fbf9c4fa776ad04373d9ee62d295", null ],
       [ "operator!=", "classadiar_1_1exec__policy.html#ab06d53119e53c968a021ff293b571466", null ],
       [ "operator&", "classadiar_1_1exec__policy.html#a24aa4a13b351101d2c6e8deb49d4d292", null ],
       [ "operator&", "classadiar_1_1exec__policy.html#a528080855004a245fd14c74aeb6a2063", null ],
       [ "operator&", "classadiar_1_1exec__policy.html#aeb3875ecf01f4345dd280a63398d4867", null ],
-      [ "operator&", "classadiar_1_1exec__policy.html#a0ef4d476bf4d8e1678682102f932c656", null ],
-      [ "operator&", "classadiar_1_1exec__policy.html#abfdd93e8eb15a3730730ac838a8030d7", null ],
       [ "operator=", "classadiar_1_1exec__policy.html#a2fca1c876178408460ec938462e84fbd", null ],
       [ "operator=", "classadiar_1_1exec__policy.html#a50808124e48523dac502047946e781f4", null ],
       [ "operator==", "classadiar_1_1exec__policy.html#a70a31c91b7a88c58790e9197aa9c22d6", null ],
       [ "set", "classadiar_1_1exec__policy.html#aae6fd20602f1ed55aa9dd37031af5f50", null ],
       [ "set", "classadiar_1_1exec__policy.html#a055a23e61b8a2da1d6f7b1fd6f376ec5", null ],
-      [ "set", "classadiar_1_1exec__policy.html#a923d6ead0387789ae7dfbe788f22a839", null ],
-      [ "set", "classadiar_1_1exec__policy.html#a523359de127caecb764993477ef71f07", null ],
-      [ "set", "classadiar_1_1exec__policy.html#af0d5bbb88ee9b1245a995422e144948d", null ]
+      [ "set", "classadiar_1_1exec__policy.html#a923d6ead0387789ae7dfbe788f22a839", null ]
     ] ],
     [ "adiar::adiar_deinit", "group__module____adiar.html#ga9501bb9e871253964682b7ac1942f911", null ],
     [ "adiar::adiar_init", "group__module____adiar.html#ga4f0460393f1bb6651306587b11d64660", null ],
@@ -56,8 +41,6 @@ var group__module____adiar =
     [ "adiar::get< exec_policy::access >", "group__module____adiar.html#ga6eac1605253cc0cdf3c1388da85605e2", null ],
     [ "adiar::get< exec_policy::memory >", "group__module____adiar.html#ga4797e28fc1f3be59af3537fe88cea5e5", null ],
     [ "adiar::get< exec_policy::quantify::algorithm >", "group__module____adiar.html#ga0c609dc6f6926df385215a96b64f618b", null ],
-    [ "adiar::get< exec_policy::quantify::transposition_growth >", "group__module____adiar.html#ga3d656ca1b74bcb8c53117f7047f135a4", null ],
-    [ "adiar::get< exec_policy::quantify::transposition_max >", "group__module____adiar.html#gaf52f88e387bbbcb65a75b4bef085a3c6", null ],
     [ "adiar::minimum_memory", "group__module____adiar.html#ga3135db1bb2a7b25635cfd5abd5421f6b", null ],
     [ "adiar::version", "group__module____adiar.html#gaecb0c967c2f53bb1700c2e6f01fc64c5", null ],
     [ "adiar::version_major", "group__module____adiar.html#ga470bef8262702a036e8da5b8f83b1f16", null ],

@@ -134,10 +134,10 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adiar_8h_source.html",
-"dir_68267d1309a1af8e8297ef4c3efbcdba.html",
-"group__module____bdd.html#ga8327a3750dcbb1d990f6f93b0cd96e6f",
-"namespaceadiar.html#aabaf6f9f1487642bb3a161cfd96fac36",
-"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html"
+"functions_enum.html",
+"group__module____bdd.html#ga8f6e81730a4c22db5ee8d2decee583d6",
+"namespaceadiar.html#af4f410828f9b8f7e7ce4e54b0d450b24",
+"structadiar_1_1statistics_1_1replace__t.html#a607faa9215476566eb69dbfb179dc031"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -197,8 +197,6 @@ var namespaceadiar =
     [ "exec_policy::get< exec_policy::access >", "group__module____adiar.html#ga6eac1605253cc0cdf3c1388da85605e2", null ],
     [ "exec_policy::get< exec_policy::memory >", "group__module____adiar.html#ga4797e28fc1f3be59af3537fe88cea5e5", null ],
     [ "exec_policy::get< exec_policy::quantify::algorithm >", "group__module____adiar.html#ga0c609dc6f6926df385215a96b64f618b", null ],
-    [ "exec_policy::get< exec_policy::quantify::transposition_growth >", "group__module____adiar.html#ga3d656ca1b74bcb8c53117f7047f135a4", null ],
-    [ "exec_policy::get< exec_policy::quantify::transposition_max >", "group__module____adiar.html#gaf52f88e387bbbcb65a75b4bef085a3c6", null ],
     [ "make_consumer", "group__module____functional.html#ga5cee18b7a7754e8a3d15487423070968", null ],
     [ "make_consumer", "group__module____functional.html#ga0e186dc412faff6f0036494f7ccdd6ad", null ],
     [ "make_consumer", "group__module____functional.html#gad03c9cc7b4569454beac5e739ff6e44f", null ],
