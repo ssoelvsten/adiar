@@ -1,72 +1,70 @@
 <map id="adiar::statistics" name="adiar::statistics">
-<area shape="rect" id="Node000001" title="Available statistics from algorithm&#39;s and data structures." alt="" coords="1847,438,1969,463"/>
-<area shape="rect" id="Node000002" href="$structadiar_1_1statistics_1_1arc__file__t.html" title="Arc Files statistics." alt="" coords="1543,5,1673,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1688,17,1723,20,1760,28,1794,42,1825,63,1844,93,1861,137,1886,249,1901,361,1908,438,1903,438,1896,362,1881,249,1856,138,1840,96,1821,67,1792,46,1758,33,1722,25,1687,23"/>
-<area shape="rect" id="Node000003" href="$structadiar_1_1statistics_1_1node__file__t.html" title="Node Files statistics." alt="" coords="1543,69,1673,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1688,81,1723,84,1759,91,1794,105,1825,126,1842,150,1857,186,1882,278,1899,372,1908,437,1903,438,1893,373,1877,279,1852,188,1837,153,1821,130,1791,110,1758,97,1722,89,1687,87"/>
+<area shape="rect" id="Node000001" title="Available statistics from algorithm&#39;s and data structures." alt="" coords="1984,514,2107,539"/>
+<area shape="rect" id="Node000002" href="$structadiar_1_1statistics_1_1arc__file__t.html" title="Arc Files statistics." alt="" coords="1680,5,1811,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1825,17,1861,20,1897,27,1932,41,1962,64,1985,100,2003,153,2017,218,2028,288,2041,424,2046,514,2041,514,2036,424,2023,289,2012,219,1998,154,1980,102,1958,67,1929,46,1896,32,1860,25,1825,22"/>
+<area shape="rect" id="Node000003" href="$structadiar_1_1statistics_1_1node__file__t.html" title="Node Files statistics." alt="" coords="1680,69,1811,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1825,81,1860,83,1897,91,1932,104,1962,126,1982,157,1999,202,2013,258,2024,318,2039,435,2046,514,2041,514,2034,435,2019,319,2008,259,1994,204,1977,159,1958,130,1929,109,1895,96,1860,89,1825,86"/>
 <area shape="rect" id="Node000004" href="$structadiar_1_1statistics_1_1levelized__priority__queue__t.html" title="Levelized Priority Queue statistics." alt="" coords="5,156,200,196"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="213,153,267,147,322,144,1609,144,1675,145,1727,154,1775,176,1825,217,1847,243,1865,273,1890,336,1903,395,1908,437,1903,438,1898,396,1885,338,1860,275,1842,246,1821,221,1772,180,1726,159,1675,151,1609,149,322,149,268,152,214,158"/>
-<area shape="rect" id="Node000007" href="$structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html" title="Type and usage of this algorithm&#39;s levelized priority queue." alt="" coords="249,239,397,279"/>
-<area shape="poly" id="edge7_Node000007_Node000004" title=" " alt="" coords="170,198,270,236,268,241,169,203"/>
-<area shape="rect" id="Node000005" href="$structadiar_1_1statistics_1_1count__t.html" title="Counting algorithm statistics." alt="" coords="948,313,1079,353"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="1093,330,1283,333,1511,347,1597,358,1682,373,1754,382,1785,388,1824,400,1860,417,1890,435,1887,440,1857,422,1822,405,1784,393,1753,388,1681,379,1596,363,1510,352,1283,339,1093,336"/>
-<area shape="rect" id="Node000006" href="$structadiar_1_1statistics_1_1____alg__base.html" title="Common statistics for all algorithms." alt="" coords="474,471,605,511"/>
-<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="595,463,631,448,801,391,947,348,948,353,803,396,633,453,597,468"/>
-<area shape="rect" id="Node000008" href="$structadiar_1_1statistics_1_1equality__t.html" title="Equality Checking algorithm statistics." alt="" coords="765,205,895,245"/>
-<area shape="poly" id="edge9_Node000008_Node000006" title=" " alt="" coords="548,456,577,384,601,345,630,310,661,286,695,266,763,239,765,244,698,271,664,290,634,314,605,348,582,386,553,458"/>
-<area shape="rect" id="Node000011" href="$structadiar_1_1statistics_1_1intercut__t.html" title="Intercut algorithm statistics." alt="" coords="1375,776,1505,816"/>
-<area shape="poly" id="edge13_Node000011_Node000006" title=" " alt="" coords="562,521,594,567,634,614,682,658,737,691,820,728,908,755,998,775,1087,788,1172,796,1250,799,1374,798,1374,803,1250,804,1172,801,1086,794,997,780,907,761,818,733,735,696,678,662,630,618,589,570,558,524"/>
-<area shape="rect" id="Node000012" href="$structadiar_1_1statistics_1_1optmin__t.html" title="Boolean Optimization algorithm statistics." alt="" coords="948,817,1079,857"/>
-<area shape="poly" id="edge15_Node000012_Node000006" title=" " alt="" coords="542,524,545,584,558,657,569,695,586,731,607,764,634,793,669,816,708,834,750,845,792,852,876,854,947,847,948,852,876,859,792,857,748,850,706,839,666,821,630,797,603,768,581,734,564,697,553,659,540,584,537,525"/>
-<area shape="rect" id="Node000013" href="$structadiar_1_1statistics_1_1prod2__t.html" title="2&#45;ary Product Construction algorithm for binary inputs." alt="" coords="765,892,895,932"/>
-<area shape="poly" id="edge17_Node000013_Node000006" title=" " alt="" coords="543,524,546,589,558,672,570,716,586,759,607,799,634,835,651,845,684,859,768,889,767,894,682,864,648,850,630,839,602,802,581,761,565,717,553,673,540,589,537,524"/>
-<area shape="rect" id="Node000016" href="$structadiar_1_1statistics_1_1prod2u__t.html" title="2&#45;ary Product Construction algorithm for unary inputs." alt="" coords="765,995,895,1035"/>
-<area shape="poly" id="edge21_Node000016_Node000006" title=" " alt="" coords="542,524,544,594,556,685,568,734,584,782,606,828,634,869,652,883,671,889,691,893,714,906,727,924,738,942,768,970,799,992,795,997,764,974,734,946,722,927,710,910,689,898,669,894,650,888,630,872,601,830,579,784,563,735,551,686,539,595,537,525"/>
-<area shape="rect" id="Node000017" href="$structadiar_1_1statistics_1_1prod3__t.html" title="3&#45;ary Product Construction algorithm statistics." alt="" coords="1375,235,1505,275"/>
-<area shape="poly" id="edge25_Node000017_Node000006" title=" " alt="" coords="573,460,631,418,681,389,735,366,839,326,947,299,1065,279,1182,266,1374,254,1375,259,1183,271,1065,285,949,304,841,331,737,370,684,393,633,422,576,464"/>
-<area shape="rect" id="Node000021" href="$structadiar_1_1statistics_1_1select__t.html" title="Select algorithm statistics." alt="" coords="948,389,1079,429"/>
-<area shape="poly" id="edge30_Node000021_Node000006" title=" " alt="" coords="618,475,947,418,948,423,619,480"/>
-<area shape="rect" id="Node000022" href="$structadiar_1_1statistics_1_1reduce__t.html" title="Reduce algorithm statistics." alt="" coords="765,641,895,681"/>
-<area shape="poly" id="edge32_Node000022_Node000006" title=" " alt="" coords="579,517,650,570,737,623,772,639,770,644,735,628,647,574,575,522"/>
-<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="354,287,521,469,517,472,351,291"/>
-<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="909,216,1053,206,1245,199,1462,200,1573,206,1682,216,1758,220,1790,228,1824,250,1845,271,1862,296,1887,349,1901,400,1908,437,1903,438,1896,401,1882,351,1858,299,1841,275,1821,254,1788,233,1757,225,1681,221,1573,211,1462,206,1245,204,1053,211,909,221"/>
-<area shape="rect" id="Node000009" href="$structadiar_1_1statistics_1_1equality__t_1_1slow__t.html" title="Statistics from O(N log N) time&#45;forward processing equality checking algorithm." alt="" coords="471,184,608,224"/>
-<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="622,207,765,218,764,223,622,213"/>
-<area shape="rect" id="Node000010" href="$structadiar_1_1statistics_1_1equality__t_1_1fast__t.html" title="Statistics from O(N) linear&#45;scan equality checking algorithm." alt="" coords="473,248,605,288"/>
-<area shape="poly" id="edge11_Node000008_Node000010" title=" " alt="" coords="619,254,764,232,765,237,620,259"/>
-<area shape="poly" id="edge12_Node000001_Node000011" title=" " alt="" coords="1519,808,1591,814,1671,811,1711,804,1751,793,1788,776,1821,753,1837,732,1852,699,1876,614,1893,525,1902,463,1908,464,1898,526,1881,615,1857,701,1841,734,1825,757,1790,780,1753,798,1713,809,1671,817,1590,820,1519,814"/>
-<area shape="poly" id="edge14_Node000001_Node000012" title=" " alt="" coords="1093,844,1268,861,1375,867,1485,870,1592,868,1689,858,1767,840,1798,827,1821,811,1839,786,1855,746,1880,642,1896,536,1903,463,1908,464,1901,537,1885,643,1861,748,1844,788,1825,815,1800,832,1769,845,1689,864,1593,873,1485,876,1375,873,1268,866,1092,850"/>
-<area shape="poly" id="edge16_Node000001_Node000013" title=" " alt="" coords="909,911,1136,913,1424,910,1563,904,1683,894,1773,880,1803,871,1821,861,1841,831,1858,785,1872,728,1883,666,1897,545,1903,463,1909,464,1903,545,1889,666,1878,729,1863,787,1846,833,1824,865,1805,876,1774,885,1683,900,1563,909,1424,915,1136,919,909,916"/>
-<area shape="rect" id="Node000014" href="$structadiar_1_1statistics_1_1____raccess__base.html" title="Common statistics for algorithms using random access." alt="" coords="474,1021,605,1061"/>
-<area shape="poly" id="edge18_Node000013_Node000014" title=" " alt="" coords="594,1013,631,996,781,930,784,934,633,1001,597,1018"/>
-<area shape="poly" id="edge22_Node000016_Node000014" title=" " alt="" coords="618,1056,665,1059,712,1056,750,1046,786,1032,787,1037,752,1051,712,1061,665,1065,618,1061"/>
-<area shape="rect" id="Node000015" href="$structadiar_1_1statistics_1_1____pq2__base.html" title="Common statistics for algorithms using a second priority queue." alt="" coords="474,921,605,961"/>
-<area shape="poly" id="edge19_Node000013_Node000015" title=" " alt="" coords="618,931,764,916,765,921,619,936"/>
-<area shape="poly" id="edge23_Node000016_Node000015" title=" " alt="" coords="570,969,599,993,633,1011,666,1019,699,1023,764,1022,764,1027,699,1029,665,1024,631,1016,596,997,567,973"/>
-<area shape="poly" id="edge20_Node000001_Node000016" title=" " alt="" coords="902,1036,983,1060,1086,1085,1204,1105,1333,1117,1399,1118,1465,1115,1530,1107,1594,1093,1656,1074,1715,1048,1770,1015,1821,974,1834,958,1846,935,1866,875,1881,801,1891,720,1902,564,1904,464,1909,464,1907,565,1896,720,1886,802,1871,876,1851,937,1839,961,1825,978,1773,1019,1718,1053,1658,1079,1596,1099,1531,1112,1465,1120,1399,1123,1333,1122,1204,1111,1084,1090,981,1065,901,1041"/>
-<area shape="poly" id="edge24_Node000001_Node000017" title=" " alt="" coords="1519,239,1588,235,1668,238,1709,245,1749,255,1788,270,1824,290,1843,305,1859,324,1883,365,1898,406,1907,437,1902,438,1893,407,1878,367,1854,327,1839,309,1821,294,1786,274,1748,260,1708,250,1667,244,1588,240,1519,245"/>
-<area shape="rect" id="Node000018" href="$structadiar_1_1statistics_1_1quantify__t.html" title="Quantification algorithm statistics." alt="" coords="1543,431,1673,471"/>
-<area shape="poly" id="edge26_Node000001_Node000018" title=" " alt="" coords="1687,448,1846,448,1846,453,1687,453"/>
-<area shape="rect" id="Node000019" href="$structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html" title="Transposition algorithms prior to nested multi&#45;variable sweeping." alt="" coords="1103,463,1345,503"/>
-<area shape="poly" id="edge27_Node000018_Node000019" title=" " alt="" coords="1359,472,1510,460,1542,457,1542,462,1511,465,1359,477"/>
-<area shape="rect" id="Node000020" href="$structadiar_1_1statistics_1_1quantify__t_1_1nested__policy__t.html" title="Nested multi&#45;variable sweeping." alt="" coords="1125,399,1323,439"/>
-<area shape="poly" id="edge28_Node000018_Node000020" title=" " alt="" coords="1337,425,1542,443,1542,448,1336,431"/>
-<area shape="poly" id="edge29_Node000001_Node000021" title=" " alt="" coords="1091,386,1102,384,1212,372,1305,367,1387,367,1464,371,1622,394,1823,428,1859,435,1858,441,1822,433,1621,399,1463,377,1387,372,1305,372,1212,378,1103,389,1092,391"/>
-<area shape="poly" id="edge31_Node000001_Node000022" title=" " alt="" coords="909,681,1001,703,1103,720,1218,731,1309,730,1398,716,1510,687,1603,661,1676,638,1743,605,1821,550,1866,504,1896,462,1900,466,1870,508,1824,554,1746,610,1678,642,1605,666,1511,692,1399,722,1309,735,1218,736,1102,725,1000,708,908,686"/>
-<area shape="rect" id="Node000025" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1outer__up__t.html" title="Outer Reduce Sweep." alt="" coords="1112,671,1336,711"/>
-<area shape="poly" id="edge36_Node000025_Node000022" title=" " alt="" coords="909,664,1112,680,1112,685,909,670"/>
-<area shape="rect" id="Node000029" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__up__t.html" title="Inner Up Sweep(s)" alt="" coords="1113,607,1335,647"/>
-<area shape="poly" id="edge41_Node000029_Node000022" title=" " alt="" coords="909,652,1112,634,1113,639,909,657"/>
-<area shape="rect" id="Node000023" href="$structadiar_1_1statistics_1_1replace__t.html" title="Variable replacement statistics." alt="" coords="1543,937,1673,977"/>
-<area shape="poly" id="edge33_Node000001_Node000023" title=" " alt="" coords="1687,967,1722,967,1758,962,1792,951,1821,931,1833,916,1844,896,1863,841,1877,773,1888,699,1900,557,1904,463,1909,464,1905,557,1893,700,1883,774,1868,842,1849,898,1837,919,1824,935,1794,956,1759,968,1723,972,1687,972"/>
-<area shape="rect" id="Node000024" href="$structadiar_1_1statistics_1_1nested__sweeping__t.html" title="Nested Sweeping statistics." alt="" coords="1535,571,1681,611"/>
-<area shape="poly" id="edge34_Node000001_Node000024" title=" " alt="" coords="1663,562,1879,461,1881,466,1665,567"/>
-<area shape="poly" id="edge35_Node000024_Node000025" title=" " alt="" coords="1349,670,1429,654,1510,632,1567,608,1569,613,1512,637,1430,659,1350,675"/>
-<area shape="rect" id="Node000026" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t.html" title="Root Requests generated for Inner Down Sweep." alt="" coords="1130,527,1318,582"/>
-<area shape="poly" id="edge37_Node000024_Node000026" title=" " alt="" coords="1332,562,1535,581,1534,587,1331,567"/>
-<area shape="rect" id="Node000027" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1inputs__t.html" title=" " alt="" coords="736,481,924,535"/>
-<area shape="poly" id="edge38_Node000026_Node000027" title=" " alt="" coords="938,518,1130,541,1130,546,937,523"/>
-<area shape="rect" id="Node000028" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1requests__t.html" title=" " alt="" coords="736,559,924,614"/>
-<area shape="poly" id="edge39_Node000026_Node000028" title=" " alt="" coords="937,575,1130,560,1130,565,938,581"/>
-<area shape="poly" id="edge40_Node000024_Node000029" title=" " alt="" coords="1349,614,1510,599,1534,596,1535,602,1511,604,1350,619"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="213,153,267,147,322,144,1747,144,1787,147,1821,156,1849,169,1873,188,1915,238,1962,303,1996,360,2020,420,2036,475,2044,513,2039,514,2031,476,2015,422,1991,362,1958,305,1911,241,1869,192,1846,174,1819,161,1786,152,1747,149,322,149,268,152,214,158"/>
+<area shape="rect" id="Node000007" href="$structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html" title="Type and usage of this algorithm&#39;s levelized priority queue." alt="" coords="249,272,397,312"/>
+<area shape="poly" id="edge7_Node000007_Node000004" title=" " alt="" coords="155,200,285,269,283,274,152,205"/>
+<area shape="rect" id="Node000005" href="$structadiar_1_1statistics_1_1count__t.html" title="Counting algorithm statistics." alt="" coords="1115,644,1245,684"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="1259,674,1398,688,1484,692,1577,691,1674,683,1772,668,1868,642,1959,606,1982,591,2003,573,2033,538,2037,541,2006,577,1985,595,1961,610,1870,647,1773,673,1674,688,1577,696,1483,697,1397,694,1259,679"/>
+<area shape="rect" id="Node000006" href="$structadiar_1_1statistics_1_1____alg__base.html" title="Common statistics for all algorithms." alt="" coords="527,563,657,603"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="663,604,738,624,840,640,943,651,1115,660,1114,665,943,656,840,645,737,629,661,609"/>
+<area shape="rect" id="Node000008" href="$structadiar_1_1statistics_1_1equality__t.html" title="Equality Checking algorithm statistics." alt="" coords="931,195,1062,235"/>
+<area shape="poly" id="edge9_Node000008_Node000006" title=" " alt="" coords="612,550,658,486,724,405,807,319,853,280,901,244,930,230,932,235,904,249,856,284,811,323,728,408,662,490,616,553"/>
+<area shape="rect" id="Node000011" href="$structadiar_1_1statistics_1_1intercut__t.html" title="Intercut algorithm statistics." alt="" coords="1517,481,1648,521"/>
+<area shape="poly" id="edge13_Node000011_Node000006" title=" " alt="" coords="670,564,737,553,961,529,1182,513,1517,500,1517,505,1183,519,962,535,738,559,671,569"/>
+<area shape="rect" id="Node000012" href="$structadiar_1_1statistics_1_1optmin__t.html" title="Boolean Optimization algorithm statistics." alt="" coords="1115,537,1245,577"/>
+<area shape="poly" id="edge15_Node000012_Node000006" title=" " alt="" coords="671,577,1114,557,1114,563,671,582"/>
+<area shape="rect" id="Node000013" href="$structadiar_1_1statistics_1_1prod2__t.html" title="2&#45;ary Product Construction algorithm statistics." alt="" coords="931,763,1062,803"/>
+<area shape="poly" id="edge17_Node000013_Node000006" title=" " alt="" coords="622,611,673,659,705,684,739,704,776,720,807,727,839,732,879,741,938,760,936,765,878,747,838,737,806,732,774,725,736,709,702,688,670,663,619,615"/>
+<area shape="rect" id="Node000016" href="$structadiar_1_1statistics_1_1prod3__t.html" title="3&#45;ary Product Construction algorithm statistics." alt="" coords="1517,588,1648,628"/>
+<area shape="poly" id="edge21_Node000016_Node000006" title=" " alt="" coords="671,582,1517,604,1517,609,671,587"/>
+<area shape="rect" id="Node000017" href="$structadiar_1_1statistics_1_1quantify__t.html" title="Quantification algorithm statistics." alt="" coords="931,888,1062,928"/>
+<area shape="poly" id="edge23_Node000017_Node000006" title=" " alt="" coords="616,613,667,677,701,710,739,738,758,747,776,752,809,754,843,757,861,764,880,775,890,784,894,793,905,813,940,853,974,886,971,890,937,856,900,816,890,796,885,787,877,779,859,769,842,763,809,760,775,757,756,752,736,742,697,714,663,680,612,616"/>
+<area shape="rect" id="Node000020" href="$structadiar_1_1statistics_1_1select__t.html" title="Select algorithm statistics." alt="" coords="1115,696,1245,736"/>
+<area shape="poly" id="edge29_Node000020_Node000006" title=" " alt="" coords="640,607,686,631,738,651,839,676,942,694,1037,705,1115,711,1114,716,1037,710,942,699,838,681,737,656,684,636,637,612"/>
+<area shape="rect" id="Node000021" href="$structadiar_1_1statistics_1_1reduce__t.html" title="Reduce algorithm statistics." alt="" coords="931,423,1062,463"/>
+<area shape="poly" id="edge31_Node000021_Node000006" title=" " alt="" coords="626,552,676,517,736,486,786,469,837,457,930,444,931,449,838,462,787,474,738,490,679,521,629,556"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="354,321,574,561,570,564,350,324"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="1076,199,1154,190,1253,183,1366,181,1488,187,1613,205,1676,219,1738,238,1798,260,1856,287,1911,320,1962,358,1995,396,2019,440,2035,481,2044,513,2039,514,2030,483,2014,442,1991,399,1958,362,1908,324,1853,292,1796,265,1736,243,1675,225,1612,210,1487,193,1365,186,1253,188,1155,195,1076,204"/>
+<area shape="rect" id="Node000009" href="$structadiar_1_1statistics_1_1equality__t_1_1slow__t.html" title="Statistics from O(N log N) time&#45;forward processing equality checking algorithm." alt="" coords="523,189,661,229"/>
+<area shape="poly" id="edge10_Node000008_Node000009" title=" " alt="" coords="675,208,931,211,931,216,675,213"/>
+<area shape="rect" id="Node000010" href="$structadiar_1_1statistics_1_1equality__t_1_1fast__t.html" title="Statistics from O(N) linear&#45;scan equality checking algorithm." alt="" coords="526,253,658,293"/>
+<area shape="poly" id="edge11_Node000008_Node000010" title=" " alt="" coords="672,260,878,231,931,223,932,228,879,236,672,265"/>
+<area shape="poly" id="edge12_Node000001_Node000011" title=" " alt="" coords="1662,503,1984,521,1984,526,1662,508"/>
+<area shape="poly" id="edge14_Node000001_Node000012" title=" " alt="" coords="1259,554,1648,545,1984,528,1984,533,1648,551,1259,559"/>
+<area shape="poly" id="edge16_Node000001_Node000013" title=" " alt="" coords="1076,783,1280,786,1408,784,1542,778,1672,768,1791,751,1890,726,1928,710,1958,693,1977,676,1992,657,2016,613,2031,571,2039,539,2044,540,2036,573,2021,616,1997,660,1981,680,1962,697,1931,715,1891,731,1792,756,1673,773,1542,784,1408,789,1280,791,1076,788"/>
+<area shape="rect" id="Node000014" href="$structadiar_1_1statistics_1_1____raccess__base.html" title="Common statistics for algorithms using random access." alt="" coords="527,877,657,917"/>
+<area shape="poly" id="edge18_Node000013_Node000014" title=" " alt="" coords="670,874,878,816,930,800,932,805,879,821,671,879"/>
+<area shape="poly" id="edge26_Node000017_Node000014" title=" " alt="" coords="671,914,738,925,808,930,878,925,930,918,931,924,879,931,808,935,737,931,670,920"/>
+<area shape="rect" id="Node000015" href="$structadiar_1_1statistics_1_1____pq2__base.html" title="Common statistics for algorithms using a second priority queue." alt="" coords="527,787,657,827"/>
+<area shape="poly" id="edge19_Node000013_Node000015" title=" " alt="" coords="671,799,931,784,931,789,671,805"/>
+<area shape="poly" id="edge27_Node000017_Node000015" title=" " alt="" coords="653,830,715,863,727,873,738,880,787,895,838,903,931,908,931,914,838,908,786,900,736,885,723,877,712,868,650,835"/>
+<area shape="poly" id="edge20_Node000001_Node000016" title=" " alt="" coords="1662,609,1727,609,1802,604,1882,593,1959,573,1996,557,2026,537,2028,542,1998,561,1961,579,1883,598,1803,609,1727,614,1662,614"/>
+<area shape="poly" id="edge22_Node000001_Node000017" title=" " alt="" coords="1076,928,1155,947,1254,966,1367,980,1489,986,1615,980,1677,970,1738,956,1798,937,1855,913,1908,882,1958,845,1975,822,1990,788,2014,697,2031,604,2040,539,2045,540,2036,605,2020,699,1995,790,1980,825,1962,849,1911,887,1857,918,1800,942,1740,962,1678,976,1615,985,1489,991,1367,985,1253,971,1154,952,1075,933"/>
+<area shape="rect" id="Node000018" href="$structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html" title="Transposition algorithms prior to nested multi&#45;variable sweeping." alt="" coords="471,955,713,995"/>
+<area shape="poly" id="edge24_Node000017_Node000018" title=" " alt="" coords="727,969,802,962,878,949,950,926,952,931,879,955,803,968,727,974"/>
+<area shape="rect" id="Node000019" href="$structadiar_1_1statistics_1_1quantify__t_1_1nested__policy__t.html" title="Nested multi&#45;variable sweeping." alt="" coords="493,1019,691,1059"/>
+<area shape="poly" id="edge25_Node000017_Node000019" title=" " alt="" coords="704,1029,791,1015,835,1003,878,988,930,959,972,926,975,930,933,963,880,993,837,1008,792,1020,705,1034"/>
+<area shape="poly" id="edge28_Node000001_Node000020" title=" " alt="" coords="1259,716,1437,719,1648,712,1733,704,1818,689,1860,684,1893,682,1924,676,1958,657,1987,629,2010,596,2037,538,2042,541,2015,599,1991,632,1962,661,1926,681,1894,688,1860,690,1819,695,1734,709,1648,717,1437,724,1259,722"/>
+<area shape="poly" id="edge30_Node000001_Node000021" title=" " alt="" coords="1076,443,1400,458,1819,484,1890,488,1961,497,2010,511,2009,517,1959,503,1889,493,1819,489,1400,463,1076,448"/>
+<area shape="rect" id="Node000024" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1outer__up__t.html" title="Outer Reduce Sweep." alt="" coords="1269,315,1493,355"/>
+<area shape="poly" id="edge35_Node000024_Node000021" title=" " alt="" coords="1074,417,1114,405,1305,352,1307,357,1115,411,1076,422"/>
+<area shape="rect" id="Node000028" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__up__t.html" title="Inner Up Sweep(s)" alt="" coords="1270,379,1493,419"/>
+<area shape="poly" id="edge40_Node000028_Node000021" title=" " alt="" coords="1075,431,1269,409,1270,414,1076,436"/>
+<area shape="rect" id="Node000022" href="$structadiar_1_1statistics_1_1replace__t.html" title="Variable replacement statistics." alt="" coords="1680,809,1811,849"/>
+<area shape="poly" id="edge32_Node000001_Node000022" title=" " alt="" coords="1824,838,1859,837,1894,832,1928,822,1958,803,1986,774,2006,740,2021,702,2032,663,2041,590,2042,540,2047,540,2046,591,2037,664,2027,703,2011,742,1990,777,1962,807,1930,827,1895,838,1859,843,1824,843"/>
+<area shape="rect" id="Node000023" href="$structadiar_1_1statistics_1_1nested__sweeping__t.html" title="Nested Sweeping statistics." alt="" coords="1672,345,1819,385"/>
+<area shape="poly" id="edge33_Node000001_Node000023" title=" " alt="" coords="1833,375,1898,393,1931,406,1961,423,1987,444,2009,469,2039,512,2035,515,2005,472,1984,448,1959,428,1929,411,1896,398,1832,380"/>
+<area shape="poly" id="edge34_Node000023_Node000024" title=" " alt="" coords="1507,343,1672,357,1671,362,1507,348"/>
+<area shape="rect" id="Node000025" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t.html" title="Root Requests generated for Inner Down Sweep." alt="" coords="1287,235,1475,290"/>
+<area shape="poly" id="edge36_Node000023_Node000025" title=" " alt="" coords="1490,282,1568,301,1649,324,1699,343,1697,348,1647,329,1567,306,1489,287"/>
+<area shape="rect" id="Node000026" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1inputs__t.html" title=" " alt="" coords="903,259,1091,314"/>
+<area shape="poly" id="edge37_Node000025_Node000026" title=" " alt="" coords="1104,277,1287,266,1287,271,1105,283"/>
+<area shape="rect" id="Node000027" href="$structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1requests__t.html" title=" " alt="" coords="903,338,1091,393"/>
+<area shape="poly" id="edge38_Node000025_Node000027" title=" " alt="" coords="1103,335,1245,297,1287,286,1288,291,1246,303,1105,340"/>
+<area shape="poly" id="edge39_Node000023_Node000028" title=" " alt="" coords="1507,387,1648,375,1671,372,1672,377,1648,380,1507,392"/>
 </map>

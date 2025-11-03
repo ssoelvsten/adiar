@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quantify_0',['quantify',['../structadiar_1_1statistics.html#af2328cd1b5b65daaaf750579c6952e7d',1,'adiar::statistics']]]
+  ['quantify_0',['quantify',['../structadiar_1_1statistics.html#abf6e8f5938dc377805bfe755d612751b',1,'adiar::statistics']]]
 ];

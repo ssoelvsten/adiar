@@ -1,7 +1,7 @@
 var searchData=
 [
   ['r_20i_20_3a_20row_0',['R(i) : Row',['../page__queens.html#autotoc_md34',1,'']]],
-  ['ra_1',['ra',['../structadiar_1_1statistics_1_1prod2__t.html#aa6445e0a8abdb103db42d2bd66336b7a',1,'adiar::statistics::prod2_t::ra'],['../structadiar_1_1statistics_1_1prod2u__t.html#a2467efe7319e516b308bad5f835f1625',1,'adiar::statistics::prod2u_t::ra']]],
+  ['ra_1',['ra',['../structadiar_1_1statistics_1_1prod2__t.html#aa6445e0a8abdb103db42d2bd66336b7a',1,'adiar::statistics::prod2_t::ra'],['../structadiar_1_1statistics_1_1quantify__t.html#a9b65597c374251ded18714502c09f4ed',1,'adiar::statistics::quantify_t::ra']]],
   ['ra_5fruns_2',['ra_runs',['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t.html#a1ac9076499735ebf672d4393810ba9ba',1,'adiar::statistics::nested_sweeping_t::inner_down_t']]],
   ['random_5faccess_3',['Random_Access',['../classadiar_1_1exec__policy.html#a34534681bd89bb97b4cfc8bcbe3c19bba6c97f842eb519778e75a9c93115ba13c',1,'adiar::exec_policy']]],
   ['reduce_4',['reduce',['../structadiar_1_1statistics.html#a769af3893e24816690a22bfc39cf88b2',1,'adiar::statistics']]],
@@ -14,9 +14,9 @@ var searchData=
   ['replace_11',['replace',['../structadiar_1_1statistics.html#a9e4226004af75f71c4d9929a531585aa',1,'adiar::statistics']]],
   ['replace_5ft_12',['replace_t',['../structadiar_1_1statistics_1_1replace__t.html',1,'adiar::statistics']]],
   ['replace_5ftype_13',['replace_type',['../namespaceadiar.html#a4679f9678ef99959f046aea209221af0',1,'adiar']]],
-  ['requests_14',['requests',['../structadiar_1_1statistics_1_1prod2u__t.html#a2ec2b902e5352a7711c22402e84d34d6',1,'adiar::statistics::prod2u_t']]],
+  ['requests_14',['requests',['../structadiar_1_1statistics_1_1quantify__t.html#af86357e35cc58af036a062f42e444f48',1,'adiar::statistics::quantify_t']]],
   ['requests_5ft_15',['requests_t',['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1requests__t.html',1,'adiar::statistics::nested_sweeping_t::inner_down_t']]],
-  ['requests_5funique_16',['requests_unique',['../structadiar_1_1statistics_1_1prod2u__t.html#a76236629020ff9dba966fc336672ceb7',1,'adiar::statistics::prod2u_t']]],
+  ['requests_5funique_16',['requests_unique',['../structadiar_1_1statistics_1_1quantify__t.html#a294ea61947714f95c53f97e5fdd65ddf',1,'adiar::statistics::quantify_t']]],
   ['restricting_20variables_17',['Restricting Variables',['../page__basic.html#autotoc_md13',1,'']]],
   ['row_18',['R(i) : Row',['../page__queens.html#autotoc_md34',1,'']]],
   ['runs_19',['runs',['../structadiar_1_1statistics_1_1____raccess__base.html#ae7ecdb5e7603066657744777c42ff99a',1,'adiar::statistics::__raccess_base::runs'],['../structadiar_1_1statistics_1_1____pq2__base.html#a2b2c76abdce6a5f54773cda73b759ecf',1,'adiar::statistics::__pq2_base::runs'],['../structadiar_1_1statistics_1_1equality__t_1_1slow__t.html#ac1b3858c751afb0e90cab795cc10b5e8',1,'adiar::statistics::equality_t::slow_t::runs'],['../structadiar_1_1statistics_1_1equality__t_1_1fast__t.html#af379e3362c9f7c2fc35366145b3d5f5b',1,'adiar::statistics::equality_t::fast_t::runs'],['../structadiar_1_1statistics_1_1quantify__t.html#a8a2c3390e878510161e4e555cbd171f0',1,'adiar::statistics::quantify_t::runs'],['../structadiar_1_1statistics_1_1nested__sweeping__t.html#af0f83478f27d24605ad894d4cfed965c',1,'adiar::statistics::nested_sweeping_t::runs']]],
