@@ -4,20 +4,7 @@ go_bandit([]() {
   describe("adiar/exec_policy.h", []() {
     describe("exec_policy", []() {
       it("uses expected number of bytes",
-         []() { AssertThat(sizeof(exec_policy), Is().EqualTo(12u)); });
-
-      const float default__transposition_growth = exec_policy::quantify::transposition_growth();
-      const unsigned char default__transposition_max = exec_policy::quantify::transposition_max();
-
-      describe("exec_policy::_::number wrapper", [&]() {
-        it("'quantify::transposition growth' defaults to a non-negative value",
-           [&]() { AssertThat(default__transposition_growth, Is().GreaterThanOrEqualTo(0.0f)); });
-
-        it("'quantify::transposition growth' truncates negative values to '0.0f'", [&]() {
-          const exec_policy::quantify::transposition_growth res(-0.5f);
-          AssertThat(static_cast<float>(res), Is().GreaterThanOrEqualTo(0.0f));
-        });
-      });
+         []() { AssertThat(sizeof(exec_policy), Is().EqualTo(3u)); });
 
       describe("exec_policy(const __ &)", [&]() {
         it("is default constructed with default settings", [&]() {
@@ -31,12 +18,6 @@ go_bandit([]() {
 
           AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
         });
 
         it("can be conversion constructed from 'access mode'", [&]() {
@@ -49,12 +30,6 @@ go_bandit([]() {
 
           AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
         });
 
         it("can be conversion constructed from 'memory mode'", [&]() {
@@ -67,12 +42,6 @@ go_bandit([]() {
 
           AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
         });
 
         it("can be conversion constructed from 'quantify::algorithm'", [&]() {
@@ -85,48 +54,6 @@ go_bandit([]() {
 
           AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Singleton));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
-        });
-
-        it("can be conversion constructed from 'quantify::transposition growth'", [&]() {
-          exec_policy ep = exec_policy::quantify::transposition_growth(4.2f);
-
-          AssertThat(ep.template get<exec_policy::access>(),
-                     Is().EqualTo(exec_policy::access::Auto));
-          AssertThat(ep.template get<exec_policy::memory>(),
-                     Is().EqualTo(exec_policy::memory::Auto));
-
-          AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
-                     Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(4.2f));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
-        });
-
-        it("can be conversion constructed from 'quantify::transposition max'", [&]() {
-          exec_policy ep = exec_policy::quantify::transposition_max(42);
-
-          AssertThat(ep.template get<exec_policy::access>(),
-                     Is().EqualTo(exec_policy::access::Auto));
-          AssertThat(ep.template get<exec_policy::memory>(),
-                     Is().EqualTo(exec_policy::memory::Auto));
-
-          AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
-                     Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(42));
         });
       });
 
@@ -181,45 +108,12 @@ go_bandit([]() {
                      Is().EqualTo(exec_policy::quantify::Nested));
         });
 
-        it("can set 'quantify::transposition growth epsilon'", [&]() {
-          exec_policy ep;
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-
-          ep.set(exec_policy::quantify::transposition_growth(4.2));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(4.2f));
-        });
-
-        /* TODO
-        it("throws when setting 'quantify::transposition growth epsilon' to a negative value", []()
-        { exec_policy ep; AssertThrows(invalid_argument,
-        ep.set(exec_policy::quantify::transposition_growth(-42.0)));
-        });
-        */
-
-        it("can set 'quantify::transposition max delta'", [&]() {
-          exec_policy ep;
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
-
-          ep.set(exec_policy::quantify::transposition_max(42));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(42));
-        });
-
         it("can set settigs with a builder pattern syntax", [&]() {
           exec_policy ep;
 
           ep.set(exec_policy::access::Priority_Queue)
             .set(exec_policy::memory::External)
-            .set(exec_policy::quantify::Singleton)
-            .set(exec_policy::quantify::transposition_growth(4.2f))
-            .set(exec_policy::quantify::transposition_max(42));
+            .set(exec_policy::quantify::Singleton);
 
           AssertThat(ep.template get<exec_policy::access>(),
                      Is().EqualTo(exec_policy::access::Priority_Queue));
@@ -229,12 +123,6 @@ go_bandit([]() {
 
           AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Singleton));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(4.2f));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(42));
         });
       });
 
@@ -280,20 +168,6 @@ go_bandit([]() {
 
           AssertThat(ep1, Is().Not().EqualTo(ep2));
         });
-
-        it("mismatches on 'quantify::transposition growth'", [&]() {
-          exec_policy ep1 = exec_policy::quantify::transposition_growth(4.2f);
-          exec_policy ep2 = exec_policy::quantify::transposition_growth(2.1f);
-
-          AssertThat(ep1, Is().Not().EqualTo(ep2));
-        });
-
-        it("mismatches on 'quantify::transposition max'", [&]() {
-          exec_policy ep1 = exec_policy::quantify::transposition_max(32);
-          exec_policy ep2 = exec_policy::quantify::transposition_max(12);
-
-          AssertThat(ep1, Is().Not().EqualTo(ep2));
-        });
       });
 
       describe("operator &(const exec_policy&)", [&]() {
@@ -321,27 +195,12 @@ go_bandit([]() {
 
         it("can create a copy with another 'quantify::*'", [&]() {
           const exec_policy in  = exec_policy::memory::Internal;
-          const exec_policy out = in & exec_policy::quantify::Singleton
-            & exec_policy::quantify::transposition_growth(4.2f)
-            & exec_policy::quantify::transposition_max(42);
+          const exec_policy out = in & exec_policy::quantify::Singleton;
 
           AssertThat(in.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(in.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(default__transposition_growth));
-          AssertThat(
-            static_cast<unsigned char>(in.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(default__transposition_max));
-
           AssertThat(out.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Singleton));
-          AssertThat(
-            static_cast<float>(out.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(4.2f));
-          AssertThat(static_cast<unsigned char>(
-                       out.template get<exec_policy::quantify::transposition_max>()),
-                     Is().EqualTo(42));
         });
 
         it("can lift enum values [access]", [&]() {
@@ -366,10 +225,8 @@ go_bandit([]() {
                      Is().EqualTo(exec_policy::quantify::Nested));
         });
 
-        it("can lift enum values [quantify::*]", [&]() {
-          const exec_policy ep = exec_policy::quantify::Nested
-            & exec_policy::quantify::transposition_growth(4.2)
-            & exec_policy::quantify::transposition_max(42);
+        it("can lift enum values [quantify*]", [&]() {
+          const exec_policy ep = exec_policy::quantify::Nested;
 
           AssertThat(ep.template get<exec_policy::access>(),
                      Is().EqualTo(exec_policy::access::Auto));
@@ -379,12 +236,6 @@ go_bandit([]() {
 
           AssertThat(ep.template get<exec_policy::quantify::algorithm>(),
                      Is().EqualTo(exec_policy::quantify::Nested));
-          AssertThat(
-            static_cast<float>(ep.template get<exec_policy::quantify::transposition_growth>()),
-            Is().EqualTo(4.2f));
-          AssertThat(
-            static_cast<unsigned char>(ep.template get<exec_policy::quantify::transposition_max>()),
-            Is().EqualTo(42));
         });
       });
     });
