@@ -5,6 +5,7 @@
 #include <adiar/internal/algorithms/prod2.h>
 #include <adiar/internal/cnl.h>
 
+
 namespace adiar
 {
   bool
