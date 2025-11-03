@@ -1,5 +1,11 @@
 var NAVTREEINDEX4 =
 {
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html":[4,6,0,13,1],
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#a83d24109c146997ea8a78b5f736601cc":[4,6,0,13,1,5],
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#a9c83f56bc2b1a865d58e97ad2c69f0cf":[4,6,0,13,1,2],
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#a9cbb4437bd4b144404f205be1122056e":[4,6,0,13,1,1],
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aa8e05a681ff42ad31d1746e01c4f8caf":[4,6,0,13,1,0],
+"structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ab0aafa99d65a0f04e699ec33ec75c901":[4,6,0,13,1,6],
 "structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ac6f1a46078169d94fe18ee72d44bf2b6":[4,6,0,13,1,3],
 "structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d":[4,6,0,13,1,4],
 "structadiar_1_1statistics_1_1reduce__t.html":[4,6,0,14],

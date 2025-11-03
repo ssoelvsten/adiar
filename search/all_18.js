@@ -16,7 +16,7 @@ var searchData=
   ['simple_13',['simple',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#a83d24109c146997ea8a78b5f736601cc',1,'adiar::statistics::quantify_t::nested_transposition_t']]],
   ['single_20position_14',['S(i,j) : Single Position',['../page__queens.html#autotoc_md33',1,'']]],
   ['single_20variables_15',['Single Variables',['../page__basic.html#autotoc_md18',1,'']]],
-  ['singleton_16',['singleton',['../classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197acf233267597644b4c91a99f8f17cbe69',1,'adiar::exec_policy::quantify::Singleton'],['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ab0aafa99d65a0f04e699ec33ec75c901',1,'adiar::statistics::quantify_t::nested_transposition_t::singleton']]],
+  ['singleton_16',['singleton',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#ab0aafa99d65a0f04e699ec33ec75c901',1,'adiar::statistics::quantify_t::nested_transposition_t::singleton'],['../classadiar_1_1exec__policy_1_1quantify.html#abee6d64d26c9ebc46e6c47a718e22197acf233267597644b4c91a99f8f17cbe69',1,'adiar::exec_policy::quantify::Singleton']]],
   ['singleton_5fsweeps_17',['singleton_sweeps',['../structadiar_1_1statistics_1_1quantify__t.html#af6fc70be36a5f085a3a3d5c2bf25d6cc',1,'adiar::statistics::quantify_t']]],
   ['size_18',['size',['../classadiar_1_1internal_1_1dd.html#adc08e814ccd31b2c213cae02421a7856',1,'adiar::internal::dd::size()'],['../classadiar_1_1internal_1_1____dd.html#ab249b578d368d029ea66e732d9fd1849',1,'adiar::internal::__dd::size()']]],
   ['skipped_19',['skipped',['../structadiar_1_1statistics_1_1quantify__t.html#aed21498989035cea7b934901862fa37f',1,'adiar::statistics::quantify_t']]],

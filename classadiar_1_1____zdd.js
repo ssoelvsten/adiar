@@ -7,6 +7,7 @@ var classadiar_1_1____zdd =
     [ "shared_arc_file_type", "classadiar_1_1____zdd.html#a073bd9314a5213108cdb99e4175dc5ae", null ],
     [ "shared_node_file_type", "classadiar_1_1____zdd.html#a0e3ab4aa5b10f26683c9d7b7bfb577b1", null ],
     [ "signed_label_type", "classadiar_1_1____zdd.html#a17d8487d9260569855a29780e975b8d3", null ],
+    [ "uid_type", "classadiar_1_1____zdd.html#a7ee63f3c5e69ef1374c85ec112398e08", null ],
     [ "__zdd", "classadiar_1_1____zdd.html#a021e7080658ecb52a8120ed559f31e9f", null ],
     [ "__zdd", "classadiar_1_1____zdd.html#a96bab59f59ddbb66b38bbeb1688d58cf", null ],
     [ "__zdd", "classadiar_1_1____zdd.html#a65226cc094b18dd90dcdec8501209af6", null ],

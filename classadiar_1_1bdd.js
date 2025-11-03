@@ -8,6 +8,7 @@ var classadiar_1_1bdd =
     [ "shared_node_file_type", "classadiar_1_1bdd.html#a6e3a8ba34a8e4c6ffa86612923293b0f", null ],
     [ "signed_label_type", "classadiar_1_1bdd.html#a88c9ef967294674d6a63ef5917e4d6eb", null ],
     [ "terminal_type", "classadiar_1_1bdd.html#ab27dcf883d83c04d944288f0b3507cd8", null ],
+    [ "uid_type", "classadiar_1_1bdd.html#a5287d1c54c33c435b33622a65b3a25fa", null ],
     [ "bdd", "classadiar_1_1bdd.html#a050e7842a11d52a4190e215ca4b55f8f", null ],
     [ "bdd", "classadiar_1_1bdd.html#ab85ae638dfda8b6cceee0f2b891e3620", null ],
     [ "bdd", "classadiar_1_1bdd.html#a2861d0db43c503b9342ff9bfff7ed6a4", null ],
