@@ -542,26 +542,6 @@ namespace adiar
         o << indent << label << "pruning" << internal::stats_quantify.nested_transposition.pruning
           << endl;
 
-        o << indent << label << "partial quantification" << bold_off
-          << internal::stats_quantify.nested_transposition.partial << endl;
-
-        indent_level++;
-
-        o << indent << label << "repetitions"
-          << internal::stats_quantify.nested_transposition.partial_repetitions << " = "
-          << internal::percent_frac(
-               internal::stats_quantify.nested_transposition.partial_repetitions,
-               internal::stats_quantify.nested_transposition.partial)
-          << percent << endl;
-        o << indent << label << "terminations"
-          << internal::stats_quantify.nested_transposition.partial_terminations << " = "
-          << internal::percent_frac(
-               internal::stats_quantify.nested_transposition.partial_terminations,
-               internal::stats_quantify.nested_transposition.partial)
-          << percent << endl;
-
-        indent_level--;
-
         indent_level--;
       }
       o << indent << endl;

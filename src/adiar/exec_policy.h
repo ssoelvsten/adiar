@@ -89,8 +89,11 @@ namespace adiar
     /// \brief   Strategies and settings for Adiar to use in quantify/project algorithms.
     ///
     /// \details Adiar’s supports multiple approaches to compute the quantification of multiple
-    ///          variables. While `Auto` heuristically uses one or more of the three options, one
-    ///          can choose to run the approach of particular interest
+    ///          variables. While `Auto` heuristically uses one or more of the given options, one
+    ///          can choose to run the approach of particular interest.
+    ///
+    /// \note    For more details, please read "Multi-variable Quantification of BDDs in External
+    ///          Memory using Nested Sweeping" arXiv 2024.
     ///
     /// \see bdd_exists bdd_forall zdd_project
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,106 +109,6 @@ namespace adiar
         Nested,
         /** Quantify each variable independently. */
         Singleton
-      };
-
-      //////////////////////////////////////////////////////////////////////////////////////////////
-      /// \brief   Multiplicative value for the maximal growth of a BDD may during repeated
-      ///          transpostion before switching to Nested Sweeping.
-      ///
-      /// \details A value of `1.0` is equivalent to the original input size. Larger Values reflect
-      ///          an acceptable increase in size. A value between `0.0` and `1.0` requires the BDD
-      ///          to shrink to continue repeating transposition.
-      ///
-      /// \details A negative value will result in undefined behaviour.
-      //////////////////////////////////////////////////////////////////////////////////////////////
-      class transposition_growth
-      {
-      private:
-        static constexpr float min_val = 0.0f;
-
-      public:
-        /// \brief Minimal value
-        static constexpr transposition_growth
-        min()
-        {
-          return min_val;
-        }
-
-        /// \brief Maximal value
-        static constexpr transposition_growth
-        max()
-        {
-          return std::numeric_limits<float>::max();
-        }
-
-      private:
-        float _value;
-
-        /// \brief Convert into a `signed char`
-        static constexpr float
-        from_float(float f)
-        {
-          // Truncate `f` to be in the interval [0.0f, ...)
-          return f < min_val ? min_val : f;
-        }
-
-      public:
-        constexpr transposition_growth()
-          : _value(1.5f)
-        {}
-
-        /// \brief Wrap a `float`.
-        constexpr transposition_growth(float value)
-          : _value(from_float(value))
-        {}
-
-        /// \brief Reobtain the wrapped `float`
-        operator float() const
-        {
-          return this->_value;
-        }
-      };
-
-      //////////////////////////////////////////////////////////////////////////////////////////////
-      /// \brief Maximum number of repeated transpositions before switching to nested sweeping.
-      //////////////////////////////////////////////////////////////////////////////////////////////
-      class transposition_max
-      {
-      public:
-        /// \brief Minimal value (equivalent to disabling repeated transpositions).
-        static constexpr transposition_max
-        min()
-        {
-          return std::numeric_limits<unsigned char>::min();
-        }
-
-        /// \brief Maximal value (equivalent to using the built-in heuristics
-        ///        based on the graph's meta information).
-        static constexpr transposition_max
-        max()
-        {
-          return std::numeric_limits<unsigned char>::max();
-        }
-
-      private:
-        unsigned char _value;
-
-      public:
-        /// \brief Default value construction.
-        constexpr transposition_max()
-          : _value(std::numeric_limits<unsigned char>::min())
-        {}
-
-        /// \brief Wrap an `unsigned char`
-        constexpr transposition_max(unsigned char value)
-          : _value(value)
-        {}
-
-        /// \brief Reobtain the wrapped `unsigned char` value
-        operator unsigned char() const
-        {
-          return this->_value;
-        }
       };
     };
 
@@ -226,17 +129,6 @@ namespace adiar
     /// \brief `quantify` algorithm (default `Nested`).
     ////////////////////////////////////////////////////////////////////////////////////////////////
     quantify::algorithm _quantify__algorithm = quantify::Nested;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Maximal growth during repeated transposition of `quantify`.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    quantify::transposition_growth _quantify__transposition_growth /*default*/;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Maximal number of repeated transpositions in `quantify`.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    quantify::transposition_max _quantify__transposition_max /*default*/;
-    ;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,20 +167,6 @@ namespace adiar
       : _quantify__algorithm(qa)
     {}
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Conversion construction from `quantify` transposition growth value.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    exec_policy(const quantify::transposition_growth& tg)
-      : _quantify__transposition_growth(tg)
-    {}
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Conversion construction from `quantify` transposition max runs value.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    exec_policy(const quantify::transposition_max& tm)
-      : _quantify__transposition_max(tm)
-    {}
-
     // TODO: constructor with defaults for a specific 'version number'?
 
   public:
@@ -321,9 +199,7 @@ namespace adiar
     {
       // Order based from the most generic to the most specific setting.
       return this->_memory == ep._memory && this->_access == ep._access
-        && this->_quantify__algorithm == ep._quantify__algorithm
-        && this->_quantify__transposition_growth == ep._quantify__transposition_growth
-        && this->_quantify__transposition_max == ep._quantify__transposition_max;
+        && this->_quantify__algorithm == ep._quantify__algorithm;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -395,46 +271,6 @@ namespace adiar
       exec_policy ep = *this;
       return ep.set(qa);
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Set the quantify strategy.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    exec_policy&
-    set(const quantify::transposition_growth& tg)
-    {
-      this->_quantify__transposition_growth = tg;
-      return *this;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Create a copy with the quantify algorithm changed.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    exec_policy
-    operator&(const quantify::transposition_growth& tg) const
-    {
-      exec_policy ep = *this;
-      return ep.set(tg);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Set the quantify strategy.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    exec_policy&
-    set(const quantify::transposition_max& tm)
-    {
-      this->_quantify__transposition_max = tm;
-      return *this;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Create a copy with the quantify algorithm changed.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    exec_policy
-    operator&(const quantify::transposition_max& tm) const
-    {
-      exec_policy ep = *this;
-      return ep.set(tm);
-    }
   };
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -465,26 +301,6 @@ namespace adiar
   exec_policy::get<exec_policy::quantify::algorithm>() const
   {
     return this->_quantify__algorithm;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Chosen quantification strategy.
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  template <>
-  inline const exec_policy::quantify::transposition_growth&
-  exec_policy::get<exec_policy::quantify::transposition_growth>() const
-  {
-    return this->_quantify__transposition_growth;
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Chosen quantification strategy.
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  template <>
-  inline const exec_policy::quantify::transposition_max&
-  exec_policy::get<exec_policy::quantify::transposition_max>() const
-  {
-    return this->_quantify__transposition_max;
   }
 
   /// \}

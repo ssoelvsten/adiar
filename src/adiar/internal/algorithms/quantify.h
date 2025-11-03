@@ -70,18 +70,6 @@ namespace adiar::internal
                                   1,
                                   0>;
 
-  /// \brief Type of the primary priority queue for arc-based inputs.
-  ///
-  /// \details This is used during repeated (partial) quantification.
-  template <size_t LookAhead, memory_mode MemoryMode>
-  using quantify_priority_queue_1_arc_t =
-    levelized_narc_priority_queue<quantify_request<0>,
-                                  request_data_first_lt<quantify_request<0>>,
-                                  LookAhead,
-                                  MemoryMode,
-                                  1,
-                                  0>;
-
   /// \brief Type of the secondary priority queue to further forward requests across a level.
   template <memory_mode MemoryMode>
   using quantify_priority_queue_2_t =
@@ -353,42 +341,22 @@ namespace adiar::internal
             __quantify_resolve_request<Policy, 4>(
               { children_fst[false], children_fst[true], children_snd[false], children_snd[true] });
 
-          if (!Policy::partial_quantification || rec_all[2] == Policy::pointer_type::nil()) {
-            // Collapsed to a terminal?
-            if (req.data.source.is_nil() && rec_all[0].is_terminal()) {
-              adiar_assert(rec_all[1] == Policy::pointer_type::nil(),
-                           "Operator should already be applied");
+          // Collapsed to a terminal?
+          if (req.data.source.is_nil() && rec_all[0].is_terminal()) {
+            adiar_assert(rec_all[1] == Policy::pointer_type::nil(),
+                         "Operator should already be applied");
 
-              return typename Policy::dd_type(rec_all[0].value());
-            }
+            return typename Policy::dd_type(rec_all[0].value());
+          }
 
-            // No need to output a node as everything fits within a 2-tuple.
-            quantify_request<0>::target_t rec(rec_all[0], rec_all[1]);
+          quantify_request<0>::target_t rec(rec_all[0], rec_all[1]);
 
-            if (rec[0].is_terminal()) {
-              const __quantify_recurse_in__output_terminal handler(aw, rec[0]);
-              request_foreach(pq, req.target, handler);
-            } else {
-              const __quantify_recurse_in__forward handler(pq, rec);
-              request_foreach(pq, req.target, handler);
-            }
-          } else if constexpr (Policy::partial_quantification) {
-            // Store for later, that a node is yet to be done.
-            policy.remaining_nodes++;
-
-            // Output an intermediate node at this level to be quantified later.
-            const node::uid_type out_uid(out_label, out_id++);
-
-            quantify_request<0>::target_t rec0(rec_all[0], rec_all[1]);
-            __quantify_recurse_out<Policy>(pq, aw, out_uid.as_ptr(false), rec0);
-
-            quantify_request<0>::target_t rec1(rec_all[2], rec_all[3]);
-            __quantify_recurse_out<Policy>(pq, aw, out_uid.as_ptr(true), rec1);
-
-            const __quantify_recurse_in__output_node handler(aw, out_uid);
+          if (rec[0].is_terminal()) {
+            const __quantify_recurse_in__output_terminal handler(aw, rec[0]);
             request_foreach(pq, req.target, handler);
           } else {
-            adiar_unreachable(); // LCOV_EXCL_LINE
+            const __quantify_recurse_in__forward handler(pq, rec);
+            request_foreach(pq, req.target, handler);
           }
 
           continue;
@@ -531,42 +499,22 @@ namespace adiar::internal
             __quantify_resolve_request<Policy, 4>(
               { children_fst[false], children_fst[true], children_snd[false], children_snd[true] });
 
-          if (!Policy::partial_quantification || rec_all[2] == Policy::pointer_type::nil()) {
-            // Collapsed to a terminal?
-            if (req.data.source.is_nil() && rec_all[0].is_terminal()) {
-              adiar_assert(rec_all[1] == Policy::pointer_type::nil(),
-                           "Operator should already be applied");
+          // Collapsed to a terminal?
+          if (req.data.source.is_nil() && rec_all[0].is_terminal()) {
+            adiar_assert(rec_all[1] == Policy::pointer_type::nil(),
+                         "Operator should already be applied");
 
-              return typename Policy::dd_type(rec_all[0].value());
-            }
+            return typename Policy::dd_type(rec_all[0].value());
+          }
 
-            // No need to output a node as everything fits within a 2-tuple.
-            quantify_request<0>::target_t rec(rec_all[0], rec_all[1]);
+          quantify_request<0>::target_t rec(rec_all[0], rec_all[1]);
 
-            if (rec[0].is_terminal()) {
-              const __quantify_recurse_in__output_terminal handler(aw, rec[0]);
-              request_foreach(pq_1, pq_2, req.target, handler);
-            } else {
-              const __quantify_recurse_in__forward handler(pq_1, rec);
-              request_foreach(pq_1, pq_2, req.target, handler);
-            }
-          } else if constexpr (Policy::partial_quantification) {
-            // Store for later, that a node is yet to be done.
-            policy.remaining_nodes++;
-
-            // Output an intermediate node at this level to be quantified later.
-            const node::uid_type out_uid(out_label, out_id++);
-
-            quantify_request<0>::target_t rec0(rec_all[0], rec_all[1]);
-            __quantify_recurse_out<Policy>(pq_1, aw, out_uid.as_ptr(false), rec0);
-
-            quantify_request<0>::target_t rec1(rec_all[2], rec_all[3]);
-            __quantify_recurse_out<Policy>(pq_1, aw, out_uid.as_ptr(true), rec1);
-
-            const __quantify_recurse_in__output_node handler(aw, out_uid);
+          if (rec[0].is_terminal()) {
+            const __quantify_recurse_in__output_terminal handler(aw, rec[0]);
             request_foreach(pq_1, pq_2, req.target, handler);
           } else {
-            adiar_unreachable(); // LCOV_EXCL_LINE
+            const __quantify_recurse_in__forward handler(pq_1, rec);
+            request_foreach(pq_1, pq_2, req.target, handler);
           }
 
           continue;
@@ -869,60 +817,6 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Single-top quantification sweep on arc-based inputs.
-  ///
-  /// \details This is used with repeated (partial) quantification.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy>
-  typename Policy::__dd_type
-  __quantify(const exec_policy& ep, const typename Policy::__dd_type& in, Policy& policy)
-  {
-    adiar_assert(in.template has<typename Policy::shared_arc_file_type>(),
-                 "__quantify(..., Policy::__dd_type, ...) is only designed for arc-based inputs");
-
-    // ---------------------------------------------------------------------------------------------
-    // Case: Terminal.
-    //
-    // NOTE: __dd cannot represent a single terminal.
-
-    // ---------------------------------------------------------------------------------------------
-    // Case: Do the product construction (with random access)
-    //
-    // Use random access if requested or the width fits half(ish) of the memory otherwise dedicated
-    // to the secondary priority queue.
-
-    constexpr size_t data_structures_in_pq_2 =
-      quantify_priority_queue_2_t<memory_mode::Internal>::data_structures;
-
-    constexpr size_t data_structures_in_pqs = data_structures_in_pq_2
-      + quantify_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD,
-                                         memory_mode::Internal>::data_structures;
-
-    const size_t ra_threshold =
-      (memory_available() * data_structures_in_pq_2) / 2 * (data_structures_in_pqs);
-
-    const size_t width = in.template get<typename Policy::shared_arc_file_type>()->width;
-
-    if ( // Use `__prod2_ra` if user has forced Random Access
-      ep.template get<exec_policy::access>() == exec_policy::access::Random_Access
-      || ( // Heuristically, if the narrowest canonical fits
-        ep.template get<exec_policy::access>() == exec_policy::access::Auto
-        && narc_raccess::memory_usage(width) <= ra_threshold)) {
-#ifdef ADIAR_STATS
-      stats_quantify.ra.runs += 1u;
-#endif
-      return __quantify_ra<narc_raccess, quantify_priority_queue_1_arc_t>(ep, in, policy);
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // Case: Do the product construction (with priority queues)
-#ifdef ADIAR_STATS
-    stats_quantify.pq.runs += 1u;
-#endif
-    return __quantify_pq<narc_ifstream<>, quantify_priority_queue_1_arc_t>(ep, in, policy);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Single-variable Quantification
@@ -950,11 +844,6 @@ namespace adiar::internal
     {
       return this->_level == level;
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Disable logic for partial quantification during sweep.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr bool partial_quantification = false;
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1062,11 +951,6 @@ namespace adiar::internal
     {
       return false;
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief The partial quantification logic of the top-down sweep can be disabled.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr bool partial_quantification = false;
 
     // bool has_sweep(const typename Policy::label_type x) const;
 
@@ -1200,9 +1084,6 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Policy Decorator for Pruning Quantification.
-  ///
-  /// \details This is to-be used as the initial transposing sweep if (Repeated) Partial
-  ///          Quantification is not to be used.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   class pruning_quantify_policy : public Policy
@@ -1269,59 +1150,6 @@ namespace adiar::internal
     }
 
     static constexpr bool skip_reduce = false;
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Policy Decorator for Partial Quantification.
-  ///
-  /// \details This is to-be used as part of Repeated Quantification (during multi-variable
-  ///          quantification before starting Nested Sweeping).
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy>
-  class partial_quantify_policy : public Policy
-  {
-  public:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Predicate for whether a level should be swept on (or not).
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    using pred_t = predicate<typename Policy::label_type>;
-
-  private:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Predicate for whether a level should be swept on (or not).
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    const pred_t& _pred;
-
-  public:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Number of nodes left to-be quantified.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    size_t remaining_nodes = 0;
-
-  public:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    partial_quantify_policy(const pred_t& pred)
-      : _pred(pred)
-    {}
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    inline bool
-    should_quantify(typename Policy::label_type level) const
-    {
-      return _pred(level) == Policy::quantify_onset;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    void
-    reset()
-    {
-      remaining_nodes = 0;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Enable partial quantification logic.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr bool partial_quantification = true;
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1549,71 +1377,17 @@ namespace adiar::internal
     case exec_policy::quantify::Nested: {
       // -------------------------------------------------------------------------------------------
       // Case: Nested Sweeping
-
-      // Do Partial Quantification as long as...
-      //   1. ... it stays smaller than 1+epsilon of the input size.
-      const size_t transposition__size_threshold = (std::min(
-        static_cast<double>(std::numeric_limits<size_t>::max() / 2u),
-        static_cast<double>(ep.template get<exec_policy::quantify::transposition_growth>())
-          * static_cast<double>(pred_profile.dd_size)));
-
-      //   2. ... it has not run more than the maximum number of iterations.
-      const size_t transposition__max_iterations =
-        std::min<size_t>({ ep.template get<exec_policy::quantify::transposition_max>(),
-                           pred_profile.quant_shallow_vars });
-
-      unreduced_t transposed;
-
-      // If transposition__max_iterations is 0, then only prune quantified levels.
-      if (transposition__max_iterations == 0) {
-        // Singleton Quantification of bottom-most level
 #ifdef ADIAR_STATS
-        stats_quantify.nested_transposition.pruning += 1u;
+      stats_quantify.nested_transposition.pruning += 1u;
 #endif
-        pruning_quantify_policy<Policy> pruning_impl(pred);
-        transposed = select(ep, std::move(dd), pruning_impl);
-      } else {
-        // Partial Quantification
-#ifdef ADIAR_STATS
-        stats_quantify.nested_transposition.partial += 1u;
-#endif
-        partial_quantify_policy<Policy> partial_impl(pred);
-        transposed = __quantify(ep, std::move(dd), partial_impl);
-
-        if (partial_impl.remaining_nodes == 0) {
-#ifdef ADIAR_STATS
-          stats_quantify.nested_transposition.partial_terminations += 1u;
-#endif
-          return transposed;
-        }
-
-        for (size_t i = 1; i < transposition__max_iterations; ++i) {
-          if (transposition__size_threshold < transposed.size()) { break; }
-
-          // Reset policy and rerun partial quantification
-          partial_impl.reset();
+      pruning_quantify_policy<Policy> pruning_impl(pred);
+      const unreduced_t transposed = select(ep, std::move(dd), pruning_impl);
 
 #ifdef ADIAR_STATS
-          stats_quantify.nested_transposition.partial_repetitions += 1u;
+      stats_quantify.nested_sweeps += 1u;
 #endif
-          transposed = __quantify(ep, transposed, partial_impl);
-
-          // Reduce result, if no work is left to be done.
-          if (partial_impl.remaining_nodes == 0) {
-#ifdef ADIAR_STATS
-            stats_quantify.nested_transposition.partial_terminations += 1u;
-#endif
-            return transposed;
-          }
-        }
-      }
-      { // Nested Sweeping
-#ifdef ADIAR_STATS
-        stats_quantify.nested_sweeps += 1u;
-#endif
-        multi_quantify_policy__pred<Policy> inner_impl(pred);
-        return nested_sweep<>(ep, std::move(transposed), inner_impl);
-      }
+      multi_quantify_policy__pred<Policy> inner_impl(pred);
+      return nested_sweep<>(ep, std::move(transposed), inner_impl);
     }
 
       // LCOV_EXCL_START
@@ -1640,9 +1414,6 @@ namespace adiar::internal
     case exec_policy::quantify::Nested: {
       // -------------------------------------------------------------------------------------------
       // Case: Nested Sweeping
-      //
-      // TODO: Also go-to 'dd_type()' variant, if heuristic claims it is a good idea to do some
-      //       partial quantification.
       if (__dd.template has<typename Policy::shared_node_file_type>()) {
         return quantify<Policy>(ep, typename Policy::dd_type(std::move(__dd)), pred);
       }
