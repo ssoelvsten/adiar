@@ -3,7 +3,7 @@
 #include <adiar/types.h>
 
 #include <adiar/internal/algorithms/nested_sweeping.h>
-#include <adiar/internal/algorithms/prod2.h>
+#include <adiar/internal/algorithms/prod2b.h>
 #include <adiar/internal/algorithms/quantify.h>
 #include <adiar/internal/algorithms/replace.h>
 #include <adiar/internal/bool_op.h>
@@ -17,17 +17,17 @@ namespace adiar
   ///          simultaneously prunes its subtrees based on the quantification predicate.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename LevelPredicate>
-  class relprod_prod2_policy
+  class relprod_prod2b_policy
     : public bdd_policy
     , public internal::and_op
-    , public internal::prod2_mixed_level_merger<bdd_policy>
+    , public internal::prod2b_mixed_level_merger<bdd_policy>
   {
   private:
     const LevelPredicate& _pred;
     bool _prune_level = false;
 
   public:
-    relprod_prod2_policy(const LevelPredicate& pred)
+    relprod_prod2b_policy(const LevelPredicate& pred)
       : _pred(pred)
     {}
 
@@ -100,7 +100,7 @@ namespace adiar
 
   public:
     /// \brief Hook for changing the targets of a new node's children.
-    internal::prod2_rec
+    internal::prod2b_rec
     resolve_request(const internal::tuple<bdd::pointer_type>& r_low,
                     const internal::tuple<bdd::pointer_type>& r_high) const
     {
@@ -109,11 +109,11 @@ namespace adiar
 
       // Prune subtree(s) if either child is 'false' and is quantified later.
       if (this->_prune_level && (low_false || high_false)) {
-        return internal::prod2_rec_skipto{ low_false ? high : low };
+        return internal::prod2b_rec_skipto{ low_false ? high : low };
       }
       // Prune subtree(s) if either child is 'true' and is quantified later.
       if (this->_prune_level && (this->__is_true(low) || this->__is_true(high))) {
-        return internal::prod2_rec_skipto{ bdd::pointer_type(true) };
+        return internal::prod2b_rec_skipto{ bdd::pointer_type(true) };
       }
       // Skip node with duplicated children requests
       //
@@ -129,10 +129,10 @@ namespace adiar
       //       In practice, it seems very unlikely these few edges are not cheaper to handle, than
       //       having this additional branch in the code (even if it is very predictable).
       /*
-      if (low == high) { return internal::prod2_rec_skipto{ low }; }
+      if (low == high) { return internal::prod2b_rec_skipto{ low }; }
       */
 
-      return internal::prod2_rec_output{ low, high };
+      return internal::prod2b_rec_output{ low, high };
     }
 
     /// \brief Hook for applying an operator to a pair of terminals.
@@ -159,7 +159,7 @@ namespace adiar
                            !internal::and_op::can_right_shortcut(true));
     }
 
-    /// \brief Due to pruning, this prod2 policy may introduce skipping of nodes.
+    /// \brief Due to pruning, this prod2b policy may introduce skipping of nodes.
     static constexpr bool no_skip = false;
   };
 
@@ -171,8 +171,8 @@ namespace adiar
                    const bdd& relation,
                    const LevelPredicate& pred)
   {
-    relprod_prod2_policy<LevelPredicate> policy(pred);
-    return internal::prod2(ep, states, relation, policy);
+    relprod_prod2b_policy<LevelPredicate> policy(pred);
+    return internal::prod2b(ep, states, relation, policy);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

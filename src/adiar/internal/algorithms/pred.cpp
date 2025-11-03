@@ -1,5 +1,6 @@
 #include "pred.h"
 
+#include <adiar/internal/algorithms/prod2b.h>
 #include <adiar/internal/assert.h>
 #include <adiar/internal/cut.h>
 #include <adiar/internal/dd.h>
@@ -82,7 +83,7 @@ namespace adiar::internal
   // template<class dd_policy>
   class isomorphism_policy
     : public dd_policy<dd, __dd>
-    , public prod2_same_level_merger<dd_policy<dd, __dd>>
+    , public prod2b_same_level_merger<dd_policy<dd, __dd>>
   {
   public:
     using level_check_t = input_bound_levels<false>;

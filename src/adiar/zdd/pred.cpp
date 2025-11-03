@@ -2,7 +2,7 @@
 #include <adiar/zdd/zdd_policy.h>
 
 #include <adiar/internal/algorithms/pred.h>
-#include <adiar/internal/algorithms/prod2.h>
+#include <adiar/internal/algorithms/prod2b.h>
 #include <adiar/internal/cnl.h>
 
 namespace adiar
@@ -128,7 +128,7 @@ namespace adiar
 
   class zdd_subseteq_policy
     : public zdd_policy
-    , public internal::prod2_mixed_level_merger<zdd_policy>
+    , public internal::prod2b_mixed_level_merger<zdd_policy>
   {
   public:
     using level_check_t = ignore_levels<internal::cut::Internal_True, internal::cut::Internal_True>;
@@ -222,7 +222,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   class zdd_disjoint_policy
     : public zdd_policy
-    , public internal::prod2_mixed_level_merger<zdd_policy>
+    , public internal::prod2b_mixed_level_merger<zdd_policy>
   {
   public:
     using level_check_t = ignore_levels<internal::cut::All, internal::cut::All>;
