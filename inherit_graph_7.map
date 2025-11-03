@@ -8,11 +8,11 @@
 <area shape="poly" id="edge7_Node000000_Node000003" title=" " alt="" coords="100,250,138,216,183,183,203,171,206,176,185,188,142,221,104,254"/>
 <area shape="rect" id="Node000004" href="$structadiar_1_1statistics_1_1optmin__t.html" title="Boolean Optimization algorithm statistics." alt="" coords="184,197,315,237"/>
 <area shape="poly" id="edge8_Node000000_Node000004" title=" " alt="" coords="139,254,192,235,194,240,141,259"/>
-<area shape="rect" id="Node000005" href="$structadiar_1_1statistics_1_1prod2__t.html" title="2&#45;ary Product Construction algorithm statistics." alt="" coords="184,261,315,301"/>
+<area shape="rect" id="Node000005" href="$structadiar_1_1statistics_1_1prod2b__t.html" title="2&#45;ary Product Construction algorithm for binary inputs." alt="" coords="184,261,315,301"/>
 <area shape="poly" id="edge9_Node000000_Node000005" title=" " alt="" coords="150,279,184,279,184,284,150,284"/>
-<area shape="rect" id="Node000006" href="$structadiar_1_1statistics_1_1prod3__t.html" title="3&#45;ary Product Construction algorithm statistics." alt="" coords="184,325,315,365"/>
+<area shape="rect" id="Node000006" href="$structadiar_1_1statistics_1_1prod2u__t.html" title="2&#45;ary Product Construction algorithm for unary inputs." alt="" coords="184,325,315,365"/>
 <area shape="poly" id="edge10_Node000000_Node000006" title=" " alt="" coords="141,303,194,323,192,328,139,308"/>
-<area shape="rect" id="Node000007" href="$structadiar_1_1statistics_1_1quantify__t.html" title="Quantification algorithm statistics." alt="" coords="184,389,315,429"/>
+<area shape="rect" id="Node000007" href="$structadiar_1_1statistics_1_1prod3__t.html" title="3&#45;ary Product Construction algorithm statistics." alt="" coords="184,389,315,429"/>
 <area shape="poly" id="edge11_Node000000_Node000007" title=" " alt="" coords="104,309,142,342,185,375,206,387,203,392,183,380,138,346,100,313"/>
 <area shape="rect" id="Node000008" href="$structadiar_1_1statistics_1_1reduce__t.html" title="Reduce algorithm statistics." alt="" coords="184,453,315,493"/>
 <area shape="poly" id="edge12_Node000000_Node000008" title=" " alt="" coords="90,312,129,375,156,409,186,439,202,451,199,455,182,443,152,413,125,378,86,315"/>

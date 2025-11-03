@@ -11,10 +11,10 @@
 <!-- Node0 -->
 <g id="Node000000" class="node">
 <title>Node0</title>
-<g id="a_Node000000"><a xlink:href="structadiar_1_1statistics_1_1quantify__t.html" target="_top" xlink:title="Quantification algorithm statistics.">
+<g id="a_Node000000"><a xlink:href="structadiar_1_1statistics_1_1replace__t.html" target="_top" xlink:title="Variable replacement statistics.">
 <polygon fill="white" stroke="#666666" points="98,-30 0,-30 0,0 98,0 98,-30"/>
 <text text-anchor="start" x="8" y="-18" font-family="Helvetica,sans-Serif" font-size="10.00">adiar::statistics::</text>
-<text text-anchor="middle" x="49" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">quantify_t</text>
+<text text-anchor="middle" x="49" y="-7" font-family="Helvetica,sans-Serif" font-size="10.00">replace_t</text>
 </a>
 </g>
 </g>

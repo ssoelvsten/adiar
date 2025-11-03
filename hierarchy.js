@@ -5,9 +5,9 @@ var hierarchy =
       [ "adiar::statistics::equality_t", "structadiar_1_1statistics_1_1equality__t.html", null ],
       [ "adiar::statistics::intercut_t", "structadiar_1_1statistics_1_1intercut__t.html", null ],
       [ "adiar::statistics::optmin_t", "structadiar_1_1statistics_1_1optmin__t.html", null ],
-      [ "adiar::statistics::prod2_t", "structadiar_1_1statistics_1_1prod2__t.html", null ],
+      [ "adiar::statistics::prod2b_t", "structadiar_1_1statistics_1_1prod2b__t.html", null ],
+      [ "adiar::statistics::prod2u_t", "structadiar_1_1statistics_1_1prod2u__t.html", null ],
       [ "adiar::statistics::prod3_t", "structadiar_1_1statistics_1_1prod3__t.html", null ],
-      [ "adiar::statistics::quantify_t", "structadiar_1_1statistics_1_1quantify__t.html", null ],
       [ "adiar::statistics::reduce_t", "structadiar_1_1statistics_1_1reduce__t.html", [
         [ "adiar::statistics::nested_sweeping_t::inner_up_t", "structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__up__t.html", null ],
         [ "adiar::statistics::nested_sweeping_t::outer_up_t", "structadiar_1_1statistics_1_1nested__sweeping__t_1_1outer__up__t.html", null ]
@@ -39,6 +39,7 @@ var hierarchy =
     [ "adiar::statistics::quantify_t::nested_transposition_t", "structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html", null ],
     [ "adiar::statistics::node_file_t", "structadiar_1_1statistics_1_1node__file__t.html", null ],
     [ "adiar::exec_policy::quantify", "classadiar_1_1exec__policy_1_1quantify.html", null ],
+    [ "adiar::statistics::quantify_t", "structadiar_1_1statistics_1_1quantify__t.html", null ],
     [ "adiar::statistics::replace_t", "structadiar_1_1statistics_1_1replace__t.html", null ],
     [ "adiar::statistics::nested_sweeping_t::inner_down_t::requests_t", "structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1requests__t.html", null ],
     [ "adiar::statistics::equality_t::slow_t", "structadiar_1_1statistics_1_1equality__t_1_1slow__t.html", null ],
