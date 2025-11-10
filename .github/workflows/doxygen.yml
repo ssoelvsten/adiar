@@ -39,7 +39,7 @@ jobs:
       run: make adiar_docs
 
     # Deploy on GitHub Pages if pushed to main
-    - uses: JamesIves/github-pages-deploy-action@v4.7.3
+    - uses: JamesIves/github-pages-deploy-action@v4.7.4
       if: ${{ github.event_name == 'push' }}
       with:
         branch: gh-pages
