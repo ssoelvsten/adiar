@@ -53,7 +53,7 @@ jobs:
 
     steps:
     - name: Git | checkout SSoelvsten/BDD-Benchmark
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: 'ssoelvsten/bdd-benchmark'
         submodules: 'recursive'
@@ -108,7 +108,7 @@ jobs:
 
     steps:
     - name: Git | checkout ssoelvsten/bdd-benchmark
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: 'ssoelvsten/bdd-benchmark'
         submodules: 'recursive'
