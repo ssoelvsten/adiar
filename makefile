@@ -139,6 +139,9 @@ tests/adiar/internal/algorithms/reduce:
 tests/adiar/internal/bool_op:
 	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/internal/ TEST_NAME=bool_op
 
+tests/adiar/internal/data_structures/generator_merger:
+	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/internal/data_structures/ TEST_NAME=generator_merger
+
 tests/adiar/internal/data_structures/level_merger:
 	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/internal/data_structures/ TEST_NAME=level_merger
 
