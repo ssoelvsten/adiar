@@ -80,7 +80,6 @@ using test_priority_queue = levelized_priority_queue<lpq_test_data,
                                                      file_t,
                                                      1u,
                                                      std::less<>,
-                                                     false,
                                                      1u>;
 
 go_bandit([]() {
@@ -4117,7 +4116,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::greater<>,
-                                 false,
                                  1u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4158,7 +4156,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::greater<>,
-                                 false,
                                  1u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4186,7 +4183,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::greater<>,
-                                 false,
                                  1u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4247,7 +4243,6 @@ go_bandit([]() {
                                           shared_file<ptr_uint64::label_type>,
                                           1u,
                                           std::greater<>,
-                                          false,
                                           1u>
                    pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4288,7 +4283,6 @@ go_bandit([]() {
                                           shared_file<ptr_uint64::label_type>,
                                           1u,
                                           std::greater<>,
-                                          false,
                                           1u>
                    pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4316,7 +4310,6 @@ go_bandit([]() {
                                           shared_file<ptr_uint64::label_type>,
                                           1u,
                                           std::greater<>,
-                                          false,
                                           1u>
                    pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4368,7 +4361,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4394,7 +4386,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4420,7 +4411,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4448,7 +4438,6 @@ go_bandit([]() {
                                  lpq_test_file,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4492,7 +4481,6 @@ go_bandit([]() {
                                  lpq_test_file,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4518,225 +4506,6 @@ go_bandit([]() {
       });
     });
 
-    describe("levelized_priority_queue<..., level_reverse=true, ...>", []() {
-      // TODO: these tests break with a look_ahead of 0. Is this indicating some bug?
-
-      it("can setup buckets in reverse order", []() {
-        lpq_test_file f;
-
-        { // Garbage collect the writer early
-          lpq_test_ofstream fw(f);
-
-          fw.push(level_info(4, 2u)); // bucket
-          fw.push(level_info(3, 3u)); // bucket
-          fw.push(level_info(2, 2u)); // overflow
-          fw.push(level_info(1, 1u)); // .
-        }
-
-        levelized_priority_queue<lpq_test_data,
-                                 lpq_test_gt,
-                                 1u,
-                                 memory_mode::Internal,
-                                 lpq_test_file,
-                                 1u,
-                                 std::greater<>,
-                                 true,
-                                 0u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(4u));
-
-        pq.setup_next_level(4u);
-        AssertThat(pq.current_level(), Is().EqualTo(4u));
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(3u));
-
-        pq.setup_next_level(3u);
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(2u));
-
-        pq.setup_next_level(2u);
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(1u));
-
-        pq.setup_next_level(1u);
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        AssertThat(pq.has_next_level(), Is().False());
-      });
-
-      it("can push and pull from reversed buckets [1]", []() {
-        lpq_test_file f;
-
-        { // Garbage collect the writer early
-          lpq_test_ofstream fw(f);
-
-          fw.push(level_info(4, 2u)); // bucket
-          fw.push(level_info(3, 3u)); // bucket
-          fw.push(level_info(2, 2u)); // overflow
-          fw.push(level_info(1, 1u)); // .
-        }
-
-        levelized_priority_queue<lpq_test_data,
-                                 lpq_test_gt,
-                                 1u,
-                                 memory_mode::Internal,
-                                 lpq_test_file,
-                                 1u,
-                                 std::greater<>,
-                                 true,
-                                 0u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
-
-        AssertThat(pq.size(), Is().EqualTo(0u));
-
-        pq.push(lpq_test_data{ 4, 1 });
-        AssertThat(pq.size(), Is().EqualTo(1u));
-
-        pq.push(lpq_test_data{ 4, 2 });
-        AssertThat(pq.size(), Is().EqualTo(2u));
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(4u));
-
-        pq.setup_next_level(); // 4
-        AssertThat(pq.current_level(), Is().EqualTo(4u));
-
-        AssertThat(pq.empty_level(), Is().False());
-
-        pq.push(lpq_test_data{ 3, 3 });
-        AssertThat(pq.size(), Is().EqualTo(3u));
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 4, 2 }));
-        AssertThat(pq.size(), Is().EqualTo(2u));
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 4, 1 }));
-        AssertThat(pq.size(), Is().EqualTo(1u));
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(3u));
-
-        pq.setup_next_level(); // 3
-        AssertThat(pq.current_level(), Is().EqualTo(3u));
-
-        AssertThat(pq.empty_level(), Is().False());
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 3, 3 }));
-        AssertThat(pq.size(), Is().EqualTo(0u));
-
-        AssertThat(pq.empty_level(), Is().True());
-      });
-
-      it("can push and pull from reversed buckets [1]", []() {
-        lpq_test_file f1;
-
-        { // Garbage collect the writer early
-          lpq_test_ofstream fw(f1);
-
-          fw.push(level_info(4, 2u)); // bucket
-          fw.push(level_info(2, 2u)); // overflow
-          fw.push(level_info(1, 1u)); // .
-        }
-
-        lpq_test_file f2;
-        { // Garbage collect the writer early
-          lpq_test_ofstream fw(f2);
-
-          fw.push(level_info(3, 3u)); // bucket
-          fw.push(level_info(2, 2u)); // overflow
-        }
-
-        levelized_priority_queue<lpq_test_data,
-                                 lpq_test_gt,
-                                 1u,
-                                 memory_mode::Internal,
-                                 lpq_test_file,
-                                 2u,
-                                 std::greater<>,
-                                 true,
-                                 0u>
-          pq({ f1, f2 }, memory_available(), 32, stats_lpq_tests);
-
-        AssertThat(pq.size(), Is().EqualTo(0u));
-
-        pq.push(lpq_test_data{ 4, 1 }); // bucket
-        AssertThat(pq.size(), Is().EqualTo(1u));
-
-        pq.push(lpq_test_data{ 4, 2 }); // bucket
-        AssertThat(pq.size(), Is().EqualTo(2u));
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(4u));
-
-        pq.setup_next_level(); // 4
-        AssertThat(pq.current_level(), Is().EqualTo(4u));
-
-        AssertThat(pq.empty_level(), Is().False());
-
-        pq.push(lpq_test_data{ 3, 3 }); // bucket
-        AssertThat(pq.size(), Is().EqualTo(3u));
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 4, 2 }));
-        AssertThat(pq.size(), Is().EqualTo(2u));
-
-        pq.push(lpq_test_data{ 2, 4 }); // overflow
-        AssertThat(pq.size(), Is().EqualTo(3u));
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 4, 1 }));
-        AssertThat(pq.size(), Is().EqualTo(2u));
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        AssertThat(pq.has_next_level(), Is().True());
-        AssertThat(pq.next_level(), Is().EqualTo(3u));
-
-        pq.setup_next_level(); // 3
-        AssertThat(pq.current_level(), Is().EqualTo(3u));
-
-        pq.push(lpq_test_data{ 2, 5 }); // bucket
-        AssertThat(pq.size(), Is().EqualTo(3u));
-
-        AssertThat(pq.empty_level(), Is().False());
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 3, 3 }));
-        AssertThat(pq.size(), Is().EqualTo(2u));
-
-        AssertThat(pq.empty_level(), Is().True());
-
-        pq.setup_next_level(); // 2
-        AssertThat(pq.current_level(), Is().EqualTo(2u));
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 5 }));
-        AssertThat(pq.size(), Is().EqualTo(1u));
-
-        AssertThat(pq.can_pull(), Is().True());
-        AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 4 }));
-        AssertThat(pq.size(), Is().EqualTo(0u));
-
-        AssertThat(pq.empty_level(), Is().True());
-      });
-    });
-
     describe("levelized_priority_queue<..., look_ahead=0, ..., init_level=0>", []() {
       it("initialises correctly", []() {
         shared_file<ptr_uint64::label_type> f;
@@ -4748,7 +4517,6 @@ go_bandit([]() {
                                  shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4774,7 +4542,6 @@ go_bandit([]() {
                                  lpq_test_file,
                                  1u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4818,7 +4585,6 @@ go_bandit([]() {
                                  lpq_test_file,
                                  1u,
                                  std::less<ptr_uint64::label_type>,
-                                 false,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 
@@ -4867,7 +4633,6 @@ go_bandit([]() {
                                  lpq_test_file,
                                  2u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f1, f2 }, memory_available(), 32, stats_lpq_tests);
 
@@ -4942,7 +4707,6 @@ go_bandit([]() {
                                  lpq_test_file,
                                  2u,
                                  std::less<>,
-                                 false,
                                  0u>
           pq({ f1, f2 }, memory_available(), 32, stats_lpq_tests);
 
