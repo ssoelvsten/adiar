@@ -83,6 +83,7 @@ go_bandit([]() {
 #include "adiar/bdd/evaluate.test.cpp"
 #include "adiar/bdd/if_then_else.test.cpp"
 #include "adiar/bdd/negate.test.cpp"
+#include "adiar/bdd/optmin.test.cpp"
 #include "adiar/bdd/pred.test.cpp"
 #include "adiar/bdd/quantify.test.cpp"
 #include "adiar/bdd/relprod.test.cpp"
