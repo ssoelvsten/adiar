@@ -34,33 +34,6 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Defines at compile time the type of the file stream to use for reading the levels from
-  ///        some file(s).
-  //
-  // TODO: Rename 'stream_t' into 'type'
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename File>
-  struct level_ifstream_t
-  {
-    template <bool Reverse = false>
-    using stream_t = level_info_ifstream<Reverse>;
-  };
-
-  template <>
-  struct level_ifstream_t<file<ptr_uint64::label_type>>
-  {
-    template <bool Reverse = false>
-    using stream_t = ifstream<ptr_uint64::label_type, Reverse>;
-  };
-
-  template <>
-  struct level_ifstream_t<shared_file<ptr_uint64::label_type>>
-  {
-    template <bool Reverse = false>
-    using stream_t = ifstream<ptr_uint64::label_type, Reverse>;
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief  Turn a `level_ifstream<...>` into a level-only generator function.
   ///
   /// \remark The direction (*ascending* vs. *descending*) of the generator is dictated by the given
@@ -86,11 +59,8 @@ namespace adiar::internal
   bool
   disjoint_levels(const A& a, const B& b)
   {
-    using stream1_t = typename level_ifstream_t<A>::template stream_t<false>;
-    stream1_t sa(a);
-
-    using stream2_t = typename level_ifstream_t<B>::template stream_t<false>;
-    stream2_t sb(b);
+    level_info_ifstream sa(a);
+    level_info_ifstream sb(b);
 
     while (sa.can_pull() && sb.can_pull()) {
       if (level_of(sa.peek()) == level_of(sb.peek())) {

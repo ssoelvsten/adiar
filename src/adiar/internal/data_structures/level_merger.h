@@ -16,6 +16,28 @@ namespace adiar::internal
   //   Add to 'File' an enum with 'Ascending'/'Descending' to then derive the comparator in
   //   conjunction with 'Reverse'.
 
+  // TODO: Remove
+  template <typename File>
+  struct level_ifstream_t
+  {
+    template <bool Reverse = false>
+    using stream_t = level_info_ifstream<Reverse>;
+  };
+
+  template <>
+  struct level_ifstream_t<file<ptr_uint64::label_type>>
+  {
+    template <bool Reverse = false>
+    using stream_t = ifstream<ptr_uint64::label_type, Reverse>;
+  };
+
+  template <>
+  struct level_ifstream_t<shared_file<ptr_uint64::label_type>>
+  {
+    template <bool Reverse = false>
+    using stream_t = ifstream<ptr_uint64::label_type, Reverse>;
+  };
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Merges the levels from one or more files.
   ///
