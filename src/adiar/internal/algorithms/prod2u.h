@@ -1,5 +1,5 @@
-#ifndef ADIAR_INTERNAL_ALGORITHMS_PROD2_UNARY_H
-#define ADIAR_INTERNAL_ALGORITHMS_PROD2_UNARY_H
+#ifndef ADIAR_INTERNAL_ALGORITHMS_PROD2U_H
+#define ADIAR_INTERNAL_ALGORITHMS_PROD2U_H
 
 #include <adiar/functional.h>
 
@@ -932,4 +932,4 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
-#endif // ADIAR_INTERNAL_ALGORITHMS_PROD2_UNARY_H
+#endif // ADIAR_INTERNAL_ALGORITHMS_PROD2U_H
