@@ -16,6 +16,7 @@
 
 namespace adiar
 {
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   class bdd_eval_func_visitor
   {
     const predicate<bdd::label_type>& af;
@@ -54,7 +55,7 @@ namespace adiar
     return v.get_result();
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   class bdd_eval_generator_visitor
   {
     const generator<pair<bdd::label_type, bool>>& _generator;
@@ -118,7 +119,7 @@ namespace adiar
     return v.get_result();
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: Merge code duplication with Curiously Recurring Template Pattern
 
   template <typename Visitor>
@@ -266,7 +267,7 @@ namespace adiar
   {
     if (!bdd_iscube(d)) { throw domain_error("BDD 'd' is not a cube"); }
 
-    typename internal::level_ifstream_t<bdd>::template stream_t<> d_levels(d);
+    internal::level_info_ifstream d_levels(d);
     const generator<bdd::label_type> d_gen = make_generator__levels(d_levels);
 
     const size_t total_levels = std::min<size_t>(f->levels() + d->levels(), bdd::max_label + 1);
@@ -298,7 +299,7 @@ namespace adiar
   {
     if (!bdd_iscube(d)) { throw domain_error("BDD 'd' is not a cube"); }
 
-    typename internal::level_ifstream_t<bdd>::template stream_t<> d_levels(d);
+    internal::level_info_ifstream d_levels(d);
     const generator<bdd::label_type> d_gen = make_generator__levels(d_levels);
 
     const size_t total_levels = std::min<size_t>(f->levels() + d->levels(), bdd::max_label + 1);
