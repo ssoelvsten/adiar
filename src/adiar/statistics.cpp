@@ -387,7 +387,7 @@ namespace adiar
   __printstat_optmin(std::ostream& o)
   {
     uintwide total_runs = internal::stats_optmin.lpq.total();
-    o << indent << bold_on << label << "Optmin" << bold_off << total_runs << endl;
+    o << indent << bold_on << label << "Optimal Minimum" << bold_off << total_runs << endl;
 
     indent_level++;
     if (total_runs == 0u) {
