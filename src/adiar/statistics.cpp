@@ -1108,9 +1108,6 @@ namespace adiar
     __printstat_prod3(o);
     o << endl;
 
-    __printstat_quantify(o);
-    o << endl;
-
     __printstat_select(o);
     o << endl;
 
@@ -1120,6 +1117,9 @@ namespace adiar
     o << endl;
 
     o << bold_on << "--== Mixed Sweep Algorithms ==--" << bold_off << endl << endl;
+
+    __printstat_quantify(o);
+    o << endl;
 
     __printstat_replace(o);
 #endif
