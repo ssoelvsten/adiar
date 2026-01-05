@@ -92,8 +92,6 @@ namespace adiar::internal
   /// \tparam LevelFileComp  Comparator to be used for merging multiple levels from the files
   ///                        together (`std::less` is top-down while `std::greater` is bottom-up).
   ///
-  /// \tparam LevelReverse   Whether to reverse the levelised meta data stream.
-  ///
   /// \tparam LevelSkip      The index for the first level one can push to. In other words, the
   ///                        number of levels to 'skip'.
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +102,6 @@ namespace adiar::internal
             typename LevelFile     = shared_file_ptr<levelized_file<T>>,
             size_t LevelFileCount  = 1u,
             typename LevelFileComp = std::less<>,
-            bool LevelReverse      = false,
             size_t LevelSkip       = 1u>
   class levelized_priority_queue
   {
@@ -141,7 +138,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type of the level merger.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    using level_merger_t = level_merger<LevelFile, LevelFileComp, LevelFileCount, LevelReverse>;
+    using level_merger_t = level_merger<LevelFile, LevelFileComp, LevelFileCount, false>;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1017,7 +1014,6 @@ namespace adiar::internal
             typename LevelFile,
             size_t LevelFileCount,
             typename LevelFileComp,
-            bool LevelReverse,
             size_t LevelSkip>
   class levelized_priority_queue<T,
                                  Comp,
@@ -1026,7 +1022,6 @@ namespace adiar::internal
                                  LevelFile,
                                  LevelFileCount,
                                  LevelFileComp,
-                                 LevelReverse,
                                  LevelSkip>
   {
   public:
@@ -1446,7 +1441,6 @@ namespace adiar::internal
                                                                  shared_levelized_file<node>,
                                                                  LevelFileCount,
                                                                  std::less<node::label_type>,
-                                                                 false,
                                                                  LevelSkip>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1465,28 +1459,7 @@ namespace adiar::internal
                                                                 shared_levelized_file<arc>,
                                                                 LevelFileCount,
                                                                 std::greater<arc::label_type>,
-                                                                false,
                                                                 LevelSkip>;
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Levelized Priority Queue to be used with `levelized_file<arc>` and a `narc_ifstream`
-  ///        or `narc_raccess`.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename T,
-            typename Comp         = std::less<T>,
-            size_t LookAhead      = ADIAR_LPQ_LOOKAHEAD,
-            memory_mode mem_mode  = memory_mode::External,
-            size_t LevelFileCount = 1u,
-            size_t LevelSkip      = 1u>
-  using levelized_narc_priority_queue = levelized_priority_queue<T,
-                                                                 Comp,
-                                                                 LookAhead,
-                                                                 mem_mode,
-                                                                 shared_levelized_file<arc>,
-                                                                 LevelFileCount,
-                                                                 std::less<arc::label_type>,
-                                                                 true,
-                                                                 LevelSkip>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Levelized Priority Queue to be used with `shared_file<label_type>`.
@@ -1505,7 +1478,6 @@ namespace adiar::internal
                              shared_file<ptr_uint64::label_type>,
                              LevelFileCount,
                              std::less<ptr_uint64::label_type>,
-                             false,
                              LevelSkip>;
 }
 
