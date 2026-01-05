@@ -1119,6 +1119,8 @@ namespace adiar
     __printstat_reduce(o);
     o << endl;
 
+    o << bold_on << "--== Mixed Sweep Algorithms ==--" << bold_off << endl << endl;
+
     __printstat_replace(o);
 #endif
   }
