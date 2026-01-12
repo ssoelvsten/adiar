@@ -198,6 +198,28 @@ paradigm in Adiar. This allows us, among other things, to implement
 *multi-variable quantification* more akin to the one in other BDD packages.
 
 - Steffan Christ Sølvsten, Jaco van de Pol.
+  “[*Multi-variable Quantification of BDDs in External Memory using Nested Sweeping*](https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17)”.
+  In: *Verification, Model Checking, and Abstract Interpretation* (VMCAI). (2026)
+  ```bibtex
+  @Misc{soelvsten2024:arXiv,
+    title         = {Multi-variable Quantification of {BDD}s in External Memory using Nested Sweeping},
+    author        = {S{\o}lvsten, Steffan Christ
+                 and van de Pol, Jaco},
+    year          = {2026},
+    editor        = {Chen, Yu-Fang
+                and Jensen, Thomas
+                and Leng{\'a}l, Ond{\v{r}}ej},
+    booktitle     = {Verification, Model Checking, and Abstract Interpretation},
+    publisher     = {Springer},
+    pages         = {359--382},
+    series        = {Lecture Notes in Computer Science},
+    volume        = {16417},
+    isbn          = {978-3-032-15700-3},
+    doi           = {10.1007/978-3-032-15700-3\_17},
+  }
+  ```
+
+- Steffan Christ Sølvsten, Jaco van de Pol.
   “[*Multi-variable Quantification of BDDs in External Memory using Nested Sweeping (Extended Paper)*](https://arxiv.org/abs/2408.14216)”.
   In: *arXiv preprint*. (2024)
   ```bibtex
