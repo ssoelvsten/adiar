@@ -1,116 +1,284 @@
 #ifndef ADIAR_INTERNAL_DATA_STRUCTURES_LEVEL_MERGER_H
 #define ADIAR_INTERNAL_DATA_STRUCTURES_LEVEL_MERGER_H
 
+#include <array>
+#include <variant>
+
+#include <adiar/functional.h>
+#include <adiar/type_traits.h>
+
 #include <adiar/internal/assert.h>
 #include <adiar/internal/dd.h>
-#include <adiar/internal/io/file.h>
-#include <adiar/internal/io/ifstream.h>
 #include <adiar/internal/io/levelized_ifstream.h>
-#include <adiar/internal/io/shared_file_ptr.h>
 #include <adiar/internal/memory.h>
 #include <adiar/internal/util.h>
 
 namespace adiar::internal
 {
-  // TODO (code clarity):
-  //   Add to 'File' an enum with 'Ascending'/'Descending' to then derive the comparator in
-  //   conjunction with 'Reverse'.
-
-  // TODO: Remove
-  template <typename File>
-  struct level_ifstream_t
-  {
-    template <bool Reverse = false>
-    using stream_t = level_info_ifstream<Reverse>;
-  };
-
-  template <>
-  struct level_ifstream_t<file<ptr_uint64::label_type>>
-  {
-    template <bool Reverse = false>
-    using stream_t = ifstream<ptr_uint64::label_type, Reverse>;
-  };
-
-  template <>
-  struct level_ifstream_t<shared_file<ptr_uint64::label_type>>
-  {
-    template <bool Reverse = false>
-    using stream_t = ifstream<ptr_uint64::label_type, Reverse>;
-  };
-
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Merges the levels from one or more files.
+  /// \brief Merges the levels from several inputs.
   ///
-  /// \tparam File Type of the files to read from.
+  /// \tparam Comp The comparator with which to merge the levels.
   ///
-  /// \tparam Comp Comparator with which to merge the levels.
+  /// \tparam InputCount Number of inputs.
   ///
-  /// \tparam FileCount  Number of files to read from.
+  /// \remark Currently, variadic inputs are supported by use of `virtual` functions, i.e. by use of
+  ///         runtime-resolved inheritance. Yet, this is always used in a context where the type of
+  ///         the individual arguments are known. Hence, one should be able to replace `InputCount`
+  ///         with a compile-time known list `<typename... Types>`. To this end, a deduction guide
+  ///         might be useful.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename File, typename Comp, size_t FileCount, bool Reverse = false>
+  template <typename Comp, size_t InputCount>
   class level_merger
   {
-    static_assert(0 < FileCount, "At least one file should be merged");
+  public:
+    using value_type = dd::label_type;
+    using arg_type   = std::variant<dd, __dd, generator<value_type>>;
 
-    using stream_type = typename level_ifstream_t<File>::template stream_t<Reverse>;
+  private:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: Move to <adiar/internal/io/...> ?
+    class istream
+    {
+    public:
+      using value_type = level_merger::value_type;
+
+      virtual ~istream() = default;
+
+    public:
+      virtual bool
+      can_pull();
+
+      virtual value_type
+      peek();
+
+      virtual value_type
+      pull();
+    };
+
+  private:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Wrapper for `generator`s to provide the same interface as an `ifstream`, including
+    ///        the ability to `peek()`.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: Move to <adiar/internal/util.h> or <adiar/internal/io/...> ?
+    class generator_istream : public istream
+    {
+    private:
+      const generator<value_type> _gen;
+      optional<value_type> _next;
+
+    public:
+      generator_istream(const generator<value_type>& gen)
+        : _gen(gen)
+      {
+        this->_next = this->_gen();
+      }
+
+      ~generator_istream() = default;
+
+    public:
+      bool
+      can_pull() override
+      {
+        return this->_next.has_value();
+      }
+
+      value_type
+      peek() override
+      {
+        return this->_next.value();
+      }
+
+      value_type
+      pull() override
+      {
+        const value_type ret = this->_next.value();
+        this->_next          = this->_gen();
+        return ret;
+      }
+    };
+
+  private:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    class level_info_istream : public istream
+    {
+    private:
+      level_info_ifstream<> _ifstream;
+
+    public:
+      template <typename T>
+      level_info_istream(const T& t)
+        : _ifstream(t)
+      {}
+
+      ~level_info_istream() = default;
+
+    public:
+      bool
+      can_pull() override
+      {
+        return this->_ifstream.can_pull();
+      }
+
+      value_type
+      peek() override
+      {
+        return this->_ifstream.peek().level();
+      }
+
+      value_type
+      pull() override
+      {
+        return this->_ifstream.pull().level();
+      }
+    };
+
+  private:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \deprecated This is merely created to help migrate from the old level_merger.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    class file_istream : public istream
+    {
+    private:
+      ifstream<value_type> _ifstream;
+
+    public:
+      [[deprecated("Use a 'generator' instead?")]]
+      file_istream(const shared_file<value_type>& f)
+        : _ifstream(f)
+      {}
+
+      [[deprecated("Use a 'generator' instead?")]]
+      file_istream(const file<value_type>& f)
+        : _ifstream(f)
+      {}
+
+      ~file_istream() = default;
+
+    public:
+      bool
+      can_pull() override
+      {
+        return this->_ifstream.can_pull();
+      }
+
+      value_type
+      peek() override
+      {
+        return this->_ifstream.peek();
+      }
+
+      value_type
+      pull() override
+      {
+        return this->_ifstream.pull();
+      }
+    };
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Manages initialization and access to an input of levels.
+    ///
+    /// \details Since the `internal::ifstream` is not copy-constructable, then we have to create
+    ///          the object on the heap.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    class istream_ptr
+    {
+    public:
+      using value_type = typename istream::value_type;
+
+    private:
+      unique_ptr<istream> _ptr;
+
+    public:
+      /// \brief Conversion for reduced diagrams (top-down).
+      istream_ptr(const dd& diagram)
+        : _ptr(adiar::make_unique<level_info_istream>(diagram))
+      {}
+
+      /// \brief Conversion for unreduced diagrams (bottom-up).
+      istream_ptr(const __dd& diagram)
+        : _ptr(adiar::make_unique<level_info_istream>(diagram))
+      {}
+
+      /// \brief Conversion for files with levels
+      template <typename T>
+      istream_ptr(const levelized_file<T>& f)
+        : _ptr(adiar::make_unique<level_info_istream>(f))
+      {}
+
+      /// \brief Conversion for files with levels
+      template <typename T>
+      istream_ptr(const shared_ptr<levelized_file<T>>& f)
+        : _ptr(adiar::make_unique<level_info_istream>(f))
+      {}
+
+      /// \brief Conversion for files.
+      istream_ptr(const shared_file<dd::label_type>& f)
+        : _ptr(adiar::make_unique<file_istream>(f))
+      {}
+
+      /// \brief Conversion for files.
+      istream_ptr(const file<dd::label_type>& f)
+        : _ptr(adiar::make_unique<file_istream>(f))
+      {}
+
+      /// \brief Conversion for generators. This requires the addition of an intermediate lambda
+      ///        which takes care of converting to `value_type`.
+      template <typename Generator,
+                typename = enable_if<!is_constructible<level_info_ifstream<>, Generator>>>
+      istream_ptr(const Generator& gen)
+        : _ptr(adiar::make_unique<generator_istream>([=]() -> optional<value_type> {
+          const auto x = gen();
+          if (!x.has_value()) { return {}; }
+          return x.value();
+        }))
+      {}
+
+    public:
+      istream*
+      operator*()
+      {
+        return this->_ptr.get();
+      }
+
+      istream*
+      operator->()
+      {
+        return *(*this);
+      }
+    };
 
   public:
     static size_t
     memory_usage()
     {
-      return FileCount * stream_type::memory_usage();
+      // NOTE: We assume that all `ifstream`s will use the same amount of memory.
+      return InputCount * level_info_ifstream<>::memory_usage();
     }
-
-    using level_type = ptr_uint64::label_type;
 
   private:
     Comp _comparator = Comp();
-
-    unique_ptr<stream_type> _level_ifstreams[FileCount];
+    std::array<istream_ptr, InputCount> _istream_ptrs;
 
   public:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Attach onto the given list of files.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    void
-    hook(const File (&fs)[FileCount])
-    {
-      for (size_t idx = 0u; idx < FileCount; idx++) {
-        _level_ifstreams[idx] = adiar::make_unique<stream_type>(fs[idx]);
-      }
-    }
+    level_merger(const level_merger&) = delete;
+    level_merger(level_merger&&)      = delete;
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Attach onto the given list of decision diagrams.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    void
-    hook(const dd (&dds)[FileCount])
-    {
-      for (size_t idx = 0u; idx < FileCount; idx++) {
-        _level_ifstreams[idx] =
-          adiar::make_unique<stream_type>(dds[idx].file_ptr(), dds[idx].shift());
-      }
-    }
+    level_merger(std::array<istream_ptr, InputCount>&& args)
+      : _istream_ptrs(std::move(args))
+    {}
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Attach onto the given list of (unreduced) decision diagrams.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    void
-    hook(const __dd (&dds)[FileCount])
-    {
-      for (size_t idx = 0u; idx < FileCount; idx++) {
-        _level_ifstreams[idx] = adiar::make_unique<stream_type>(dds[idx] /*, dds[idx]._shift*/);
-      }
-    }
-
+  public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Whether there are more levels to fetch.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     bool
     can_pull()
     {
-      for (size_t idx = 0u; idx < FileCount; idx++) {
-        if (_level_ifstreams[idx]->can_pull()) { return true; }
+      for (istream_ptr& p : this->_istream_ptrs) {
+        if (p->can_pull()) { return true; }
       }
       return false;
     }
@@ -120,19 +288,19 @@ namespace adiar::internal
     ///
     /// \pre `can_pull() == true`
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    level_type
+    value_type
     peek()
     {
       adiar_assert(can_pull(), "Cannot peek past end of all streams");
 
       bool has_min_level   = false;
-      level_type min_level = 0u;
-      for (size_t idx = 0u; idx < FileCount; idx++) {
-        if (_level_ifstreams[idx]->can_pull()
-            && (!has_min_level
-                || _comparator(level_of(_level_ifstreams[idx]->peek()), min_level))) {
+      value_type min_level = 0u;
+      for (istream_ptr& p : this->_istream_ptrs) {
+        if (!p->can_pull()) { continue; }
+
+        if (!has_min_level || _comparator(level_of(p->peek()), min_level)) {
           has_min_level = true;
-          min_level     = level_of(_level_ifstreams[idx]->peek());
+          min_level     = level_of(p->peek());
         }
       }
 
@@ -144,22 +312,20 @@ namespace adiar::internal
     ///
     /// \pre `can_pull() == true`
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    level_type
+    value_type
     pull()
     {
       adiar_assert(can_pull(), "Cannot pull past end of all streams");
 
-      level_type min_level = peek();
+      value_type min_level = peek();
 
       // pull from all with min_level
-      for (const unique_ptr<stream_type>& level_info_ifstream : _level_ifstreams) {
-        if (level_info_ifstream->can_pull() && level_of(level_info_ifstream->peek()) == min_level) {
-          level_info_ifstream->pull();
-        }
+      for (istream_ptr& p : this->_istream_ptrs) {
+        if (p->can_pull() && level_of(p->peek()) == min_level) { p->pull(); }
       }
       return min_level;
     }
   };
 }
 
-#endif //  ADIAR_INTERNAL_DATA_STRUCTURES_LEVEL_MERGER_H
+#endif // ADIAR_INTERNAL_DATA_STRUCTURES_LEVEL_MERGER_H
