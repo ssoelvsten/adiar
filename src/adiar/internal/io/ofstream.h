@@ -54,6 +54,10 @@ namespace adiar::internal
     {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    ofstream(const ofstream&) = delete;
+    ofstream(ofstream&&)      = delete;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Construct attached to a given `file<value_type>`.
     ///
     /// \pre No `iofstream` or `ifstream` is currently attached to this file.
