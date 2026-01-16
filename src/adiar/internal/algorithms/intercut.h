@@ -83,7 +83,7 @@ namespace adiar::internal
 
   template <size_t look_ahead, memory_mode mem_mode>
   using intercut_priority_queue_t =
-    levelized_label_priority_queue<intercut_req, intercut_req_lt, look_ahead, mem_mode, 2u, 0u>;
+    levelized_node_priority_queue<intercut_req, intercut_req_lt, look_ahead, mem_mode, 2u, 0u>;
 
   //////////////////////////////////////////////////////////////////////////////
 

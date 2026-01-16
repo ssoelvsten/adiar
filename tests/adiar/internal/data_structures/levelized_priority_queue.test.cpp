@@ -77,7 +77,6 @@ using test_priority_queue = levelized_priority_queue<lpq_test_data,
                                                      lpq_test_lt,
                                                      look_ahead,
                                                      memory_mode::Internal,
-                                                     file_t,
                                                      1u,
                                                      std::less<>,
                                                      1u>;
@@ -4113,7 +4112,6 @@ go_bandit([]() {
                                  lpq_test_gt,
                                  1u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::greater<>,
                                  1u>
@@ -4153,7 +4151,6 @@ go_bandit([]() {
                                  lpq_test_gt,
                                  1u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::greater<>,
                                  1u>
@@ -4180,7 +4177,6 @@ go_bandit([]() {
                                  lpq_test_gt,
                                  1u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::greater<>,
                                  1u>
@@ -4240,7 +4236,6 @@ go_bandit([]() {
                                           lpq_test_gt,
                                           0u,
                                           memory_mode::Internal,
-                                          shared_file<ptr_uint64::label_type>,
                                           1u,
                                           std::greater<>,
                                           1u>
@@ -4280,7 +4275,6 @@ go_bandit([]() {
                                           lpq_test_gt,
                                           0u,
                                           memory_mode::Internal,
-                                          shared_file<ptr_uint64::label_type>,
                                           1u,
                                           std::greater<>,
                                           1u>
@@ -4307,7 +4301,6 @@ go_bandit([]() {
                                           lpq_test_gt,
                                           0u,
                                           memory_mode::Internal,
-                                          shared_file<ptr_uint64::label_type>,
                                           1u,
                                           std::greater<>,
                                           1u>
@@ -4358,7 +4351,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  1u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4383,7 +4375,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  1u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4408,7 +4399,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  1u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4435,7 +4425,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  1u,
                                  memory_mode::Internal,
-                                 lpq_test_file,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4478,7 +4467,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  1u,
                                  memory_mode::Internal,
-                                 lpq_test_file,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4514,7 +4502,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  0u,
                                  memory_mode::Internal,
-                                 shared_file<ptr_uint64::label_type>,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4539,7 +4526,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  0u,
                                  memory_mode::Internal,
-                                 lpq_test_file,
                                  1u,
                                  std::less<>,
                                  0u>
@@ -4582,7 +4568,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  0u,
                                  memory_mode::Internal,
-                                 lpq_test_file,
                                  1u,
                                  std::less<ptr_uint64::label_type>,
                                  0u>
@@ -4630,7 +4615,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  1u,
                                  memory_mode::Internal,
-                                 lpq_test_file,
                                  2u,
                                  std::less<>,
                                  0u>
@@ -4704,7 +4688,6 @@ go_bandit([]() {
                                  lpq_test_lt,
                                  0u,
                                  memory_mode::Internal,
-                                 lpq_test_file,
                                  2u,
                                  std::less<>,
                                  0u>
