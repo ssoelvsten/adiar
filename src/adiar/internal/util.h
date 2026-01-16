@@ -55,9 +55,9 @@ namespace adiar::internal
   /// \brief Obtain whether the levels in two files are disjoint.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: Move to dd_func?
-  template <typename A, typename B>
+  template <typename DD>
   bool
-  disjoint_levels(const A& a, const B& b)
+  disjoint_levels(const DD& a, const DD& b)
   {
     level_info_ifstream sa(a);
     level_info_ifstream sb(b);
