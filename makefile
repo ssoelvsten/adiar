@@ -154,6 +154,9 @@ tests/adiar/internal/data_structures/sorter:
 tests/adiar/internal/data_structures/stack:
 	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/internal/data_structures/ TEST_NAME=stack
 
+tests/adiar/internal/data_structures/vector:
+	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/internal/data_structures/ TEST_NAME=vector
+
 tests/adiar/internal/data_types/arc:
 	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/internal/data_types/ TEST_NAME=arc
 
