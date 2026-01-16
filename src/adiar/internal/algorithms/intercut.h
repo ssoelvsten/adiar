@@ -194,7 +194,7 @@ namespace adiar::internal
     // In the general case, we have to use it both in the priority queue
     // `intercut_pq` below, and for a lookahead of the algorithm. The main issue
     // is how to design the priority queue such that it can retrieve, merge with
-    // `dd_levels`, and expose `xs`.
+    // the levels of `dd` and expose `xs`.
     shared_file<typename intercut_policy::label_type> hit_levels;
     {
       ofstream<typename intercut_policy::label_type> lw(hit_levels);
@@ -213,14 +213,8 @@ namespace adiar::internal
 
     out_arcs->max_1level_cut = 0;
 
-    shared_file<typename intercut_policy::label_type> dd_levels;
-    {
-      ofstream<typename intercut_policy::label_type> lw(dd_levels);
-      dd_support(dd, [&lw](const typename intercut_policy::label_type x) { lw << x; });
-    }
-
     // Add request for root in the queue
-    pq_t intercut_pq({ dd_levels, hit_levels }, pq_memory, max_pq_size, stats_intercut.lpq);
+    pq_t intercut_pq({ dd, hit_levels }, pq_memory, max_pq_size, stats_intercut.lpq);
     intercut_pq.push(intercut_req(ptr_uint64::nil(), n.uid(), std::min(l, n.label())));
 
     // Process nodes of the decision diagram in topological order
