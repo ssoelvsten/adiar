@@ -11,34 +11,49 @@ namespace adiar::internal
   class vector;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Wrapper for TPIE's internal memory vector.
+  /// \brief Wrapper for TPIE's internal memory array to match the interface of `std::vector`.
+  ///
+  /// \details TPIE also provides the `internal_vector`. Yet, that does not (yet) include a reverse
+  ///          iterator. Hence, for now it's easier for us to just wrap the `array` directly
+  ///          instead of using the array. This also gives us the freedom to make it more conform to
+  ///          the `std::vector<T>`.
+  //
+  // TODO: explicit or implicit `resize` when full?
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename T>
   class vector<memory_mode::Internal, T>
   {
   private:
-    using vector_type = tpie::internal_vector<T>;
+    using array_type = tpie::array<T>;
 
+    /// \brief The underlying (internal memory) array to store the information.
+    array_type _array;
+
+    /// \brief The size of `_array` that was allocated.
     size_t _capacity;
-    vector_type _vector;
+
+    /// \brief The number of elements placed in the vector.
+    size_t _size = 0;
 
   public:
-    using value_type     = typename vector_type::value_type;
-    using iterator       = typename vector_type::iterator;
-    using const_iterator = typename vector_type::const_iterator;
+    using value_type             = typename array_type::value_type;
+    using iterator               = typename array_type::iterator;
+    using reverse_iterator       = typename array_type::reverse_iterator;
+    using const_iterator         = typename array_type::const_iterator;
+    using const_reverse_iterator = typename array_type::const_reverse_iterator;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     static size_t
     memory_usage(size_t capacity = 0)
     {
-      return vector_type::memory_usage(capacity);
+      return array_type::memory_usage(capacity);
     }
 
     static size_t
     memory_fits(size_t memory_bytes)
     {
-      const size_t c = vector_type::memory_fits(memory_bytes);
+      const size_t c = array_type::memory_fits(memory_bytes);
 
       adiar_assert(memory_usage(c) <= memory_bytes, "memory_fits and memory_usage should agree.");
       return c;
@@ -47,8 +62,8 @@ namespace adiar::internal
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     vector(size_t capacity = 0)
-      : _capacity(capacity)
-      , _vector(capacity)
+      : _array(capacity)
+      , _capacity(capacity)
     {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,14 +71,14 @@ namespace adiar::internal
     at(size_t i)
     {
       adiar_assert(i < this->size(), "Use of invalid index!");
-      return this->_vector[i];
+      return this->_array[i];
     }
 
     const value_type&
     at(size_t i) const
     {
       adiar_assert(i < this->size(), "Use of invalid index!");
-      return this->_vector[i];
+      return this->_array[i];
     }
 
     value_type&
@@ -82,77 +97,105 @@ namespace adiar::internal
     value_type&
     front()
     {
-      return this->_vector.front();
+      return this->_array[0];
     }
 
     const value_type&
     front() const
     {
-      return this->_vector.front();
+      return this->_array[0];
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
+  public:
     value_type&
     back()
     {
-      return this->_vector.back();
+      return this->_array[this->_size - 1];
     }
 
     const value_type&
     back() const
     {
-      return this->_vector.back();
+      return this->_array[this->_size - 1];
     }
 
     value_type&
     push_back(const value_type& x)
     {
-      adiar_assert(this->size() < this->_capacity, "Cannot push at full capacity");
-      return this->_vector.push_back(x);
+      adiar_assert(this->_size < this->_capacity, "Cannot push at full capacity");
+      this->_array[this->_size] = x;
+      this->_size += 1;
+      return this->back();
     }
 
     void
     pop_back()
     {
-      return this->_vector.pop_back();
+      this->_size -= 1;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     iterator
     begin()
     {
-      return this->_vector.begin();
+      return this->_array.begin();
     }
 
     const_iterator
     begin() const
     {
-      return this->_vector.begin();
+      return this->_array.begin();
     }
 
     iterator
     end()
     {
-      return this->_vector.end();
+      return this->_array.begin() + this->_size;
     }
 
     const_iterator
     end() const
     {
-      return this->_vector.end();
+      return this->_array.begin() + this->_size;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    bool
-    empty() const
+    reverse_iterator
+    rbegin()
     {
-      return this->_vector.empty();
+      return this->_array.rend() - this->_size;
     }
 
+    const_reverse_iterator
+    rbegin() const
+    {
+      return this->_array.rend() - this->_size;
+    }
+
+    reverse_iterator
+    rend()
+    {
+      return this->_array.rend();
+    }
+
+    const_reverse_iterator
+    rend() const
+    {
+      return this->_array.rend();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     size_t
     size() const
     {
-      return this->_vector.size();
+      return this->_size;
+    }
+
+    bool
+    empty() const
+    {
+      return this->_size == 0;
     }
 
     size_t
@@ -160,21 +203,13 @@ namespace adiar::internal
     {
       return this->_capacity;
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    void
-    reset()
-    {
-      this->_vector.clear();
-    }
-
-    void
-    reset(size_t capacity)
-    {
-      this->_vector.resize(capacity);
-      this->_capacity = capacity;
-    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Alias for a `vector<memory_mode::Internal, T>`.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename T>
+  using internal_vector = vector<memory_mode::Internal, T>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief An external memory vector in TPIE.

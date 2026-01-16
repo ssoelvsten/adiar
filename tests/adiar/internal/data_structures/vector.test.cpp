@@ -74,6 +74,16 @@ go_bandit([]() {
           i += 1;
         }
       });
+
+      it("can iterate backwards through the vector", [&v]() {
+        int i = 3;
+        const int expected[4] = { 3, 1, 4, 4 };
+
+        for (auto iter = v.rbegin(); iter != v.rend(); ++iter) {
+          AssertThat(*iter, Is().EqualTo(expected[i]));
+          i -= 1;
+        }
+      });
     });
 
     describe("vector<memory_mode::External, int>", []() {
