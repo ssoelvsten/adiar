@@ -57,12 +57,11 @@ namespace adiar
     static zdd
     on_terminal_input(const bool terminal_value,
                       const zdd& /*dd*/,
-                      const internal::shared_file<zdd::label_type>& universe)
+                      const internal::internal_vector<zdd::label_type>& universe)
     {
       // TODO: remove
-      internal::ifstream<zdd::label_type, true> ls(universe);
-
-      const generator<zdd::label_type> universe_generator = make_generator(ls);
+      const generator<zdd::label_type> universe_generator =
+        make_generator(universe.rbegin(), universe.rend());
 
       using complement_chain_converter =
         internal::chain_converter<zdd_policy, generator<zdd::label_type>>;
