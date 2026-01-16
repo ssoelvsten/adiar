@@ -5,6 +5,7 @@
 
 #include <adiar/internal/algorithms/intercut.h>
 #include <adiar/internal/assert.h>
+#include <adiar/internal/data_structures/vector.h>
 #include <adiar/internal/data_types/node.h>
 #include <adiar/internal/data_types/tuple.h>
 #include <adiar/internal/dd.h>
@@ -54,9 +55,9 @@ namespace adiar::internal
     static typename to_policy::dd_type
     on_terminal_input(const bool terminal_value,
                       const typename from_policy::dd_type& /*dd*/,
-                      const shared_file<typename from_policy::label_type>& dom)
+                      const internal_vector<typename from_policy::label_type>& dom)
     {
-      adiar_assert(dom->size() > 0, "Emptiness check is before terminal check");
+      adiar_assert(dom.size() > 0, "Emptiness check is before terminal check");
 
       node::uid_type prior_node = node::uid_type(terminal_value);
 
@@ -65,13 +66,9 @@ namespace adiar::internal
       bool has_output = true;
       node_ofstream nw(nf);
 
-      ifstream<typename from_policy::label_type, true> ls(dom);
-
-      while (ls.can_pull()) {
-        const typename to_policy::label_type next_label = ls.pull();
-
+      for (auto iter = dom.rbegin(); iter != dom.rend(); ++iter) {
         const tuple children = from_policy::reduction_rule_inv(prior_node);
-        const node next_node = node(next_label, to_policy::max_id, children[0], children[1]);
+        const node next_node = node(*iter, to_policy::max_id, children[0], children[1]);
         const typename to_policy::pointer_type reduction_result =
           to_policy::reduction_rule(next_node);
 
@@ -79,7 +76,7 @@ namespace adiar::internal
           prior_node = next_node.uid();
 
           nw.unsafe_push(next_node);
-          nw.unsafe_push(level_info(next_label, 1u));
+          nw.unsafe_push(level_info(*iter, 1u));
         } else {
           // If we kill the resulting node once, then we will also do it for all the other labels we
           // still are missing.
