@@ -3,3 +3,4 @@ add_test(adiar-internal-data_structures-levelized_priority_queue levelized_prior
 add_test(adiar-internal-data_structures-priority_queue           priority_queue.test.cpp)
 add_test(adiar-internal-data_structures-sorter                   sorter.test.cpp)
 add_test(adiar-internal-data_structures-stack                    stack.test.cpp)
+add_test(adiar-internal-data_structures-vector                   vector.test.cpp)
