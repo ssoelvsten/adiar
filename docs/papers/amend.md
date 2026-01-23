@@ -15,6 +15,16 @@ Figure 6 of the [TACAS
 error on line 3. It should be `Q_red != Ø or F_leaf.has_next()`; this has been
 fixed in the [extended arXiv paper](https://arxiv.org/abs/2104.12101).
 
+Error: Nested Sweeping Cases
+========================
+
+As Springer were preparing the [VMCAI
+26](https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17) publication,
+the references for the particular cases in Section 3 got turned into "*Case 3*"
+references to nowhere. We did not notice all botched references. So, some still
+linger which impedes understanding; see the [extended arXiv
+paper](https://arxiv.org/abs/2408.14216) for the correct case references.
+
 Change: 64-bit Encoding of Pointers
 ========================
 
