@@ -32,7 +32,7 @@ var searchData=
   ['statistics_5fget_29',['statistics_get',['../group__module____statistics.html#ga4f0439fa1b9af8e4510e5910fe27cc16',1,'adiar']]],
   ['statistics_5fprint_30',['statistics_print',['../group__module____statistics.html#ga27ad872ca3c87a2a5d3a41b16e286cad',1,'adiar']]],
   ['statistics_5freset_31',['statistics_reset',['../group__module____statistics.html#ga3b38ee176ed58300fd1ec790752c36e5',1,'adiar']]],
-  ['student_20projects_32',['Student Projects',['../page__cite.html#autotoc_md50',1,'']]],
+  ['student_20projects_32',['Student Projects',['../page__cite.html#autotoc_md51',1,'']]],
   ['sum_5factual_5fmax_5fsize_33',['sum_actual_max_size',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#ae485ef1f9462d3c8106dc37a519ca896',1,'adiar::statistics::levelized_priority_queue_t']]],
   ['sum_5fdestructors_34',['sum_destructors',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a18db66cef68fc1e68532347a86bd3d2b',1,'adiar::statistics::levelized_priority_queue_t']]],
   ['sum_5fmax_5fsize_5fratio_35',['sum_max_size_ratio',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a6cbf004655dd759cc729fad62a47321d',1,'adiar::statistics::levelized_priority_queue_t']]],
@@ -41,5 +41,6 @@ var searchData=
   ['sum_5fterminal_5farcs_38',['sum_terminal_arcs',['../structadiar_1_1statistics_1_1reduce__t.html#a624cd625bf7ff160e3625ddf65cca558',1,'adiar::statistics::reduce_t']]],
   ['support_39',['Support',['../page__basic.html#autotoc_md23',1,'']]],
   ['suppressed_20decision_20diagrams_40',['Zero-suppressed Decision Diagrams',['../group__module____zdd.html',1,'']]],
-  ['system_5ferror_41',['system_error',['../namespaceadiar.html#a0c8a41f4c8e148e1e565bb18825da862',1,'adiar']]]
+  ['sweeping_20cases_41',['Error: Nested Sweeping Cases',['../page__amend.html#autotoc_md39',1,'']]],
+  ['system_5ferror_42',['system_error',['../namespaceadiar.html#a0c8a41f4c8e148e1e565bb18825da862',1,'adiar']]]
 ];

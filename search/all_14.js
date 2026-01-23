@@ -1,7 +1,7 @@
 var searchData=
 [
   ['objects_0',['objects',['../page__functional.html',1,'Function Objects'],['../group__module____functional.html',1,'Function Objects']]],
-  ['of_20pointers_1',['Change: 64-bit Encoding of Pointers',['../page__amend.html#autotoc_md39',1,'']]],
+  ['of_20pointers_1',['Change: 64-bit Encoding of Pointers',['../page__amend.html#autotoc_md40',1,'']]],
   ['operations_2',['Counting Operations',['../page__basic.html#autotoc_md22',1,'']]],
   ['operator_3',['If-Then-Else Operator',['../page__basic.html#autotoc_md12',1,'']]],
   ['operator_21_3d_4',['operator!=',['../classadiar_1_1exec__policy.html#ab06d53119e53c968a021ff293b571466',1,'adiar::exec_policy::operator!=()'],['../group__module____bdd.html#ga2f369c9b2555d1f42ebe90272d8a4719',1,'adiar::operator!=(const zdd &amp;lhs, const zdd &amp;rhs)'],['../group__module____bdd.html#gaa9b3e19419780c15c4b2534582431894',1,'adiar::operator!=(const bdd &amp;f, const bdd &amp;g)']]],

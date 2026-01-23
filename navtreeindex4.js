@@ -1,5 +1,6 @@
 var NAVTREEINDEX4 =
 {
+"structadiar_1_1statistics_1_1replace__t.html#a13f299ab622357fab0d8dc674de72246":[4,6,0,16,0],
 "structadiar_1_1statistics_1_1replace__t.html#a607faa9215476566eb69dbfb179dc031":[4,6,0,16,2],
 "structadiar_1_1statistics_1_1replace__t.html#a63f5b487d41f67a87ab5049e58b2f71e":[4,6,0,16,6],
 "structadiar_1_1statistics_1_1replace__t.html#a70c8dddb8ddfa03d0171f1e3400704b1":[4,6,0,16,1],

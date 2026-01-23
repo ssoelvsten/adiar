@@ -81,22 +81,23 @@ var NAVTREE =
     ] ],
     [ "Papers", "page__papers.html", [
       [ "Citing this Project", "page__cite.html", [
-        [ "Lars Arge", "page__cite.html#autotoc_md42", null ],
-        [ "Adiar", "page__cite.html#autotoc_md43", [
-          [ "v1.0", "page__cite.html#autotoc_md44", null ],
-          [ "v1.1", "page__cite.html#autotoc_md45", null ],
-          [ "v1.2", "page__cite.html#autotoc_md46", null ],
-          [ "v2.0", "page__cite.html#autotoc_md47", null ],
-          [ "v2.1", "page__cite.html#autotoc_md48", null ],
-          [ "Future Work", "page__cite.html#autotoc_md49", null ],
-          [ "Student Projects", "page__cite.html#autotoc_md50", null ]
+        [ "Lars Arge", "page__cite.html#autotoc_md43", null ],
+        [ "Adiar", "page__cite.html#autotoc_md44", [
+          [ "v1.0", "page__cite.html#autotoc_md45", null ],
+          [ "v1.1", "page__cite.html#autotoc_md46", null ],
+          [ "v1.2", "page__cite.html#autotoc_md47", null ],
+          [ "v2.0", "page__cite.html#autotoc_md48", null ],
+          [ "v2.1", "page__cite.html#autotoc_md49", null ],
+          [ "Future Work", "page__cite.html#autotoc_md50", null ],
+          [ "Student Projects", "page__cite.html#autotoc_md51", null ]
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
         [ "Error: Reduce PseudoCode", "page__amend.html#autotoc_md38", null ],
-        [ "Change: 64-bit Encoding of Pointers", "page__amend.html#autotoc_md39", [
-          [ "v1.2", "page__amend.html#autotoc_md40", null ],
-          [ "v2.0", "page__amend.html#autotoc_md41", null ]
+        [ "Error: Nested Sweeping Cases", "page__amend.html#autotoc_md39", null ],
+        [ "Change: 64-bit Encoding of Pointers", "page__amend.html#autotoc_md40", [
+          [ "v1.2", "page__amend.html#autotoc_md41", null ],
+          [ "v2.0", "page__amend.html#autotoc_md42", null ]
         ] ]
       ] ]
     ] ],
@@ -137,7 +138,7 @@ var NAVTREEINDEX =
 "functions_enum.html",
 "group__module____bdd.html#ga8f6e81730a4c22db5ee8d2decee583d6",
 "namespaceadiar.html#af4f410828f9b8f7e7ce4e54b0d450b24",
-"structadiar_1_1statistics_1_1replace__t.html#a607faa9215476566eb69dbfb179dc031"
+"structadiar_1_1statistics_1_1replace__t.html#a13f299ab622357fab0d8dc674de72246"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

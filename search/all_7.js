@@ -66,7 +66,7 @@ var searchData=
   ['bdds_63',['bdds',['../page__basic.html#autotoc_md9',1,'Combining BDDs'],['../page__basic.html#autotoc_md6',1,'Creating BDDs']]],
   ['binary_20decision_20diagrams_64',['Binary Decision Diagrams',['../group__module____bdd.html',1,'']]],
   ['binary_20operators_65',['Binary Operators',['../page__basic.html#autotoc_md11',1,'']]],
-  ['bit_20encoding_20of_20pointers_66',['Change: 64-bit Encoding of Pointers',['../page__amend.html#autotoc_md39',1,'']]],
+  ['bit_20encoding_20of_20pointers_66',['Change: 64-bit Encoding of Pointers',['../page__amend.html#autotoc_md40',1,'']]],
   ['board_67',['board',['../page__queens.html#autotoc_md35',1,'B() : Board'],['../page__queens.html#autotoc_md32',1,'Constructing the Board']]],
   ['boolean_20constants_68',['Boolean Constants',['../page__basic.html#autotoc_md17',1,'']]],
   ['build_69',['build',['../classadiar_1_1builder.html#ad352fdf568e8d100de19174386fc200c',1,'adiar::builder']]],

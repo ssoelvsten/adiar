@@ -103,8 +103,9 @@ $(document).ready(function(){initNavTree('page__amend.html',''); initResizable()
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
 <ul><li class="level1"><a href="#autotoc_md38">Error: Reduce PseudoCode</a></li>
-<li class="level1"><a href="#autotoc_md39">Change: 64-bit Encoding of Pointers</a><ul><li class="level2"><a href="#autotoc_md40">v1.2</a></li>
-<li class="level2"><a href="#autotoc_md41">v2.0</a></li>
+<li class="level1"><a href="#autotoc_md39">Error: Nested Sweeping Cases</a></li>
+<li class="level1"><a href="#autotoc_md40">Change: 64-bit Encoding of Pointers</a><ul><li class="level2"><a href="#autotoc_md41">v1.2</a></li>
+<li class="level2"><a href="#autotoc_md42">v2.0</a></li>
 </ul>
 </li>
 </ul>
@@ -114,12 +115,15 @@ $(document).ready(function(){initNavTree('page__amend.html',''); initResizable()
 Error: Reduce PseudoCode</h1>
 <p>Figure 6 of the <a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a> paper has an error on line 3. It should be <code>Q_red != Ø or F_leaf.has_next()</code>; this has been fixed in the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a>.</p>
 <h1><a class="anchor" id="autotoc_md39"></a>
+Error: Nested Sweeping Cases</h1>
+<p>As Springer were preparing the <a href="https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17">VMCAI 26</a> publication, the references for the particular cases in Section 3 got turned into "*Case 3*" references to nowhere. We did not notice all botched references. So, some still linger which impedes understanding; see the <a href="https://arxiv.org/abs/2408.14216">extended arXiv paper</a> for the correct case references.</p>
+<h1><a class="anchor" id="autotoc_md40"></a>
 Change: 64-bit Encoding of Pointers</h1>
 <p>In the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a> for [<a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a>], we show in Section 3.5 how to encode the <em>unique identifier</em> into a single 64-bit integer. This is (1) to decrease the BDD size and especially (2) to make the pointer sorting operations as fast as possible.</p>
-<h2><a class="anchor" id="autotoc_md40"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 v1.2</h2>
 <p>It was always the intention that the <em>flag</em> bit on children should be used for the addition of <em>complement edges</em> in BDDs. Yet, up to this point it was left unused. Hence, we reassigned the meaning of this bit to instead propagate an edge being <em>tainted</em> by the decision diagram's reduction rule [<a href="https://link.springer.com/chapter/10.1007/978-3-031-45332-8_4">ATVA 23</a>].</p>
-<h2><a class="anchor" id="autotoc_md41"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 v2.0</h2>
 <p>For <em>Nested Sweeping</em>, we need to <em>taint</em> an arc's <em>source</em> to be originating from the <em>outer sweep</em>. Yet, the <em>flag</em> was up to this point used to store the <em>out-index</em> of the source. Hence, for <em>internal nodes</em> we introduce the out-index (<em>p</em>) on the second least-significant bit - essentially adding a second (possibly non-Boolean) <em>flag</em>.</p>
 <p><b>Figure 10 (b):</b></p>
