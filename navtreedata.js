@@ -136,9 +136,8 @@ var NAVTREEINDEX =
 [
 "adiar_8h_source.html",
 "functions_enum.html",
-"group__module____bdd.html#ga8f6e81730a4c22db5ee8d2decee583d6",
-"namespaceadiar.html#af4f410828f9b8f7e7ce4e54b0d450b24",
-"structadiar_1_1statistics_1_1replace__t.html#a13f299ab622357fab0d8dc674de72246"
+"group__module____zdd.html#ga294677f879d85e1d95f472444dc42bd6",
+"structadiar_1_1statistics_1_1____alg__base.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
