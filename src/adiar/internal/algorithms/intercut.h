@@ -195,11 +195,11 @@ namespace adiar::internal
     // variable in this scope. But, the resulting code complexity does not seem worth it.
     internal_vector<typename Policy::label_type> hit_levels(dd::max_label);
     for (auto x = xs(); x; x = xs()) { hit_levels.push_back(x.value()); }
-    if (hit_levels.empty()) { return Policy::on_empty_labels(dd); }
-
-    if (n.is_terminal()) { return Policy::on_terminal_input(n.value(), dd, hit_levels); }
 
     typename internal_vector<typename Policy::label_type>::iterator ls = hit_levels.begin();
+    if (ls == hit_levels.end()) { return Policy::on_empty_labels(dd); }
+
+    if (n.is_terminal()) { return Policy::on_terminal_input(n.value(), dd, hit_levels); }
 
     shared_levelized_file<arc> out_arcs;
     arc_ofstream aw(out_arcs);
