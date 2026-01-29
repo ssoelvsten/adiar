@@ -47,13 +47,13 @@ namespace adiar::internal
 
     public:
       virtual bool
-      can_pull();
+      can_pull() = 0;
 
       virtual value_type
-      peek();
+      peek() = 0;
 
       virtual value_type
-      pull();
+      pull() = 0;
     };
 
   private:
