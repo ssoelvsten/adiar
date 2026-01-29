@@ -14,13 +14,13 @@ file(GLOB_RECURSE ALL_SRC_FILES
 
 # Get all test/ files
 file(GLOB_RECURSE ALL_TEST_FILES
-  ${PROJECT_SOURCE_DIR}/test/*.[chi]pp
-  ${PROJECT_SOURCE_DIR}/test/*.[chi]xx
-  ${PROJECT_SOURCE_DIR}/test/*.cc
-  ${PROJECT_SOURCE_DIR}/test/*.hh
-  ${PROJECT_SOURCE_DIR}/test/*.h
-  ${PROJECT_SOURCE_DIR}/test/*.ii
-  ${PROJECT_SOURCE_DIR}/test/*.[CHI]
+  ${PROJECT_SOURCE_DIR}/tests/*.[chi]pp
+  ${PROJECT_SOURCE_DIR}/tests/*.[chi]xx
+  ${PROJECT_SOURCE_DIR}/tests/*.cc
+  ${PROJECT_SOURCE_DIR}/tests/*.hh
+  ${PROJECT_SOURCE_DIR}/tests/*.h
+  ${PROJECT_SOURCE_DIR}/tests/*.ii
+  ${PROJECT_SOURCE_DIR}/tests/*.[CHI]
 )
 
 # Adding clang-format target if executable is found
