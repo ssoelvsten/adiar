@@ -223,7 +223,7 @@ namespace adiar::internal
 
       // Derive whether this level needs to be cut and what is the next level. Note, that `ls` is
       // always kept ahead of the current level (until it is empty).
-      const bool hit_level = out_label == *ls;
+      const bool hit_level = ls != hit_levels.end() && out_label == *ls;
       if (hit_level) { ++ls; }
       const typename Policy::label_type l = ls == hit_levels.end() ? Policy::max_label + 1 : *ls;
 
