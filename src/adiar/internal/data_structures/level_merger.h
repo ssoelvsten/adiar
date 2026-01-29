@@ -134,48 +134,6 @@ namespace adiar::internal
       }
     };
 
-  private:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \deprecated This is merely created to help migrate from the old level_merger.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    class file_istream : public istream
-    {
-    private:
-      ifstream<value_type> _ifstream;
-
-    public:
-      [[deprecated("Use a 'generator' instead?")]]
-      file_istream(const shared_file<value_type>& f)
-        : _ifstream(f)
-      {}
-
-      [[deprecated("Use a 'generator' instead?")]]
-      file_istream(const file<value_type>& f)
-        : _ifstream(f)
-      {}
-
-      ~file_istream() = default;
-
-    public:
-      bool
-      can_pull() override
-      {
-        return this->_ifstream.can_pull();
-      }
-
-      value_type
-      peek() override
-      {
-        return this->_ifstream.peek();
-      }
-
-      value_type
-      pull() override
-      {
-        return this->_ifstream.pull();
-      }
-    };
-
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Manages initialization and access to an input of levels.
@@ -212,16 +170,6 @@ namespace adiar::internal
       template <typename T>
       istream_ptr(const shared_ptr<levelized_file<T>>& f)
         : _ptr(adiar::make_unique<level_info_istream>(f))
-      {}
-
-      /// \brief Conversion for files.
-      istream_ptr(const shared_file<dd::label_type>& f)
-        : _ptr(adiar::make_unique<file_istream>(f))
-      {}
-
-      /// \brief Conversion for files.
-      istream_ptr(const file<dd::label_type>& f)
-        : _ptr(adiar::make_unique<file_istream>(f))
       {}
 
       /// \brief Conversion for generators. This requires the addition of an intermediate lambda

@@ -72,7 +72,7 @@ struct lpq_test_gt
 typedef shared_file_ptr<levelized_file<lpq_test_data>> lpq_test_file;
 typedef levelized_ofstream<lpq_test_data> lpq_test_ofstream;
 
-template <typename file_t, size_t look_ahead>
+template <size_t look_ahead>
 using test_priority_queue = levelized_priority_queue<lpq_test_data,
                                                      lpq_test_lt,
                                                      look_ahead,
@@ -96,7 +96,7 @@ go_bandit([]() {
       it("initialises #levels = 0", []() {
         lpq_test_file f;
 
-        test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -104,15 +104,10 @@ go_bandit([]() {
       });
 
       it("initialises with #levels = 1 (which is skipped)", []() {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = { 2 };
 
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-          fw << 2;
-        }
-
-        test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-          { f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<1> pq(
+          { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -120,15 +115,10 @@ go_bandit([]() {
       });
 
       it("initialises with #levels = 2 (#buckets = 1)", []() {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = { 1, 2 };
 
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-          fw << 1 << 2;
-        }
-
-        test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-          { f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<1> pq(
+          { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -138,16 +128,14 @@ go_bandit([]() {
       });
 
       it("initialises with #buckets == #levels", []() {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = {
+          1, // skipped
+          3,
+          4 // buckets
+        };
 
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-          fw << 1       // skipped
-             << 3 << 4; // buckets
-        }
-
-        test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-          { f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<1> pq(
+          { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -157,17 +145,15 @@ go_bandit([]() {
       });
 
       it("initialises with #buckets < #levels", []() {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = {
+          1, // skipped
+          2,
+          4, // buckets
+          5  // overflow
+        };
 
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-          fw << 1      // skipped
-             << 2 << 4 // buckets
-             << 5;     // overflow
-        }
-
-        test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-          { f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<1> pq(
+          { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -185,18 +171,15 @@ go_bandit([]() {
 
       describe(".setup_next_level()", []() {
         it("can forward until the first non-empty bucket [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 0      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -218,18 +201,13 @@ go_bandit([]() {
         });
 
         it("can forward until the first non-empty bucket [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3, // buckets
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -251,18 +229,15 @@ go_bandit([]() {
         });
 
         it("can forward up until the overflow queue [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -283,18 +258,14 @@ go_bandit([]() {
         });
 
         it("can forward up until the overflow queue [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1,      // skipped
+            2, 3,   // buckets
+            4, 5, 6 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1            // skipped
-               << 2 << 3       // buckets
-               << 4 << 5 << 6; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -324,18 +295,15 @@ go_bandit([]() {
         });
 
         it("can forward until next bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -372,18 +340,16 @@ go_bandit([]() {
         });
 
         it("can forward past buckets until top of overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4,
+            5 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1       // skipped
-               << 2 << 3  // buckets
-               << 4 << 5; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -420,21 +386,17 @@ go_bandit([]() {
         });
 
         it("can relabel buckets until top of overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1,    // skipped
+            2, 3, // buckets
+            4, 5, // overflow that is skipped
+            6,    // overflow with an element
+            7, 8, // overflow that will have relabelled buckets
+            9     // overflow not yet touched
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4 << 5 // overflow that is skipped
-               << 6      // overflow with an element
-               << 7 << 8 // overflow that will have relabelled buckets
-               << 9;     // overflow not yet touched
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -456,20 +418,16 @@ go_bandit([]() {
         });
 
         it("can relabel buckets until top of overflow queue (on second last level)", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1,       // skipped
+            2, 3, 4, // buckets (after element in 3)
+            5, 6,    // overflow that is skipped
+            7,       // overflow with an element
+            8        // overflow that will have relabelled bucket(s)
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1           // skipped
-               << 2 << 3 << 4 // buckets (after element in 3)
-               << 5 << 6      // overflow that is skipped
-               << 7           // overflow with an element
-               << 8;          // overflow that will have relabelled bucket(s)
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -506,18 +464,15 @@ go_bandit([]() {
 
       describe(".setup_next_level(stop_label)", []() {
         it("does nothing when given level prior to next bucket [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            3,
+            4, // buckets
+            5  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 3 << 4 // buckets
-               << 5;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -535,18 +490,16 @@ go_bandit([]() {
         });
 
         it("does nothing when given level prior to next bucket [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            4,
+            5, // bucket
+            6  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1           // skipped
-               << 2 << 4 << 5 // buckets
-               << 6;          // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level(); // 2
@@ -566,18 +519,15 @@ go_bandit([]() {
         });
 
         it("forwards to first bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -599,18 +549,15 @@ go_bandit([]() {
         });
 
         it("forwards to second bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -632,18 +579,15 @@ go_bandit([]() {
         });
 
         it("forwards to next bucket with content", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -663,18 +607,15 @@ go_bandit([]() {
         });
 
         it("forwards to next bucket without content", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
 
@@ -691,18 +632,15 @@ go_bandit([]() {
         });
 
         it("stops early at bucket with content", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -719,18 +657,15 @@ go_bandit([]() {
         });
 
         it("forwards to first bucket for unknown level prior to second bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            4, // buckets
+            5  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 4 // buckets
-               << 5;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -750,18 +685,15 @@ go_bandit([]() {
         });
 
         it("relabels with current buckets included", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1, // skipped
+            2,
+            3, // buckets
+            4  // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1      // skipped
-               << 2 << 3 // buckets
-               << 4;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -783,18 +715,14 @@ go_bandit([]() {
         });
 
         it("relabels early at top of overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1,      // skipped
+            2, 3,   // buckets
+            4, 5, 6 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1            // skipped
-               << 2 << 3       // buckets
-               << 4 << 5 << 6; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
           AssertThat(pq.can_pull(), Is().False());
@@ -817,20 +745,16 @@ go_bandit([]() {
         });
 
         it("can relabel for unknown level", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1,        // skipped
+            2, 3,  4, // buckets (after element in 2)
+            5, 6,  7, // overflow that is skipped
+            9, 10,    // overflow that will become a bucket
+            11        // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1           // skipped
-               << 2 << 3 << 4 // buckets (after element in 2)
-               << 5 << 6 << 7 // overflow that is skipped
-               << 9 << 10     // overflow that will become a bucket
-               << 11;         // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level();
@@ -864,7 +788,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 2, 2 });
@@ -892,7 +816,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 2, 2 });
@@ -943,7 +867,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
 
@@ -967,7 +891,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
           pq.push(lpq_test_data{ 4, 1 });
@@ -1000,7 +924,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 2 });
           pq.push(lpq_test_data{ 5, 1 });
@@ -1037,7 +961,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 2 }); // overflow
 
@@ -1075,7 +999,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1));
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.can_pull(), Is().False());
 
@@ -1106,7 +1030,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u));
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.can_pull(), Is().False());
 
@@ -1125,17 +1049,14 @@ go_bandit([]() {
         });
 
         it("can use relabelled buckets [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,         // skipped
+            1, 2,      // buckets
+            3, 4, 5, 6 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                 // skipped
-              << 1 << 2            // buckets
-              << 3 << 4 << 5 << 6; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 }); // bucket
 
@@ -1174,17 +1095,14 @@ go_bandit([]() {
         });
 
         it("can use relabelled buckets [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,         // skipped
+            1, 2,      // buckets
+            3, 4, 5, 6 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                 // skipped
-              << 1 << 2            // buckets
-              << 3 << 4 << 5 << 6; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 }); // overflow
 
@@ -1214,17 +1132,14 @@ go_bandit([]() {
         });
 
         it("can push after relabelling that skips levels [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,            // skipped
+            1, 2,         // buckets
+            3, 4, 5, 6, 7 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                      // skipped
-              << 1 << 2                 // buckets
-              << 3 << 4 << 5 << 6 << 7; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 }); // bucket
           pq.push(lpq_test_data{ 5, 1 }); // overflow
@@ -1266,17 +1181,14 @@ go_bandit([]() {
         });
 
         it("can push after relabelling that skips levels [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,            // skipped
+            1, 2,         // buckets
+            3, 4, 5, 6, 7 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                      // skipped
-              << 1 << 2                 // buckets
-              << 3 << 4 << 5 << 6 << 7; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 1 }); // overflow
           pq.push(lpq_test_data{ 6, 1 }); // overflow
@@ -1314,17 +1226,14 @@ go_bandit([]() {
         });
 
         it("can use buckets after relabelling close to the end", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,      // skipped
+            1, 2,   // buckets
+            3, 4, 5 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0            // skipped
-              << 1 << 2       // buckets
-              << 3 << 4 << 5; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 }); // overflow
           pq.push(lpq_test_data{ 1, 1 }); // bucket
@@ -1360,17 +1269,12 @@ go_bandit([]() {
 
         it("can use buckets after relabelling close to the end (the current read bucket dies)",
            []() {
-             shared_file<ptr_uint64::label_type> f;
+             const std::vector<int> ls = { 0,       // skipped
+                                           1, 2, 3, // buckets (after first 'setup_next_level')
+                                           4, 5 };
 
-             {
-               ofstream<ptr_uint64::label_type> w(f);
-               w << 0           // skipped
-                 << 1 << 2 << 3 // buckets (after first 'setup_next_level')
-                 << 4 << 5;
-             }
-
-             test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-               { f }, memory_available(), 32, stats_lpq_tests);
+             test_priority_queue<1> pq(
+               { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
              pq.push(lpq_test_data{ 4, 1 }); // overflow
              pq.push(lpq_test_data{ 2, 1 }); // bucket
@@ -1405,17 +1309,16 @@ go_bandit([]() {
            });
 
         it("can use buckets after bucket-hitting stop-level", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0       // skipped
-              << 1 << 2  // buckets
-              << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 }); // buckete
 
@@ -1449,17 +1352,14 @@ go_bandit([]() {
         });
 
         it("can use relabelled buckets (with stop-level)", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,         // skipped
+            1, 2,      // buckets
+            3, 4, 5, 6 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                 // skipped
-              << 1 << 2            // buckets
-              << 3 << 4 << 5 << 6; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 }); // overflow
 
@@ -1490,17 +1390,16 @@ go_bandit([]() {
         it(
           "can use relabelled bucket of a level that was also a prior bucket due to the stop-level",
           []() {
-            shared_file<ptr_uint64::label_type> f;
+            const std::vector<int> ls = {
+              0, // skipped
+              1,
+              2, // buckets
+              3,
+              4 // overflow
+            };
 
-            {
-              ofstream<ptr_uint64::label_type> w(f);
-              w << 0       // skipped
-                << 1 << 2  // buckets
-                << 3 << 4; // overflow
-            }
-
-            test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-              { f }, memory_available(), 32, stats_lpq_tests);
+            test_priority_queue<1> pq(
+              { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
             pq.setup_next_level(1u); // buckets: [2,3]
 
@@ -1528,17 +1427,14 @@ go_bandit([]() {
           });
 
         it("can push after relabelling (with stop-level) that skips levels [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,            // skipped
+            1, 2,         // buckets
+            3, 4, 5, 6, 7 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                      // skipped
-              << 1 << 2                 // buckets
-              << 3 << 4 << 5 << 6 << 7; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 }); // bucket
           pq.push(lpq_test_data{ 7, 2 }); // overflow
@@ -1574,17 +1470,14 @@ go_bandit([]() {
         });
 
         it("can push after relabelling (with stop-level) that skips levels [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,            // skipped
+            1, 2,         // buckets
+            3, 4, 5, 6, 7 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0                      // skipped
-              << 1 << 2                 // buckets
-              << 3 << 4 << 5 << 6 << 7; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 6, 1 }); // overflow
           pq.push(lpq_test_data{ 7, 2 }); // overflow
@@ -1618,17 +1511,14 @@ go_bandit([]() {
         });
 
         it("can use buckets after relabelling (with stop-level) close to the end", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,      // skipped
+            1, 2,   // buckets
+            3, 4, 5 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0            // skipped
-              << 1 << 2       // buckets
-              << 3 << 4 << 5; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 }); // bucket
 
@@ -1661,17 +1551,12 @@ go_bandit([]() {
         it("can use buckets after relabelling (with stop-level) close to the end (the current read "
            "bucket dies)",
            []() {
-             shared_file<ptr_uint64::label_type> f;
+             const std::vector<int> ls = { 0,       // skipped
+                                           1, 2, 3, // buckets (after first 'setup_next_level')
+                                           4, 5 };
 
-             {
-               ofstream<ptr_uint64::label_type> w(f);
-               w << 0           // skipped
-                 << 1 << 2 << 3 // buckets (after first 'setup_next_level')
-                 << 4 << 5;
-             }
-
-             test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-               { f }, memory_available(), 32, stats_lpq_tests);
+             test_priority_queue<1> pq(
+               { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
              pq.push(lpq_test_data{ 2, 1 }); // bucket
 
@@ -1704,17 +1589,15 @@ go_bandit([]() {
 
       describe(".pop()", [] {
         it("can pop from bucket [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3  // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0      // skipped
-              << 1 << 2 // buckets
-              << 3;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
 
@@ -1728,17 +1611,15 @@ go_bandit([]() {
         });
 
         it("can pop from bucket [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3  // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0      // skipped
-              << 1 << 2 // buckets
-              << 3;     // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 2, 2 });
@@ -1756,17 +1637,16 @@ go_bandit([]() {
         });
 
         it("can pop from overflow [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0       // skipped
-              << 1 << 2  // buckets
-              << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 }); // overflow
 
@@ -1780,17 +1660,16 @@ go_bandit([]() {
         });
 
         it("can pop from overflow [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0       // skipped
-              << 1 << 2  // buckets
-              << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 }); // overflow
           pq.push(lpq_test_data{ 2, 1 }); // bucket
@@ -1822,27 +1701,23 @@ go_bandit([]() {
       //////////////////////////////////////////////////////////////////////////
       //                           .can_pull()                                //
       describe(".empty_level() / .can_pull()", [] {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = {
+          1,      // skipped
+          2, 3,   // buckets
+          4, 5, 6 // overflow
+        };
 
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-
-          fw << 1            // skipped
-             << 2 << 3       // buckets
-             << 4 << 5 << 6; // overflow
-        }
-
-        it("cannot pull after initialisation", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("cannot pull after initialisation", [&ls]() {
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("shows element after forwarding to level", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("shows element after forwarding to level", [&ls]() {
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level(); // 2
@@ -1850,9 +1725,9 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().True());
         });
 
-        it("shows a level becomes empty", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("shows a level becomes empty", [&ls]() {
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level(); // 2
@@ -1868,9 +1743,9 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("shows forwarding to an empty level", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("shows forwarding to an empty level", [&ls]() {
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
           pq.setup_next_level(2); // 2
@@ -1896,7 +1771,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -1930,7 +1805,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 3 }); // overflow
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -1962,7 +1837,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 }); // bucket
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -1995,7 +1870,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 1> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 }); // bucket
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -2023,16 +1898,14 @@ go_bandit([]() {
 
       describe(".size()", [] {
         it("increments on push to bucket [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2 // buckets
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2; // buckets
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -2044,16 +1917,14 @@ go_bandit([]() {
         });
 
         it("increments on push to bucket [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2 // buckets
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2; // buckets
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -2067,17 +1938,16 @@ go_bandit([]() {
         });
 
         it("increments on push to overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2  // buckets
-               << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -2089,16 +1959,14 @@ go_bandit([]() {
         });
 
         it("decrements on pull from bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2 // buckets
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2; // buckets
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 1, 2 });
@@ -2112,17 +1980,16 @@ go_bandit([]() {
         });
 
         it("decrements on pull from overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2  // buckets
-               << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 4, 2 });
@@ -2136,16 +2003,14 @@ go_bandit([]() {
         });
 
         it("decrements on pull from bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2 // buckets
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2; // buckets
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 1, 2 });
@@ -2159,17 +2024,16 @@ go_bandit([]() {
         });
 
         it("decrements on pull from overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2  // buckets
-               << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 4, 2 });
@@ -2183,16 +2047,14 @@ go_bandit([]() {
         });
 
         it("is unchanged on top from bucket", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2 // buckets
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2; // buckets
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 1, 2 });
@@ -2204,17 +2066,16 @@ go_bandit([]() {
         });
 
         it("is unchanged on top from overflow queue", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1,
+            2, // buckets
+            3,
+            4 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0       // skipped
-               << 1 << 2  // buckets
-               << 3 << 4; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 1> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<1> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 4, 2 });
@@ -2233,7 +2094,7 @@ go_bandit([]() {
       it("initialises correctly", []() {
         lpq_test_file f;
 
-        test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -2249,17 +2110,13 @@ go_bandit([]() {
 
       describe(".setup_next_level()", []() {
         it("can forward until the first non-empty level [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 0 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2278,17 +2135,13 @@ go_bandit([]() {
         });
 
         it("can forward until the first non-empty level [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2307,17 +2160,13 @@ go_bandit([]() {
         });
 
         it("can forward until the first non-empty level [3]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2338,17 +2187,11 @@ go_bandit([]() {
         });
 
         it("can forward until the first non-empty level [4]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2, 3, 4, 5, 6 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4 << 5 << 6;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2378,17 +2221,13 @@ go_bandit([]() {
         });
 
         it("can forward until next level [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2422,17 +2261,14 @@ go_bandit([]() {
         });
 
         it("can forward until next level [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4,
+                                        5 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4 << 5;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2466,17 +2302,11 @@ go_bandit([]() {
         });
 
         it("can forward until next level [3]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2, 3, 4, 5, 6, 7, 8, 9 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4 << 5 << 6 << 7 << 8 << 9;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2495,17 +2325,13 @@ go_bandit([]() {
         });
 
         it("can forward until next level [4]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            1,                  // skipped
+            2, 3, 4, 5, 6, 7, 8 // overflow that will have relabelled bucket(s)
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1                                // skipped
-               << 2 << 3 << 4 << 5 << 6 << 7 << 8; // overflow that will have relabelled bucket(s)
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2539,17 +2365,13 @@ go_bandit([]() {
 
       describe(".setup_next_level(stop_label)", []() {
         it("forwards to first level", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2571,17 +2393,13 @@ go_bandit([]() {
         });
 
         it("forwards to next level with content [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2600,17 +2418,13 @@ go_bandit([]() {
         });
 
         it("stops early at level with content", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2627,17 +2441,13 @@ go_bandit([]() {
         });
 
         it("forwards to unknown level without content [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        4,
+                                        5 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 4 << 5;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2657,17 +2467,13 @@ go_bandit([]() {
         });
 
         it("forwards to stop level [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
 
@@ -2689,17 +2495,11 @@ go_bandit([]() {
         });
 
         it("forwards to next level with content [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2, 3, 4, 5, 6 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4 << 5 << 6;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
           AssertThat(pq.can_pull(), Is().False());
@@ -2719,17 +2519,11 @@ go_bandit([]() {
         });
 
         it("forwards to unknown level without content [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 1, // skipped
+                                        2, 3, 4, 5, 6, 7, 9, 10, 11 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-
-            fw << 1 // skipped
-               << 2 << 3 << 4 << 5 << 6 << 7 << 9 << 10 << 11;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level();
@@ -2763,7 +2557,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 2, 2 });
@@ -2791,7 +2585,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 2, 2 });
@@ -2842,7 +2636,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
 
@@ -2866,7 +2660,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
           pq.push(lpq_test_data{ 4, 1 });
@@ -2899,7 +2693,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 2 });
           pq.push(lpq_test_data{ 5, 1 });
@@ -2936,7 +2730,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 2 });
 
@@ -2974,7 +2768,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1));
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.can_pull(), Is().False());
 
@@ -3005,7 +2799,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u));
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.can_pull(), Is().False());
 
@@ -3024,16 +2818,11 @@ go_bandit([]() {
         });
 
         it("can push [5]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
 
@@ -3072,16 +2861,11 @@ go_bandit([]() {
         });
 
         it("can push [6]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
 
@@ -3111,16 +2895,11 @@ go_bandit([]() {
         });
 
         it("can push [7]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6, 7 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6 << 7;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 5, 1 });
@@ -3162,16 +2941,11 @@ go_bandit([]() {
         });
 
         it("can push [8]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6, 7 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6 << 7;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 1 });
           pq.push(lpq_test_data{ 6, 1 });
@@ -3209,16 +2983,11 @@ go_bandit([]() {
         });
 
         it("can push [9]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 1, 1 });
@@ -3253,16 +3022,11 @@ go_bandit([]() {
         });
 
         it("can push [10]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 2, 1 });
@@ -3297,16 +3061,13 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [3]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0, // skipped
+            1, 2, 3, 4,
+          };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
 
@@ -3340,16 +3101,11 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [4]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
 
@@ -3378,16 +3134,14 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [5]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 3, 2 });
@@ -3413,16 +3167,11 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [6]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6, 7 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6 << 7;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 7, 2 });
@@ -3458,16 +3207,11 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [7]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5, 6, 7 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5 << 6 << 7;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 6, 1 });
           pq.push(lpq_test_data{ 7, 2 });
@@ -3501,16 +3245,11 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [8]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
 
@@ -3541,16 +3280,11 @@ go_bandit([]() {
         });
 
         it("can set up next level with a stop_label [9]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1, 2, 3, 4, 5 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4 << 5;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
 
@@ -3583,16 +3317,13 @@ go_bandit([]() {
 
       describe(".pop()", [] {
         it("can pop [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
 
@@ -3606,16 +3337,13 @@ go_bandit([]() {
         });
 
         it("can pop [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.push(lpq_test_data{ 2, 2 });
@@ -3633,16 +3361,14 @@ go_bandit([]() {
         });
 
         it("can pop [3]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
 
@@ -3656,16 +3382,14 @@ go_bandit([]() {
         });
 
         it("can pop [4]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          {
-            ofstream<ptr_uint64::label_type> w(f);
-            w << 0 // skipped
-              << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 }); // overflow
           pq.push(lpq_test_data{ 2, 1 }); // bucket
@@ -3697,27 +3421,23 @@ go_bandit([]() {
       //////////////////////////////////////////////////////////////////////////
       //                           .can_pull()                                //
       describe(".empty_level() / .can_pull()", [] {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = {
+          1,      // skipped
+          2, 3,   // buckets
+          4, 5, 6 // overflow
+        };
 
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-
-          fw << 1            // skipped
-             << 2 << 3       // buckets
-             << 4 << 5 << 6; // overflow
-        }
-
-        it("cannot pull after initialisation", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("cannot pull after initialisation", [&ls]() {
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.has_current_level(), Is().False());
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("shows element after forwarding to level", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("shows element after forwarding to level", [&ls]() {
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level(); // 2
@@ -3725,9 +3445,9 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().True());
         });
 
-        it("shows a level becomes empty", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("shows a level becomes empty", [&ls]() {
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           pq.setup_next_level(); // 2
@@ -3743,9 +3463,9 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("shows forwarding to an empty level", [&f]() {
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+        it("shows forwarding to an empty level", [&ls]() {
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 1 });
           pq.setup_next_level(2); // 2
@@ -3770,7 +3490,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -3804,7 +3524,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 3 });
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -3836,7 +3556,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -3869,7 +3589,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 0> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 2, 1 });
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -3897,16 +3617,12 @@ go_bandit([]() {
 
       describe(".size()", [] {
         it("increments on push to priority queue [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -3918,16 +3634,12 @@ go_bandit([]() {
         });
 
         it("increments on push to priority queue [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -3941,16 +3653,14 @@ go_bandit([]() {
         });
 
         it("increments on push to priority queue [3]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -3962,16 +3672,12 @@ go_bandit([]() {
         });
 
         it("decrements on pull from priority queue [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 1, 2 });
@@ -3985,16 +3691,14 @@ go_bandit([]() {
         });
 
         it("decrements on pull from priority queue [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 4, 2 });
@@ -4008,16 +3712,12 @@ go_bandit([]() {
         });
 
         it("decrements on pull from priority queue [3]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 1, 2 });
@@ -4031,16 +3731,14 @@ go_bandit([]() {
         });
 
         it("decrements on pull from priority queue [4]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 4, 2 });
@@ -4054,16 +3752,12 @@ go_bandit([]() {
         });
 
         it("is unchanged on top from priority queue [1]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 1, 1 });
           pq.push(lpq_test_data{ 1, 2 });
@@ -4075,16 +3769,14 @@ go_bandit([]() {
         });
 
         it("is unchanged on top from priority queue [2]", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = { 0, // skipped
+                                        1,
+                                        2,
+                                        3,
+                                        4 };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> fw(f);
-            fw << 0 // skipped
-               << 1 << 2 << 3 << 4;
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 0> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<0> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 4, 1 });
           pq.push(lpq_test_data{ 4, 2 });
@@ -4098,16 +3790,12 @@ go_bandit([]() {
     });
 
     describe("levelized_priority_queue<..., lpq_test_gt, ..., std::greater<>, ...>", []() {
-      shared_file<ptr_uint64::label_type> f;
+      const std::vector<int> ls = { 3, // skipped
+                                    2,
+                                    1,
+                                    0 };
 
-      { // Garbage collect the writer early
-        ofstream<ptr_uint64::label_type> fw(f);
-
-        fw << 3 // skipped
-           << 2 << 1 << 0;
-      }
-
-      it("can sort elements from buckets", [&f]() {
+      it("can sort elements from buckets", [&ls]() {
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_gt,
                                  1u,
@@ -4115,7 +3803,7 @@ go_bandit([]() {
                                  1u,
                                  std::greater<>,
                                  1u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         pq.push(lpq_test_data{ 2, 1 });
         pq.push(lpq_test_data{ 1, 1 });
@@ -4146,7 +3834,7 @@ go_bandit([]() {
         AssertThat(pq.can_pull(), Is().False());
       });
 
-      it("can sort elements in overflow priority queue", [&f]() {
+      it("can sort elements in overflow priority queue", [&ls]() {
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_gt,
                                  1u,
@@ -4154,7 +3842,7 @@ go_bandit([]() {
                                  1u,
                                  std::greater<>,
                                  1u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         pq.push(lpq_test_data{ 0, 1 });
         pq.push(lpq_test_data{ 0, 2 });
@@ -4172,7 +3860,7 @@ go_bandit([]() {
         AssertThat(pq.can_pull(), Is().False());
       });
 
-      it("can merge elements from buckets and overflow", [&f]() {
+      it("can merge elements from buckets and overflow", [&ls]() {
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_gt,
                                  1u,
@@ -4180,7 +3868,7 @@ go_bandit([]() {
                                  1u,
                                  std::greater<>,
                                  1u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.has_current_level(), Is().False());
 
@@ -4220,132 +3908,128 @@ go_bandit([]() {
     });
 
     // Fixed (ub)
-    describe("levelized_priority_queue<..., look_ahead=0, lpq_test_gt, ..., std::greater<>, ...>",
-             []() {
-               shared_file<ptr_uint64::label_type> f;
+    describe(
+      "levelized_priority_queue<..., look_ahead=0, lpq_test_gt, ..., std::greater<>, ...>", []() {
+        const std::vector<int> ls = { 3, // skipped
+                                      2,
+                                      1,
+                                      0 };
 
-               { // Garbage collect the writer early
-                 ofstream<ptr_uint64::label_type> fw(f);
+        it("can sort elements from the priority queue [1]", [&ls]() {
+          levelized_priority_queue<lpq_test_data,
+                                   lpq_test_gt,
+                                   0u,
+                                   memory_mode::Internal,
+                                   1u,
+                                   std::greater<>,
+                                   1u>
+            pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
-                 fw << 3 // skipped
-                    << 2 << 1 << 0;
-               }
+          pq.push(lpq_test_data{ 2, 1 });
+          pq.push(lpq_test_data{ 1, 1 });
+          pq.push(lpq_test_data{ 2, 2 });
 
-               it("can sort elements from the priority queue [1]", [&f]() {
-                 levelized_priority_queue<lpq_test_data,
-                                          lpq_test_gt,
-                                          0u,
-                                          memory_mode::Internal,
-                                          1u,
-                                          std::greater<>,
-                                          1u>
-                   pq({ f }, memory_available(), 32, stats_lpq_tests);
+          AssertThat(pq.can_pull(), Is().False());
 
-                 pq.push(lpq_test_data{ 2, 1 });
-                 pq.push(lpq_test_data{ 1, 1 });
-                 pq.push(lpq_test_data{ 2, 2 });
+          pq.setup_next_level(); // 2
 
-                 AssertThat(pq.can_pull(), Is().False());
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 2 }));
 
-                 pq.setup_next_level(); // 2
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 1 }));
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 2 }));
+          AssertThat(pq.can_pull(), Is().False());
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 1 }));
+          pq.push(lpq_test_data{ 1, 2 });
 
-                 AssertThat(pq.can_pull(), Is().False());
+          pq.setup_next_level(); // 1
 
-                 pq.push(lpq_test_data{ 1, 2 });
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 1, 2 }));
 
-                 pq.setup_next_level(); // 1
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 1, 1 }));
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 1, 2 }));
+          AssertThat(pq.can_pull(), Is().False());
+        });
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 1, 1 }));
+        it("can sort elements from the priority queue [2]", [&ls]() {
+          levelized_priority_queue<lpq_test_data,
+                                   lpq_test_gt,
+                                   0u,
+                                   memory_mode::Internal,
+                                   1u,
+                                   std::greater<>,
+                                   1u>
+            pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
-                 AssertThat(pq.can_pull(), Is().False());
-               });
+          pq.push(lpq_test_data{ 0, 1 });
+          pq.push(lpq_test_data{ 0, 2 });
 
-               it("can sort elements from the priority queue [2]", [&f]() {
-                 levelized_priority_queue<lpq_test_data,
-                                          lpq_test_gt,
-                                          0u,
-                                          memory_mode::Internal,
-                                          1u,
-                                          std::greater<>,
-                                          1u>
-                   pq({ f }, memory_available(), 32, stats_lpq_tests);
+          AssertThat(pq.can_pull(), Is().False());
 
-                 pq.push(lpq_test_data{ 0, 1 });
-                 pq.push(lpq_test_data{ 0, 2 });
+          pq.setup_next_level(); // 0
 
-                 AssertThat(pq.can_pull(), Is().False());
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 2 }));
 
-                 pq.setup_next_level(); // 0
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 1 }));
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 2 }));
+          AssertThat(pq.can_pull(), Is().False());
+        });
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 1 }));
+        it("can sort elements from the priority queue [3]", [&ls]() {
+          levelized_priority_queue<lpq_test_data,
+                                   lpq_test_gt,
+                                   0u,
+                                   memory_mode::Internal,
+                                   1u,
+                                   std::greater<>,
+                                   1u>
+            pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
-                 AssertThat(pq.can_pull(), Is().False());
-               });
+          AssertThat(pq.has_current_level(), Is().False());
 
-               it("can sort elements from the priority queue [3]", [&f]() {
-                 levelized_priority_queue<lpq_test_data,
-                                          lpq_test_gt,
-                                          0u,
-                                          memory_mode::Internal,
-                                          1u,
-                                          std::greater<>,
-                                          1u>
-                   pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq.push(lpq_test_data{ 2, 1 });
 
-                 AssertThat(pq.has_current_level(), Is().False());
+          AssertThat(pq.can_pull(), Is().False());
 
-                 pq.push(lpq_test_data{ 2, 1 });
+          pq.setup_next_level(); // 2
 
-                 AssertThat(pq.can_pull(), Is().False());
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 1 }));
 
-                 pq.setup_next_level(); // 2
+          AssertThat(pq.can_pull(), Is().False());
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 2, 1 }));
+          pq.push(lpq_test_data{ 1, 1 });
+          pq.push(lpq_test_data{ 0, 2 });
 
-                 AssertThat(pq.can_pull(), Is().False());
+          pq.setup_next_level(); // 1
 
-                 pq.push(lpq_test_data{ 1, 1 });
-                 pq.push(lpq_test_data{ 0, 2 });
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 1, 1 }));
 
-                 pq.setup_next_level(); // 1
+          AssertThat(pq.can_pull(), Is().False());
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 1, 1 }));
+          pq.push(lpq_test_data{ 0, 1 });
 
-                 AssertThat(pq.can_pull(), Is().False());
+          pq.setup_next_level(); // 0
 
-                 pq.push(lpq_test_data{ 0, 1 });
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 2 }));
 
-                 pq.setup_next_level(); // 0
+          AssertThat(pq.can_pull(), Is().True());
+          AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 1 }));
 
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 2 }));
-
-                 AssertThat(pq.can_pull(), Is().True());
-                 AssertThat(pq.pull(), Is().EqualTo(lpq_test_data{ 0, 1 }));
-
-                 AssertThat(pq.can_pull(), Is().False());
-               });
-             });
+          AssertThat(pq.can_pull(), Is().False());
+        });
+      });
 
     describe("levelized_priority_queue<..., look_ahead=1, ..., init_level=0>", []() {
       it("initialises #levels = 0", []() {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = {};
 
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_lt,
@@ -4354,7 +4038,7 @@ go_bandit([]() {
                                  1u,
                                  std::less<>,
                                  0u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -4364,12 +4048,7 @@ go_bandit([]() {
       });
 
       it("initialises with #levels = 1 < #buckets", []() {
-        shared_file<ptr_uint64::label_type> f;
-
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-          fw << 2;
-        }
+        const std::vector<int> ls = { 2 };
 
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_lt,
@@ -4378,7 +4057,7 @@ go_bandit([]() {
                                  1u,
                                  std::less<>,
                                  0u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.has_current_level(), Is().False());
 
@@ -4388,12 +4067,7 @@ go_bandit([]() {
       });
 
       it("initialises #buckets <= #levels", []() {
-        shared_file<ptr_uint64::label_type> f;
-
-        { // Garbage collect the writer early
-          ofstream<ptr_uint64::label_type> fw(f);
-          fw << 1 << 3 << 4;
-        }
+        const std::vector<int> ls = { 1, 3, 4 };
 
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_lt,
@@ -4402,7 +4076,7 @@ go_bandit([]() {
                                  1u,
                                  std::less<>,
                                  0u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -4496,7 +4170,7 @@ go_bandit([]() {
 
     describe("levelized_priority_queue<..., look_ahead=0, ..., init_level=0>", []() {
       it("initialises correctly", []() {
-        shared_file<ptr_uint64::label_type> f;
+        const std::vector<int> ls = {};
 
         levelized_priority_queue<lpq_test_data,
                                  lpq_test_lt,
@@ -4505,7 +4179,7 @@ go_bandit([]() {
                                  1u,
                                  std::less<>,
                                  0u>
-          pq({ f }, memory_available(), 32, stats_lpq_tests);
+          pq({ make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_current_level(), Is().False());
@@ -4743,7 +4417,7 @@ go_bandit([]() {
       it("initialises with #levels = 0", []() {
         lpq_test_file f;
 
-        test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
         AssertThat(pq.has_next_level(), Is().False());
@@ -4763,7 +4437,7 @@ go_bandit([]() {
           fw.push(level_info(1, 1u)); // skipped
         }
 
-        test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
 
@@ -4782,7 +4456,7 @@ go_bandit([]() {
           fw.push(level_info(1, 1u)); // skipped
         }
 
-        test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
 
@@ -4807,7 +4481,7 @@ go_bandit([]() {
           fw.push(level_info(1, 1u)); // skipped
         }
 
-        test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+        test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
         AssertThat(pq.can_pull(), Is().False());
 
@@ -4832,7 +4506,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5007,7 +4681,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u));  // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5048,7 +4722,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5084,7 +4758,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u));  // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5130,7 +4804,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.can_pull(), Is().False());
           AssertThat(pq.has_current_level(), Is().False());
@@ -5333,7 +5007,7 @@ go_bandit([]() {
             fw.push(level_info(0, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5399,7 +5073,7 @@ go_bandit([]() {
             fw.push(level_info(0, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5432,18 +5106,14 @@ go_bandit([]() {
         });
 
         it("can push into relabelled buckets", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,                // skipped
+            1, 2, 3, 4,       // buckets
+            5, 6, 7, 8, 9, 10 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> w(f);
-
-            w << 0                            // skipped
-              << 1 << 2 << 3 << 4             // buckets
-              << 5 << 6 << 7 << 8 << 9 << 10; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 3> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 5, 2 }); // overflow
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -5478,18 +5148,14 @@ go_bandit([]() {
         });
 
         it("can push into relabelled buckets (with stop-level)", []() {
-          shared_file<ptr_uint64::label_type> f;
+          const std::vector<int> ls = {
+            0,                // skipped
+            1, 2, 3, 4,       // buckets
+            5, 6, 7, 8, 9, 10 // overflow
+          };
 
-          { // Garbage collect the writer early
-            ofstream<ptr_uint64::label_type> w(f);
-
-            w << 0                            // skipped
-              << 1 << 2 << 3 << 4             // buckets
-              << 5 << 6 << 7 << 8 << 9 << 10; // overflow
-          }
-
-          test_priority_queue<shared_file<ptr_uint64::label_type>, 3> pq(
-            { f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq(
+            { make_generator(ls.begin(), ls.end()) }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 9, 2 }); // overflow
           AssertThat(pq.size(), Is().EqualTo(1u));
@@ -5533,8 +5199,7 @@ go_bandit([]() {
                fw.push(level_info(1, 1u)); // skipped
              }
 
-             test_priority_queue<lpq_test_file, 3> pq(
-               { f }, memory_available(), 32, stats_lpq_tests);
+             test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
              AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5577,7 +5242,7 @@ go_bandit([]() {
             fw.push(level_info(0, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           AssertThat(pq.size(), Is().EqualTo(0u));
 
@@ -5625,7 +5290,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 3, 42 }); // bucket
 
@@ -5659,7 +5324,7 @@ go_bandit([]() {
             fw.push(level_info(1, 1u)); // skipped
           }
 
-          test_priority_queue<lpq_test_file, 3> pq({ f }, memory_available(), 32, stats_lpq_tests);
+          test_priority_queue<3> pq({ f }, memory_available(), 32, stats_lpq_tests);
 
           pq.push(lpq_test_data{ 7, 3 }); // overflow
 
