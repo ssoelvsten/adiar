@@ -64,8 +64,8 @@ go_bandit([]() {
         });
 
         it("rejects maximal Node Uid", []() {
-          const uid_uint64 u =
-            uid_uint64(ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
+          const uid_uint64 u = uid_uint64(
+            ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
 
           AssertThat(u.is_terminal(), Is().False());
         });
@@ -105,8 +105,8 @@ go_bandit([]() {
         });
 
         it("rejects maximal Node Uid", []() {
-          const uid_uint64 u =
-            uid_uint64(ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
+          const uid_uint64 u = uid_uint64(
+            ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
 
           AssertThat(u.is_false(), Is().False());
         });
@@ -132,8 +132,8 @@ go_bandit([]() {
         });
 
         it("rejects maximal Node Uid", []() {
-          const uid_uint64 u =
-            uid_uint64(ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
+          const uid_uint64 u = uid_uint64(
+            ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
 
           AssertThat(u.is_true(), Is().False());
         });
@@ -159,8 +159,8 @@ go_bandit([]() {
         });
 
         it("accepts maximal Node Uid", []() {
-          const uid_uint64 u =
-            uid_uint64(ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
+          const uid_uint64 u = uid_uint64(
+            ptr_uint64(uid_uint64::max_label, uid_uint64::max_id, uid_uint64::max_out_idx));
 
           AssertThat(u.is_node(), Is().True());
         });

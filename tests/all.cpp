@@ -41,6 +41,8 @@ go_bandit([]() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Adiar Internal unit tests
+#include "adiar/exec_policy.test.cpp"
+#include "adiar/functional.test.cpp"
 #include "adiar/internal/algorithms/convert.test.cpp"
 #include "adiar/internal/algorithms/dot.test.cpp"
 #include "adiar/internal/algorithms/isomorphism.test.cpp"
@@ -57,22 +59,20 @@ go_bandit([]() {
 #include "adiar/internal/data_types/request.test.cpp"
 #include "adiar/internal/data_types/tuple.test.cpp"
 #include "adiar/internal/data_types/uid.test.cpp"
+#include "adiar/internal/dd_func.test.cpp"
 #include "adiar/internal/io/arc_file.test.cpp"
 #include "adiar/internal/io/file.test.cpp"
 #include "adiar/internal/io/levelized_file.test.cpp"
 #include "adiar/internal/io/node_file.test.cpp"
 #include "adiar/internal/io/shared_file_ptr.test.cpp"
-#include "adiar/internal/dd_func.test.cpp"
 #include "adiar/internal/util.test.cpp"
-#include "adiar/exec_policy.test.cpp"
-#include "adiar/functional.test.cpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Adiar Core unit tests
-#include "adiar/internal/bool_op.test.cpp"
 #include "adiar/bool_op.test.cpp"
 #include "adiar/builder.test.cpp"
 #include "adiar/domain.test.cpp"
+#include "adiar/internal/bool_op.test.cpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Adiar BDD unit tests
