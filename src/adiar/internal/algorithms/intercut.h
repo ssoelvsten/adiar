@@ -188,12 +188,11 @@ namespace adiar::internal
     node_ifstream<> in_nodes(dd);
     node n = in_nodes.pull();
 
-    // TODO: Only copy `xs` into a `shared_file<label_type>`, in the degenerate case, that we have
-    //       to reverse it.
+    // Copy the labels into a B-sized vector. This way, we can read it twice: once for the levels in
+    // the priority queue and secondly for a lookahead of where to cut next.
     //
-    // In the general case, we have to use it both in the priority queue `intercut_pq` below, and
-    // for a lookahead of the algorithm. The main issue is how to design the priority queue such
-    // that it can retrieve, merge with the levels of `dd` and expose `xs`.
+    // Alternatively, we could also hack it by wrapping `xs` with a side-effect of updating a
+    // variable in this scope. But, the resulting code complexity does not seem worth it.
     internal_vector<typename Policy::label_type> hit_levels(dd::max_label);
     for (auto x = xs(); x; x = xs()) { hit_levels.push_back(x.value()); }
     if (hit_levels.empty()) { return Policy::on_empty_labels(dd); }
