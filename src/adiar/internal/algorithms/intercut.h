@@ -221,12 +221,11 @@ namespace adiar::internal
       const typename Policy::label_type out_label = intercut_pq.current_level();
       typename Policy::id_type out_id             = 0;
 
+      // Derive whether this level needs to be cut and what is the next level. Note, that `ls` is
+      // always kept ahead of the current level (until it is empty).
       const bool hit_level = out_label == *ls;
-
-      // Forward to next label to cut on after this level
-      while (ls != hit_levels.end() && *ls <= out_label) { ++ls; }
-
-      typename Policy::label_type l = ls == hit_levels.end() ? Policy::max_label + 1 : *ls;
+      if (hit_level) { ++ls; }
+      const typename Policy::label_type l = ls == hit_levels.end() ? Policy::max_label + 1 : *ls;
 
       // Update max 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, intercut_pq.size());
