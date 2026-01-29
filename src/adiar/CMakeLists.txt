@@ -66,6 +66,7 @@ set(HEADERS
   internal/data_structures/priority_queue.h
   internal/data_structures/sorter.h
   internal/data_structures/stack.h
+  internal/data_structures/vector.h
 
   # adiar/internal/data_types
   internal/data_types/arc.h

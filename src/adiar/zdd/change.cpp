@@ -1,8 +1,10 @@
 #include <adiar/functional.h>
+#include <adiar/types.h>
 #include <adiar/zdd.h>
 #include <adiar/zdd/zdd_policy.h>
 
 #include <adiar/internal/algorithms/intercut.h>
+#include <adiar/internal/data_structures/vector.h>
 #include <adiar/internal/data_types/node.h>
 #include <adiar/internal/io/file.h>
 #include <adiar/internal/io/ifstream.h>
@@ -29,12 +31,11 @@ namespace adiar
     static zdd
     on_terminal_input(const bool terminal_value,
                       const zdd& dd,
-                      const internal::shared_file<zdd::label_type>& vars)
+                      const internal::internal_vector<zdd::label_type>& vars)
     {
       // TODO: simplify with generator function as input
       if (terminal_value) {
-        internal::ifstream<zdd::label_type, true> ls(vars);
-        return zdd_vars(make_generator(ls));
+        return zdd_vars(make_generator(vars.rbegin(), vars.rend()));
       } else {
         return dd;
       }

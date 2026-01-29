@@ -17,6 +17,9 @@ namespace adiar
   template <typename A, typename B>
   inline constexpr bool needs_conversion = !is_same<A, B> && is_convertible<A, B>;
 
+  template <typename A, typename B>
+  inline constexpr bool is_constructible = std::is_constructible<A, B>::value;
+
   template <typename A>
   inline constexpr bool is_const = std::is_const<std::remove_reference_t<A>>::value;
 

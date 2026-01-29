@@ -3,8 +3,8 @@
 #include <adiar/internal/data_structures/stack.h>
 
 go_bandit([]() {
-  describe("adiar/internal/sorter.h", []() {
-    describe("sorter<memory_mode::Internal, int>", []() {
+  describe("adiar/internal/stack.h", []() {
+    describe("stack<memory_mode::Internal, int>", []() {
       stack<memory_mode::Internal, int> s(16);
 
       it("is initially empty", [&s]() {
@@ -52,7 +52,7 @@ go_bandit([]() {
       });
     });
 
-    describe("sorter<memory_mode::External, int>", []() {
+    describe("stack<memory_mode::External, int>", []() {
       // TODO: Add tests when implemented.
     });
   });

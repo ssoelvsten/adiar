@@ -7,6 +7,7 @@
 #include <adiar/internal/cnl.h>
 #include <adiar/internal/cut.h>
 #include <adiar/internal/data_structures/levelized_priority_queue.h>
+#include <adiar/internal/data_structures/vector.h>
 #include <adiar/internal/data_types/arc.h>
 #include <adiar/internal/data_types/node.h>
 #include <adiar/internal/data_types/uid.h>
@@ -83,7 +84,7 @@ namespace adiar::internal
 
   template <size_t look_ahead, memory_mode mem_mode>
   using intercut_priority_queue_t =
-    levelized_label_priority_queue<intercut_req, intercut_req_lt, look_ahead, mem_mode, 2u, 0u>;
+    levelized_node_priority_queue<intercut_req, intercut_req_lt, look_ahead, mem_mode, 2u, 0u>;
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -194,34 +195,27 @@ namespace adiar::internal
     // In the general case, we have to use it both in the priority queue
     // `intercut_pq` below, and for a lookahead of the algorithm. The main issue
     // is how to design the priority queue such that it can retrieve, merge with
-    // `dd_levels`, and expose `xs`.
-    shared_file<typename intercut_policy::label_type> hit_levels;
-    {
-      ofstream<typename intercut_policy::label_type> lw(hit_levels);
-      for (auto x = xs(); x; x = xs()) { lw << x.value(); }
-
-      if (lw.size() == 0) { return intercut_policy::on_empty_labels(dd); }
-    }
+    // the levels of `dd` and expose `xs`.
+    internal_vector<typename intercut_policy::label_type> hit_levels(dd::max_label);
+    for (auto x = xs(); x; x = xs()) { hit_levels.push_back(x.value()); }
+    if (hit_levels.empty()) { return intercut_policy::on_empty_labels(dd); }
 
     if (n.is_terminal()) { return intercut_policy::on_terminal_input(n.value(), dd, hit_levels); }
 
-    ifstream<typename intercut_policy::label_type> ls(hit_levels);
-    typename intercut_policy::label_type l = ls.pull();
+    typename internal_vector<typename intercut_policy::label_type>::iterator ls =
+      hit_levels.begin();
 
     shared_levelized_file<arc> out_arcs;
     arc_ofstream aw(out_arcs);
 
     out_arcs->max_1level_cut = 0;
 
-    shared_file<typename intercut_policy::label_type> dd_levels;
-    {
-      ofstream<typename intercut_policy::label_type> lw(dd_levels);
-      dd_support(dd, [&lw](const typename intercut_policy::label_type x) { lw << x; });
-    }
-
     // Add request for root in the queue
-    pq_t intercut_pq({ dd_levels, hit_levels }, pq_memory, max_pq_size, stats_intercut.lpq);
-    intercut_pq.push(intercut_req(ptr_uint64::nil(), n.uid(), std::min(l, n.label())));
+    pq_t intercut_pq({ dd, make_generator(hit_levels.begin(), hit_levels.end()) },
+                     pq_memory,
+                     max_pq_size,
+                     stats_intercut.lpq);
+    intercut_pq.push(intercut_req(ptr_uint64::nil(), n.uid(), std::min(*ls, n.label())));
 
     // Process nodes of the decision diagram in topological order
     while (!intercut_pq.empty()) {
@@ -231,12 +225,13 @@ namespace adiar::internal
       const typename intercut_policy::label_type out_label = intercut_pq.current_level();
       typename intercut_policy::id_type out_id             = 0;
 
-      const bool hit_level = out_label == l;
+      const bool hit_level = out_label == *ls;
 
       // Forward to next label to cut on after this level
-      while (ls.can_pull() && l <= out_label) { l = ls.pull(); }
+      while (ls != hit_levels.end() && *ls <= out_label) { ++ls; }
 
-      if (!ls.can_pull() && l <= out_label) { l = intercut_policy::max_label + 1; }
+      typename intercut_policy::label_type l =
+        ls == hit_levels.end() ? intercut_policy::max_label + 1 : *ls;
 
       // Update max 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, intercut_pq.size());

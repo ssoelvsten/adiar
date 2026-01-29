@@ -91,17 +91,17 @@ namespace adiar::internal
     size_t _terminals[2] = { 0u, 0u };
 
   public:
-    reduce_priority_queue(const shared_levelized_file<arc> (&files)[1u],
+    reduce_priority_queue(std::array<typename inner_lpq::level_input_type, 1>&& files,
                           size_t memory_given,
                           size_t max_size,
                           statistics::levelized_priority_queue_t& stats)
-      : inner_lpq(files, memory_given, max_size, stats)
+      : inner_lpq(std::move(files), memory_given, max_size, stats)
     {}
 
-    reduce_priority_queue(const shared_levelized_file<arc> (&files)[1u],
+    reduce_priority_queue(std::array<typename inner_lpq::level_input_type, 1>&& files,
                           size_t memory_given,
                           size_t max_size)
-      : reduce_priority_queue(files, memory_given, max_size, stats_reduce.lpq)
+      : reduce_priority_queue(std::move(files), memory_given, max_size, stats_reduce.lpq)
     {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
