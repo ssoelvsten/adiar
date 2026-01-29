@@ -20,14 +20,13 @@
 
 namespace adiar::internal
 {
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   //  Intercut Algorithm
   // ====================
   //
-  // Given a Decision Diagram, a subset of the levels are have their arcs "cut"
-  // in two with a new diagram node inserted (of any desired shape).
-  // Furthermore, existing nodes on said level are changed as desired. Nodes on
-  // *offset* levels are changed differently.
+  // Given a Decision Diagram, a subset of the levels are have their arcs "cut" in two with a new
+  // diagram node inserted (of any desired shape). Furthermore, existing nodes on said level are
+  // changed as desired. Nodes on *offset* levels are changed differently.
   /*
   //          ( )     ---- xi                ( )        ---- xi
   //         /   \                          /   \
@@ -36,13 +35,13 @@ namespace adiar::internal
   //        a b  c                         b a  c
   */
   // Examples of uses are `zdd_extend`.
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /// Struct to hold statistics
   extern statistics::intercut_t stats_intercut;
 
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Priority queue
 
   class intercut_req : public arc
@@ -86,7 +85,7 @@ namespace adiar::internal
   using intercut_priority_queue_t =
     levelized_node_priority_queue<intercut_req, intercut_req_lt, look_ahead, mem_mode, 2u, 0u>;
 
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
 
   struct intercut_rec_output
   {
@@ -101,7 +100,7 @@ namespace adiar::internal
 
   using intercut_rec = std::variant<intercut_rec_output, intercut_rec_skipto>;
 
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Helper functions
   template <typename intercut_policy>
   bool
@@ -189,13 +188,12 @@ namespace adiar::internal
     node_ifstream<> in_nodes(dd);
     node n = in_nodes.pull();
 
-    // TODO: Only copy `xs` into a `shared_file<label_type>`, in the degenerate
-    //       case, that we have to reverse it.
+    // TODO: Only copy `xs` into a `shared_file<label_type>`, in the degenerate case, that we have
+    //       to reverse it.
     //
-    // In the general case, we have to use it both in the priority queue
-    // `intercut_pq` below, and for a lookahead of the algorithm. The main issue
-    // is how to design the priority queue such that it can retrieve, merge with
-    // the levels of `dd` and expose `xs`.
+    // In the general case, we have to use it both in the priority queue `intercut_pq` below, and
+    // for a lookahead of the algorithm. The main issue is how to design the priority queue such
+    // that it can retrieve, merge with the levels of `dd` and expose `xs`.
     internal_vector<typename intercut_policy::label_type> hit_levels(dd::max_label);
     for (auto x = xs(); x; x = xs()) { hit_levels.push_back(x.value()); }
     if (hit_levels.empty()) { return intercut_policy::on_empty_labels(dd); }
@@ -253,9 +251,9 @@ namespace adiar::internal
               && !cut_terminal<intercut_policy>(out_label, l, rs.tgt.value())) {
             return intercut_policy::terminal(rs.tgt.value());
           }
-          // TODO: The 'rs.tgt.is_terminal() && cut_terminal(...)' case can be handled even
-          //       better with 'intercut_policy::on_terminal_input' but where the
-          //       label file are only of the remaining labels.
+          // TODO: The 'rs.tgt.is_terminal() && cut_terminal(...)' case can be handled even better
+          //       with 'intercut_policy::on_terminal_input' but where the label file are only of
+          //       the remaining labels.
 
           intercut_in__pq<intercut_policy, intercut_out__pq<intercut_policy>>(
             aw, intercut_pq, out_label, n.uid(), rs.tgt, l);
@@ -316,12 +314,11 @@ namespace adiar::internal
            const typename intercut_policy::dd_type& dd,
            const generator<typename intercut_policy::label_type>& xs)
   {
-    // Compute amount of memory available for auxiliary data structures after
-    // having opened all streams.
+    // Compute amount of memory available for auxiliary data structures after having opened all
+    // streams.
     //
-    // We then may derive an upper bound on the size of auxiliary data
-    // structures and check whether we can run them with a faster internal
-    // memory variant.
+    // We then may derive an upper bound on the size of auxiliary data structures and check whether
+    // we can run them with a faster internal memory variant.
     const size_t aux_available_memory = memory_available()
       // Input stream
       - node_ifstream<>::memory_usage()
