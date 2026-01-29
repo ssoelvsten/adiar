@@ -106,15 +106,15 @@ go_bandit([]() {
       { // Garbage collect writer early
         arc_ofstream uw(unreduced_bdd);
 
-        uw.push_terminal(arc{ uid_uint64(2, 0), true,  ptr_uint64(true) });
+        uw.push_terminal(arc{ uid_uint64(2, 0), true, ptr_uint64(true) });
         uw.push_terminal(arc{ uid_uint64(2, 0), false, ptr_uint64(true) });
         uw.push_terminal(arc{ uid_uint64(1, 1), false, ptr_uint64(true) });
 
         uw.push_internal(arc{ uid_uint64(0, 0), false, ptr_uint64(1, 0) });
-        uw.push_internal(arc{ uid_uint64(0, 0), true,  ptr_uint64(1, 1) });
+        uw.push_internal(arc{ uid_uint64(0, 0), true, ptr_uint64(1, 1) });
         uw.push_internal(arc{ uid_uint64(1, 0), false, ptr_uint64(2, 0) });
-        uw.push_internal(arc{ uid_uint64(1, 0), true,  ptr_uint64(2, 0) });
-        uw.push_internal(arc{ uid_uint64(1, 1), true,  ptr_uint64(2, 0) });
+        uw.push_internal(arc{ uid_uint64(1, 0), true, ptr_uint64(2, 0) });
+        uw.push_internal(arc{ uid_uint64(1, 1), true, ptr_uint64(2, 0) });
       }
 
       print_dot(unreduced_bdd, "dot_test_unreduced.dot");

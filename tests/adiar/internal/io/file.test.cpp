@@ -1,5 +1,4 @@
 #include "../../../test.h"
-
 #include <filesystem>
 
 #include <adiar/internal/io/file.h>

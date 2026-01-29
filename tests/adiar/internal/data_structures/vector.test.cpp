@@ -21,13 +21,9 @@ go_bandit([]() {
         AssertThat(v.size(), Is().EqualTo(3u));
       });
 
-      it("can retrieve the front element", [&v]() {
-        AssertThat(v.front(), Is().EqualTo(3));
-      });
+      it("can retrieve the front element", [&v]() { AssertThat(v.front(), Is().EqualTo(3)); });
 
-      it("can retrieve the back element", [&v]() {
-        AssertThat(v.back(), Is().EqualTo(2));
-      });
+      it("can retrieve the back element", [&v]() { AssertThat(v.back(), Is().EqualTo(2)); });
 
       it("can retrieve elements via '.at(i)'", [&v]() {
         AssertThat(v.at(0), Is().EqualTo(3));
@@ -42,9 +38,8 @@ go_bandit([]() {
         AssertThat(v.size(), Is().EqualTo(2u));
       });
 
-      it("can retrieve different element from the back", [&v]() {
-        AssertThat(v.back(), Is().EqualTo(1));
-      });
+      it("can retrieve different element from the back",
+         [&v]() { AssertThat(v.back(), Is().EqualTo(1)); });
 
       it("can new elements", [&v]() {
         v.push_back(4);
@@ -54,9 +49,8 @@ go_bandit([]() {
         AssertThat(v.size(), Is().EqualTo(4u));
       });
 
-      it("can retrieve different element from the back", [&v]() {
-        AssertThat(v.back(), Is().EqualTo(4));
-      });
+      it("can retrieve different element from the back",
+         [&v]() { AssertThat(v.back(), Is().EqualTo(4)); });
 
       it("can retrieve elements via '[i]'", [&v]() {
         AssertThat(v[0], Is().EqualTo(3));
@@ -66,7 +60,7 @@ go_bandit([]() {
       });
 
       it("can iterate forwards through the vector", [&v]() {
-        int i = 0;
+        int i                 = 0;
         const int expected[4] = { 3, 1, 4, 4 };
 
         for (auto iter = v.begin(); iter != v.end(); ++iter) {
@@ -76,7 +70,7 @@ go_bandit([]() {
       });
 
       it("can iterate backwards through the vector", [&v]() {
-        int i = 3;
+        int i                 = 3;
         const int expected[4] = { 3, 1, 4, 4 };
 
         for (auto iter = v.rbegin(); iter != v.rend(); ++iter) {

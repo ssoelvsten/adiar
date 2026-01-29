@@ -45,10 +45,8 @@ go_bandit([]() {
     {
       node_ofstream nw(zdd_C_nf);
       nw << node(2, zdd::max_id, terminal_T, terminal_T)
-         << node(1,
-                 zdd::max_id,
-                 zdd::pointer_type(2, zdd::max_id),
-                 zdd::pointer_type(2, zdd::max_id));
+         << node(
+              1, zdd::max_id, zdd::pointer_type(2, zdd::max_id), zdd::pointer_type(2, zdd::max_id));
     }
 
     auto zdd_C_nf_copy = shared_levelized_file<zdd::node_type>::copy(zdd_C_nf);

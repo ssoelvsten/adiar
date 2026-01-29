@@ -1727,7 +1727,8 @@ go_bandit([]() {
         it("cleans taint flags on targets from outer roots", [&]() {
           sorter.reset(); // ignore 'before_each' and do our own setup
 
-          const test_request_t root1_taint({ flag(inner_n1) }, {}, { node::pointer_type(1, 0, false) });
+          const test_request_t root1_taint(
+            { flag(inner_n1) }, {}, { node::pointer_type(1, 0, false) });
           sorter.push(root1_taint);
           sorter.push(root2);
           sorter.push(root3);
@@ -1754,7 +1755,8 @@ go_bandit([]() {
         it("cleans taint flags on targets from outer roots [cardinality == 1]", [&]() {
           sorter.reset(); // ignore 'before_each' and do our own setup
 
-          const test_request_t root1_taint({ flag(inner_n1) }, {}, { node::pointer_type(1, 0, false) });
+          const test_request_t root1_taint(
+            { flag(inner_n1) }, {}, { node::pointer_type(1, 0, false) });
           sorter.push(root1_taint);
 
           sorter.sort();
@@ -1793,7 +1795,7 @@ go_bandit([]() {
              test_roots_sorter_t sorter(1024, 16);
 
              const test_request_t req(
-                                      { flag(inner_n1), flag(inner_n2) }, {}, { node::pointer_type(1, 0, false) });
+               { flag(inner_n1), flag(inner_n2) }, {}, { node::pointer_type(1, 0, false) });
              sorter.push(req);
 
              sorter.sort();
@@ -3820,8 +3822,8 @@ go_bandit([]() {
 
             AssertThat(out_nodes.can_pull(), Is().True()); // 3
             AssertThat(out_nodes.pull(),
-                       Is().EqualTo(
-                                    node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
+                       Is().EqualTo(node(
+                         2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -3916,8 +3918,8 @@ go_bandit([]() {
 
             AssertThat(out_nodes.can_pull(), Is().True()); // 3
             AssertThat(out_nodes.pull(),
-                       Is().EqualTo(
-                         node(2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
+                       Is().EqualTo(node(
+                         2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -4009,8 +4011,8 @@ go_bandit([]() {
 
             AssertThat(out_nodes.can_pull(), Is().True()); // 3
             AssertThat(out_nodes.pull(),
-                       Is().EqualTo(
-                         node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
+                       Is().EqualTo(node(
+                         2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
 
             AssertThat(out_nodes.can_pull(), Is().False());
 
@@ -4098,8 +4100,8 @@ go_bandit([]() {
 
                AssertThat(out_nodes.can_pull(), Is().True()); // 5
                AssertThat(out_nodes.pull(),
-                          Is().EqualTo(
-                            node(2, node::max_id, terminal_T, node::pointer_type(3, node::max_id))));
+                          Is().EqualTo(node(
+                            2, node::max_id, terminal_T, node::pointer_type(3, node::max_id))));
 
                AssertThat(out_nodes.can_pull(), Is().True()); // 4
                AssertThat(out_nodes.pull(),
@@ -4263,14 +4265,14 @@ go_bandit([]() {
           AssertThat(out_nodes.pull(), Is().EqualTo(node(2, node::max_id, terminal_F, terminal_T)));
 
           AssertThat(out_nodes.can_pull(), Is().True()); // 4
-          AssertThat(
-            out_nodes.pull(),
-            Is().EqualTo(node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
+          AssertThat(out_nodes.pull(),
+                     Is().EqualTo(
+                       node(2, node::max_id - 1, terminal_T, node::pointer_type(3, node::max_id))));
 
           AssertThat(out_nodes.can_pull(), Is().True()); // 3
-          AssertThat(
-            out_nodes.pull(),
-            Is().EqualTo(node(2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
+          AssertThat(out_nodes.pull(),
+                     Is().EqualTo(
+                       node(2, node::max_id - 2, terminal_T, node::pointer_type(3, node::max_id))));
 
           AssertThat(out_nodes.can_pull(), Is().False());
 

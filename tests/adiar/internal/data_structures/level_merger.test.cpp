@@ -247,7 +247,7 @@ go_bandit([]() {
 
     describe("level_merger(gen ...)", []() {
       it("can pull from a single generator []", []() {
-        const std::vector<int> xs = { };
+        const std::vector<int> xs = {};
 
         level_merger<std::less<>, 1> merger({ make_generator(xs.begin(), xs.end()) });
 
@@ -297,7 +297,8 @@ go_bandit([]() {
         const std::vector<int> xs = { 0, 2, 3 };
         const std::vector<int> ys = { 2 };
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -315,7 +316,8 @@ go_bandit([]() {
         const std::vector<int> xs = { 0, 2, 3 };
         const std::vector<int> ys = { 1, 2 };
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -334,9 +336,10 @@ go_bandit([]() {
 
       it("can merge from a two generators [0,2]+[] (std::less)", []() {
         const std::vector<int> xs = { 0, 2 };
-        const std::vector<int> ys = { };
+        const std::vector<int> ys = {};
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -351,7 +354,8 @@ go_bandit([]() {
         const std::vector<int> xs = { 2 };
         const std::vector<int> ys = { 0, 2 };
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -363,10 +367,11 @@ go_bandit([]() {
       });
 
       it("can merge from a two generators []+[0,2] (std::less)", []() {
-        const std::vector<int> xs = { };
+        const std::vector<int> xs = {};
         const std::vector<int> ys = { 0, 2 };
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -381,7 +386,8 @@ go_bandit([]() {
         const std::vector<int> xs = { 4, 2, 0 };
         const std::vector<int> ys = { 3, 2, 0 };
 
-        level_merger<std::greater<>, 2> merger({ make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
+        level_merger<std::greater<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), make_generator(ys.begin(), ys.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(4u));
@@ -465,7 +471,8 @@ go_bandit([]() {
       it("can merge a diagram [x0|x1] and generator [0,2] (std::less)", [&]() {
         const std::vector<int> xs = { 0, 2 };
 
-        level_merger<std::less<>, 2> merger({ dd(nf_x0_or_x2), make_generator(xs.begin(), xs.end()) });
+        level_merger<std::less<>, 2> merger(
+          { dd(nf_x0_or_x2), make_generator(xs.begin(), xs.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -479,7 +486,8 @@ go_bandit([]() {
       it("can merge a generator [0,2] and a diagram [x0|x1] (std::less)", [&]() {
         const std::vector<int> xs = { 0, 2 };
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), dd(nf_x0_or_x2) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), dd(nf_x0_or_x2) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -493,7 +501,8 @@ go_bandit([]() {
       it("can merge a diagram [x0|x1] and generator [1,2] (std::less)", [&]() {
         const std::vector<int> xs = { 1, 2 };
 
-        level_merger<std::less<>, 2> merger({ dd(nf_x0_or_x2), make_generator(xs.begin(), xs.end()) });
+        level_merger<std::less<>, 2> merger(
+          { dd(nf_x0_or_x2), make_generator(xs.begin(), xs.end()) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
@@ -510,7 +519,8 @@ go_bandit([]() {
       it("can merge a generator [1,2] and a diagram [x0|x1] (std::less)", [&]() {
         const std::vector<int> xs = { 1, 2 };
 
-        level_merger<std::less<>, 2> merger({ make_generator(xs.begin(), xs.end()), dd(nf_x0_or_x2) });
+        level_merger<std::less<>, 2> merger(
+          { make_generator(xs.begin(), xs.end()), dd(nf_x0_or_x2) });
 
         AssertThat(merger.can_pull(), Is().True());
         AssertThat(merger.pull(), Is().EqualTo(0u));
