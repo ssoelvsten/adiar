@@ -30,8 +30,9 @@ when they outgrow the memory limit of the given machine.
 </div>
 
 This project has been developed at the
-[Logic and Semantics](https://logsem.github.io/) group at
-[Aarhus University](https://cs.au.dk).
+[Programming Languages, Logic, and Software
+Security](https://cs.au.dk/research/programming-languages-logic-and-software-security)
+section at [Aarhus University](https://cs.au.dk).
 
 If you have obtained a copy of Adiar via a fork or downloaded it from Zenodo,
 then it might be lacking some features or bug fixes. You can find the most
