@@ -266,7 +266,8 @@ further improve performance of the product construction algorithms.
 
 v2.1
 ------------------------
-With [v2.1.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.1.0), we add
+With [v2.1.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.1.0) (and its
+patch [v2.1.1](https://github.com/SSoelvsten/adiar/releases/tag/v2.1.1)), we add
 the *Relational Product* such that Adiar can be used in the context of model
 checking.
 
