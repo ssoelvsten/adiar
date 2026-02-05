@@ -191,7 +191,7 @@ slower than other implementations.
 
 v2.0
 ------------------------
-With [v2.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.0.0), we
+With [v2.0.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.0.0), we
 introduce the *Nested Sweeping* framework as a way to more closely recreate the
 more complex BDD operations within the *time-forward processing* algorithmic
 paradigm in Adiar. This allows us, among other things, to implement
@@ -266,7 +266,7 @@ further improve performance of the product construction algorithms.
 
 v2.1
 ------------------------
-With [v2.1](https://github.com/SSoelvsten/adiar/releases/tag/v2.1.0), we add
+With [v2.1.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.1.0), we add
 the *Relational Product* such that Adiar can be used in the context of model
 checking.
 
@@ -330,8 +330,8 @@ results were negative. Yet, this spawned the ideas in Sølvsten's thesis.
   ```
 
 Carstensen investigated the possibility to implement the `adiar::bdd_optmin` operation (part of
-[v2.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.0.0)) which can be used to obtain the
-smallest satisfying assignment according to some linear cost function.
+[v2.0.0](https://github.com/SSoelvsten/adiar/releases/tag/v2.0.0)) which can be used to obtain
+the smallest satisfying assignment according to some linear cost function.
 
 - Erik Funder Carstensen.
   “*Solving optimization problems I/O efficiently: An extension to Adiar*”.
