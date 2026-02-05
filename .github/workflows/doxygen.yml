@@ -20,6 +20,9 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Setup Aptitude
+      run: sudo apt update
+
     - name: Install C++ project dependencies
       run: sudo apt install libboost-all-dev
 
