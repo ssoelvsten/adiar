@@ -389,9 +389,6 @@ namespace adiar::internal
               PriorityQueue_1& pq_1,
               PriorityQueue_2& pq_2)
   {
-    // TODO (optimisation):
-    //   Merge 'op' into 'policy'.
-
     // Set up input
 
     // TODO (optimisation):
