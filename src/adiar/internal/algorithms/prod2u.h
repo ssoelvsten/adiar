@@ -764,9 +764,9 @@ namespace adiar::internal
     const size_t ra_threshold =
       (memory_available() * data_structures_in_pq_2) / 2 * (data_structures_in_pqs);
 
-    if ( // Use `__prod2_ra` if user has forced Random Access
+    if ( // If user has forced Random Access
       ep.template get<exec_policy::access>() == exec_policy::access::Random_Access
-      || ( // Heuristically, if the narrowest canonical fits
+      || ( // Heuristically, if it is indexable and it fits
         ep.template get<exec_policy::access>() == exec_policy::access::Auto && in->indexable
         && node_raccess::memory_usage(in->width) <= ra_threshold)) {
 #ifdef ADIAR_STATS
