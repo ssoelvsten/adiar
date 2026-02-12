@@ -43,7 +43,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Data structures
   template <uint8_t NodesCarried>
-  using prod2u_request = request_data<2, with_parent, NodesCarried, 1>;
+  using prod2u_request = request_data<2, with_parent, NodesCarried, true>;
 
   /// \brief Type of the primary priority queue for node-based inputs.
   template <size_t LookAhead, memory_mode MemoryMode>

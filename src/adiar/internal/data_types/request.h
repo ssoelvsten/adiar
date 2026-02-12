@@ -26,19 +26,17 @@ namespace adiar::internal
   ///                       `cardinality` is greater than 1 and a per-level priority queue forwards
   ///                       the children of `target.first()` to `target.second()` and so on.
   ///
-  /// \tparam Inputs        The number of inputs to the algorithm. This value differs from
-  ///                       `Cardinality` (default) in algorithms such as `bdd_exists` and
-  ///                       `bdd_compose` where the request includes pairs of nodes from the same
-  ///                       input.
+  /// \tparam Sorted        Whether the request target should be sorted. This is useful for
+  ///                       operations such as `quantify` where the operation is commutative.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <uint8_t Cardinality, uint8_t NodeCarrySize = 0u, uint8_t Inputs = Cardinality>
+  template <uint8_t Cardinality, uint8_t NodeCarrySize = 0u, bool Sorted = false>
   class request;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \details Common details for requests with and without a node carry.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <uint8_t Cardinality, uint8_t Inputs>
-  class request<Cardinality, 0, Inputs>
+  template <uint8_t Cardinality, bool Sorted>
+  class request<Cardinality, 0, Sorted>
   {
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,19 +50,9 @@ namespace adiar::internal
     static constexpr uint8_t cardinality = Cardinality;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    static_assert(Inputs > 0,
-                  "Request type is not designed for a 0-ary operation, i.e. an algorithm taking no "
-                  "diagrams as input.");
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Number of input files.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr uint8_t inputs = Inputs;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Whether the target tuple ought to be sorted.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr bool sorted_target = cardinality == 1u || inputs == 1u;
+    static constexpr bool sorted_target = Sorted || cardinality == 1u;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type of a variable label.
@@ -234,10 +222,10 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \details Implementation of `request` template with a non-empty node carry.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <uint8_t Cardinality, uint8_t NodeCarrySize, uint8_t Inputs>
-  class request : public request<Cardinality, 0, Inputs>
+  template <uint8_t Cardinality, uint8_t NodeCarrySize, bool Sorted>
+  class request : public request<Cardinality, 0, Sorted>
   {
-    using base = request<Cardinality, 0, Inputs>;
+    using base = request<Cardinality, 0, Sorted>;
 
     /* ======================================= NODE CARRY ======================================= */
   public:
@@ -436,15 +424,11 @@ namespace adiar::internal
   ///        ordering.
   ///
   /// \see request
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <uint8_t Cardinality,
-            typename Data,
-            uint8_t NodeCarrySize = 0u,
-            uint8_t Inputs        = Cardinality>
-  class request_data : public request<Cardinality, NodeCarrySize, Inputs>
+  template <uint8_t Cardinality, typename Data, uint8_t NodeCarrySize = 0u, bool Sorted = false>
+  class request_data : public request<Cardinality, NodeCarrySize, Sorted>
   {
   private:
-    using Request = request<Cardinality, NodeCarrySize, Inputs>;
+    using Request = request<Cardinality, NodeCarrySize, Sorted>;
 
     /* ========================================== DATA ========================================== */
   public:
