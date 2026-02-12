@@ -125,7 +125,7 @@ To install all of the above, run the respective command below.
 |------------------|---------------------------------------------------------------------------|
 | Ubuntu 22+       | `apt install        cmake g++     libboost-all-dev doxygen graphviz lcov` |
 | Fedora 36+       | `dnf install        cmake gcc-c++ boost-devel      doxygen graphviz lcov` |
-| Arch Linux       | `pacman -S --needed cmake gcc     boost-libs       doxygen graphviz lcov` |
+| Arch Linux       | `pacman -S --needed cmake gcc     boost            doxygen graphviz lcov` |
 
 ## Usage
 
