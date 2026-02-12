@@ -42,23 +42,31 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Data structures
-  template <uint8_t NodesCarried>
-  using prod2u_request = request_data<2, with_parent, NodesCarried, true>;
+
+  /// \brief Recursion request for binary product construction on a single input decision diagram.
+  ///
+  /// \tparam SortTargets In the case of `quantify`, the binary operation applied is commutative,
+  ///                     e.g. `or` for the `bdd_exists`. In this case, we can enable `SortTargets`.
+  ///                     This should improve performance a little by simplifying the comparator.
+  template <uint8_t NodesCarried, bool SortTargets>
+  using prod2u_request = request_data<2, with_parent, NodesCarried, SortTargets>;
 
   /// \brief Type of the primary priority queue for node-based inputs.
-  template <size_t LookAhead, memory_mode MemoryMode>
+  template <size_t LookAhead, memory_mode MemoryMode, bool SortTargets>
   using prod2u_priority_queue_1_node_t =
-    levelized_node_priority_queue<prod2u_request<0>,
-                                  request_data_first_lt<prod2u_request<0>>,
+    levelized_node_priority_queue<prod2u_request<0, SortTargets>,
+                                  request_data_first_lt<prod2u_request<0, SortTargets>>,
                                   LookAhead,
                                   MemoryMode,
                                   1,
                                   0>;
 
   /// \brief Type of the secondary priority queue to further forward requests across a level.
-  template <memory_mode MemoryMode>
+  template <memory_mode MemoryMode, bool SortTargets>
   using prod2u_priority_queue_2_t =
-    priority_queue<MemoryMode, prod2u_request<1>, request_data_second_lt<prod2u_request<1>>>;
+    priority_queue<MemoryMode,
+                   prod2u_request<1, SortTargets>,
+                   request_data_second_lt<prod2u_request<1, SortTargets>>>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,7 +125,7 @@ namespace adiar::internal
   __prod2u_recurse_out(PriorityQueue& pq,
                        arc_ofstream& aw,
                        const typename Policy::pointer_type source,
-                       const prod2u_request<0>::target_t& target)
+                       const typename prod2u_request<0, Policy::sort_targets>::target_t& target)
   {
     adiar_assert(!target.first().is_nil(),
                  "pointer_type::nil() should only ever end up being placed in target.second()");
@@ -226,17 +234,24 @@ namespace adiar::internal
   /// \brief Reduces a request with (up to) `Targets` many values into its canonical form.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  inline tuple<typename Policy::pointer_type, 2, true>
+  inline tuple<typename Policy::pointer_type, 2, Policy::sort_targets>
   __prod2u_resolve_request(const typename Policy::pointer_type& t1,
                            const typename Policy::pointer_type& t2)
   {
-    using tuple_t = tuple<typename Policy::pointer_type, 2, true>;
+    using tuple_t = tuple<typename Policy::pointer_type, 2, Policy::sort_targets>;
 
     // Collapse to a single value, if `t1` and `t2` are equal
     if (t1 == t2) { return tuple_t(t1, Policy::pointer_type::nil()); }
 
+    // Are there only terminals left that should be combined with the operator?
+    //
+    // TODO (optimisation): disable based on policy
+    if (t1.is_terminal() && t2.is_terminal()) {
+      return tuple_t(Policy::resolve_terminals(t1, t2), Policy::pointer_type::nil());
+    }
+
     // Sort the two values
-    const tuple_t ts = t1 < t2 ? tuple_t(t1, t2) : tuple_t(t2, t1);
+    const tuple_t ts = !Policy::sort_targets || t1 < t2 ? tuple_t(t1, t2) : tuple_t(t2, t1);
 
     // Skip remainder, if only one value is not nil
     if (ts[1].is_nil()) { return ts; }
@@ -245,24 +260,27 @@ namespace adiar::internal
     if (ts[0].is_terminal() && !Policy::keep_terminal(ts[0])) {
       return tuple_t(ts[1], Policy::pointer_type::nil());
     }
-
     if (ts[1].is_terminal() && !Policy::keep_terminal(ts[1])) {
       return tuple_t(ts[0], Policy::pointer_type::nil());
     }
 
-    // Collapse to terminal. Due to sorting and the above pruning, this value has to be the last.
-    if (ts[1].is_terminal() && Policy::collapse_to_terminal(ts[1])) {
-      return tuple_t(ts[1], Policy::pointer_type::nil());
+    // Collapse to terminal.
+    if constexpr (Policy::sort_targets) {
+      // Due to sorting and the above pruning, this value has to be the last.
+      if (ts[1].is_terminal() && Policy::collapse_to_terminal(ts[1])) {
+        return tuple_t(ts[1], Policy::pointer_type::nil());
+      }
+    } else {
+      // if not sorted, check both options.
+      if (ts[0].is_terminal() && Policy::collapse_to_terminal(ts[0])) {
+        return tuple_t(ts[0], Policy::pointer_type::nil());
+      }
+      if (ts[1].is_terminal() && Policy::collapse_to_terminal(ts[1])) {
+        return tuple_t(ts[1], Policy::pointer_type::nil());
+      }
     }
 
-    // Are there only terminals left that should be combined with the operator?
-    //
-    // TODO (optimisation): disable based on policy
-    if (ts[0].is_terminal() && ts[1].is_terminal()) {
-      return tuple_t(Policy::resolve_terminals(ts[0], ts[1]), Policy::pointer_type::nil());
-    }
-
-    // Otherwise, return the sorted tuple.
+    // Otherwise, return the tuple.
     return ts;
   }
 
@@ -290,7 +308,7 @@ namespace adiar::internal
       const bool split = policy.split(out_label);
 
       while (!pq.empty_level()) {
-        prod2u_request<0> req = pq.top();
+        prod2u_request<0, Policy::sort_targets> req = pq.top();
 
 #ifdef ADIAR_STATS
         stats_prod2u.requests_unique[__prod2u_arity_idx(req)] += 1u;
@@ -310,7 +328,7 @@ namespace adiar::internal
         // -----------------------------------------------------------------------------------------
         // CASE: Split node into binary recursion request
         if (split) {
-          const tuple<typename Policy::pointer_type, 2, true> rec_all =
+          const tuple<typename Policy::pointer_type, 2, Policy::sort_targets> rec_all =
             __prod2u_resolve_request<Policy>(children_fst[false], children_fst[true]);
 
           // Collapsed to a terminal?
@@ -321,7 +339,7 @@ namespace adiar::internal
             return typename Policy::dd_type(rec_all[0].value());
           }
 
-          prod2u_request<0>::target_t rec(rec_all[0], rec_all[1]);
+          typename prod2u_request<0, Policy::sort_targets>::target_t rec(rec_all[0], rec_all[1]);
 
           if (rec[0].is_terminal()) {
             const __prod2u_recurse_in__output_terminal handler(aw, rec[0]);
@@ -341,12 +359,12 @@ namespace adiar::internal
 
         const node::uid_type out_uid(out_label, out_id++);
 
-        prod2u_request<0>::target_t rec0 =
+        typename prod2u_request<0, Policy::sort_targets>::target_t rec0 =
           __prod2u_resolve_request<Policy>(children_fst[false], children_snd[false]);
 
         __prod2u_recurse_out<Policy>(pq, aw, out_uid.as_ptr(false), rec0);
 
-        prod2u_request<0>::target_t rec1 =
+        typename prod2u_request<0, Policy::sort_targets>::target_t rec1 =
           __prod2u_resolve_request<Policy>(children_fst[true], children_snd[true]);
         __prod2u_recurse_out<Policy>(pq, aw, out_uid.as_ptr(true), rec1);
 
@@ -415,7 +433,7 @@ namespace adiar::internal
 
       while (!pq_1.empty_level() || !pq_2.empty()) {
         // Merge requests from pq_1 and pq_2
-        prod2u_request<1> req;
+        prod2u_request<1, Policy::sort_targets> req;
 
         if (pq_1.can_pull()
             && (pq_2.empty() || pq_1.top().target.first() < pq_2.top().target.second())) {
@@ -464,7 +482,7 @@ namespace adiar::internal
         // -----------------------------------------------------------------------------------------
         // CASE: Split node into binary recursion request
         if (split) {
-          const tuple<typename Policy::pointer_type, 2, true> rec_all =
+          const tuple<typename Policy::pointer_type, 2, Policy::sort_targets> rec_all =
             __prod2u_resolve_request<Policy>(children_fst[false], children_fst[true]);
 
           // Collapsed to a terminal?
@@ -475,7 +493,7 @@ namespace adiar::internal
             return typename Policy::dd_type(rec_all[0].value());
           }
 
-          prod2u_request<0>::target_t rec(rec_all[0], rec_all[1]);
+          typename prod2u_request<0, Policy::sort_targets>::target_t rec(rec_all[0], rec_all[1]);
 
           if (rec[0].is_terminal()) {
             const __prod2u_recurse_in__output_terminal handler(aw, rec[0]);
@@ -495,12 +513,12 @@ namespace adiar::internal
 
         const node::uid_type out_uid(out_label, out_id++);
 
-        prod2u_request<0>::target_t rec0 =
+        typename prod2u_request<0, Policy::sort_targets>::target_t rec0 =
           __prod2u_resolve_request<Policy>(children_fst[false], children_snd[false]);
 
         __prod2u_recurse_out<Policy>(pq_1, aw, out_uid.as_ptr(false), rec0);
 
-        prod2u_request<0>::target_t rec1 =
+        typename prod2u_request<0, Policy::sort_targets>::target_t rec1 =
           __prod2u_resolve_request<Policy>(children_fst[true], children_snd[true]);
         __prod2u_recurse_out<Policy>(pq_1, aw, out_uid.as_ptr(true), rec1);
 
@@ -528,6 +546,16 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Common logic for a full single sweep.
 
+  template <typename Policy, bool SortTargets = false>
+  class prod2u_single_policy : public Policy
+  {
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Whether to enable the sorting targets optimization.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool sort_targets = SortTargets;
+  };
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Set up of priority queue for a single top-down sweep with random access.
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -553,7 +581,7 @@ namespace adiar::internal
   ///        access.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename NodeRandomAccess,
-            template <size_t, memory_mode> typename PriorityQueueTemplate,
+            template <size_t, memory_mode, bool> typename PriorityQueueTemplate,
             typename In,
             typename Policy>
   typename Policy::__dd_type
@@ -571,7 +599,8 @@ namespace adiar::internal
       - arc_ofstream::memory_usage();
 
     const size_t pq_memory_fits =
-      PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(pq_memory);
+      PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, Policy::sort_targets>::memory_fits(
+        pq_memory);
 
     const bool internal_only =
       ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
@@ -587,21 +616,22 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.unbucketed += 1u;
 #endif
-      using PriorityQueue = PriorityQueueTemplate<0, memory_mode::Internal>;
+      using PriorityQueue = PriorityQueueTemplate<0, memory_mode::Internal, Policy::sort_targets>;
 
       return __prod2u_ra<NodeRandomAccess, PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
     } else if (!external_only && max_pq_size <= pq_memory_fits) {
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.internal += 1u;
 #endif
-      using PriorityQueue = PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
+      using PriorityQueue = PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, Policy::sort_targets>;
 
       return __prod2u_ra<NodeRandomAccess, PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
     } else {
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.external += 1u;
 #endif
-      using PriorityQueue = PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
+      using PriorityQueue =
+        PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::External, Policy::sort_targets>;
 
       return __prod2u_ra<NodeRandomAccess, PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
     }
@@ -646,7 +676,7 @@ namespace adiar::internal
   /// \brief Memory computations to decide types of both priority queues for a single sweep.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename NodeStream,
-            template <size_t, memory_mode> typename PriorityQueue_1_Template,
+            template <size_t, memory_mode, bool> typename PriorityQueue_1_Template,
             typename Policy,
             typename In>
   typename Policy::__dd_type
@@ -664,23 +694,23 @@ namespace adiar::internal
       - arc_ofstream::memory_usage();
 
     constexpr size_t data_structures_in_pq_1 =
-      PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
+      PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, Policy::sort_targets>::data_structures;
 
     constexpr size_t data_structures_in_pq_2 =
-      prod2u_priority_queue_2_t<memory_mode::Internal>::data_structures;
+      prod2u_priority_queue_2_t<memory_mode::Internal, Policy::sort_targets>::data_structures;
 
     const size_t pq_1_internal_memory =
       (aux_available_memory / (data_structures_in_pq_1 + data_structures_in_pq_2))
       * data_structures_in_pq_1;
 
     const size_t pq_1_memory_fits =
-      PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(
+      PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, Policy::sort_targets>::memory_fits(
         pq_1_internal_memory);
 
     const size_t pq_2_internal_memory = aux_available_memory - pq_1_internal_memory;
 
     const size_t pq_2_memory_fits =
-      prod2u_priority_queue_2_t<memory_mode::Internal>::memory_fits(pq_2_internal_memory);
+      prod2u_priority_queue_2_t<memory_mode::Internal, Policy::sort_targets>::memory_fits(pq_2_internal_memory);
 
     const bool internal_only =
       ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
@@ -703,8 +733,8 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.unbucketed += 1u;
 #endif
-      using PriorityQueue_1 = PriorityQueue_1_Template<0, memory_mode::Internal>;
-      using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal>;
+      using PriorityQueue_1 = PriorityQueue_1_Template<0, memory_mode::Internal, Policy::sort_targets>;
+      using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal, Policy::sort_targets>;
 
       return __prod2u_pq<NodeStream, PriorityQueue_1, PriorityQueue_2>(
         ep, in, policy, pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
@@ -713,8 +743,9 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.internal += 1u;
 #endif
-      using PriorityQueue_1 = PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
-      using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal>;
+      using PriorityQueue_1 =
+        PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, Policy::sort_targets>;
+      using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal, Policy::sort_targets>;
 
       return __prod2u_pq<NodeStream, PriorityQueue_1, PriorityQueue_2>(
         ep, in, policy, pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
@@ -722,8 +753,9 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.external += 1u;
 #endif
-      using PriorityQueue_1 = PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
-      using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::External>;
+      using PriorityQueue_1 =
+        PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::External, Policy::sort_targets>;
+      using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::External, Policy::sort_targets>;
 
       const size_t pq_1_memory = aux_available_memory / 2;
       const size_t pq_2_memory = pq_1_memory;
@@ -753,10 +785,11 @@ namespace adiar::internal
     // to the secondary priority queue.
 
     constexpr size_t data_structures_in_pq_2 =
-      prod2u_priority_queue_2_t<memory_mode::Internal>::data_structures;
+      prod2u_priority_queue_2_t<memory_mode::Internal, Policy::sort_targets>::data_structures;
 
     constexpr size_t data_structures_in_pqs = data_structures_in_pq_2
-      + prod2u_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
+      + prod2u_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, Policy::sort_targets>::
+        data_structures;
 
     const size_t ra_threshold =
       (memory_available() * data_structures_in_pq_2) / 2 * (data_structures_in_pqs);
@@ -785,15 +818,21 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Common logic for using `prod2u` as part of a nested sweep.
 
-  template <typename Policy>
+  template <typename Policy, bool SortTargets = false>
   class prod2u_nested_policy : public Policy
   {
   public:
-    using request_t      = prod2u_request<0>;
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Whether to enable the sorting targets optimization.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool sort_targets = SortTargets;
+
+  public:
+    using request_t      = prod2u_request<0, sort_targets>;
     using request_pred_t = request_data_first_lt<request_t>;
 
     template <size_t LookAhead, memory_mode MemoryMode>
-    using pq_t = prod2u_priority_queue_1_node_t<LookAhead, MemoryMode>;
+    using pq_t = prod2u_priority_queue_1_node_t<LookAhead, MemoryMode, SortTargets>;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -808,10 +847,11 @@ namespace adiar::internal
     pq_memory(const size_t inner_memory)
     {
       constexpr size_t data_structures_in_pq_1 =
-        prod2u_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
+        prod2u_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, sort_targets>::
+          data_structures;
 
       constexpr size_t data_structures_in_pq_2 =
-        prod2u_priority_queue_2_t<memory_mode::Internal>::data_structures;
+        prod2u_priority_queue_2_t<memory_mode::Internal, sort_targets>::data_structures;
 
       return (inner_memory / (data_structures_in_pq_1 + data_structures_in_pq_2))
         * data_structures_in_pq_1;
@@ -881,7 +921,8 @@ namespace adiar::internal
       adiar_assert(ep.template get<exec_policy::access>() != exec_policy::access::Random_Access);
 
       const size_t pq_2_memory_fits =
-        prod2u_priority_queue_2_t<memory_mode::Internal>::memory_fits(inner_remaining_memory);
+        prod2u_priority_queue_2_t<memory_mode::Internal, sort_targets>::memory_fits(
+          inner_remaining_memory);
 
       const size_t pq_2_bound =
         // Obtain 1-level cut from subset
@@ -897,13 +938,13 @@ namespace adiar::internal
 
       if (ep.template get<exec_policy::memory>() != exec_policy::memory::External
           && max_pq_2_size <= pq_2_memory_fits) {
-        using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal>;
+        using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal, sort_targets>;
         PriorityQueue_2 pq_2(inner_remaining_memory, max_pq_2_size);
 
         return __prod2u_pq<node_ifstream<>, PriorityQueue_1, PriorityQueue_2>(
           ep, outer_file, *this, pq_1, pq_2);
       } else {
-        using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::External>;
+        using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::External, sort_targets>;
         PriorityQueue_2 pq_2(inner_remaining_memory, max_pq_2_size);
 
         return __prod2u_pq<node_ifstream<>, PriorityQueue_1, PriorityQueue_2>(

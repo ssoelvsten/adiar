@@ -50,7 +50,7 @@ namespace adiar::internal
   /// \brief Policy Decorator for quantifying a single variable.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  class single_quantify_policy : public Policy
+  class single_quantify_policy : public prod2u_single_policy<Policy, /* SortTargets = */ true>
   {
   private:
     const typename Policy::label_type _level;
@@ -61,6 +61,7 @@ namespace adiar::internal
       : _level(level)
     {}
 
+  public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Start product construction at the desired level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,9 +113,12 @@ namespace adiar::internal
   /// \brief Policy Decorator to lift it for Nested Sweeping.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  class multi_quantify_policy : public prod2u_nested_policy<Policy>
+  class multi_quantify_policy : public prod2u_nested_policy<Policy, /* SortTargets = */ true>
   {
+    using base = prod2u_nested_policy<Policy, true>;
+
   public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     multi_quantify_policy()
     {}
 
@@ -130,11 +134,11 @@ namespace adiar::internal
     //////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Convert a node from the outer sweep on a to-be quantified level into a request.
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    inline typename prod2u_nested_policy<Policy>::request_t
+    inline typename base::request_t
     request_from_node(const typename Policy::node_type& n,
                       const typename Policy::pointer_type& parent) const
     {
-      using request_t = typename prod2u_nested_policy<Policy>::request_t;
+      using request_t = typename base::request_t;
       using target_t  = typename request_t::target_t;
 
       // Shortcutting or Irrelevant terminal?
