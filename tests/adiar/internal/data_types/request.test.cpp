@@ -12,12 +12,7 @@ go_bandit([]() {
         AssertThat(cardinality, Is().EqualTo(1u));
       });
 
-      it("has statically derived number of inputs", []() {
-        const auto inputs = request<1>::inputs;
-        AssertThat(inputs, Is().EqualTo(1u));
-      });
-
-      it("knows the target is sorted", []() {
+      it("knows the target must be sorted", []() {
         const auto sorted_target = request<1>::sorted_target;
         AssertThat(sorted_target, Is().True());
 
@@ -110,11 +105,6 @@ go_bandit([]() {
         AssertThat(cardinality, Is().EqualTo(2u));
       });
 
-      it("has statically derived number of inputs (default)", []() {
-        const auto inputs = request<2>::inputs;
-        AssertThat(inputs, Is().EqualTo(2u));
-      });
-
       it("has the target not sorted by default", []() {
         const auto sorted_target = request<2>::sorted_target;
         AssertThat(sorted_target, Is().False());
@@ -123,11 +113,11 @@ go_bandit([]() {
         AssertThat(target__is_sorted, Is().False());
       });
 
-      it("has the target sorted if number of inputs is 1", []() {
-        const auto sorted_target = request<2, 0, 1>::sorted_target;
+      it("has the target sorted if set to do so", []() {
+        const auto sorted_target = request<2, 0, true>::sorted_target;
         AssertThat(sorted_target, Is().True());
 
-        const auto target__is_sorted = request<2, 0, 1>::target_t::is_sorted;
+        const auto target__is_sorted = request<2, 0, true>::target_t::is_sorted;
         AssertThat(target__is_sorted, Is().True());
       });
 
@@ -302,11 +292,6 @@ go_bandit([]() {
         AssertThat(cardinality, Is().EqualTo(3u));
       });
 
-      it("has statically derived number of inputs (default)", []() {
-        const auto inputs = request<3>::inputs;
-        AssertThat(inputs, Is().EqualTo(3u));
-      });
-
       it("has the target not sorted by default", []() {
         const auto sorted_target = request<3>::sorted_target;
         AssertThat(sorted_target, Is().False());
@@ -315,7 +300,7 @@ go_bandit([]() {
         AssertThat(target__is_sorted, Is().False());
       });
 
-      it("has the target sorted if number of inputs is 1", []() {
+      it("has the target sorted if set to do so", []() {
         const auto sorted_target = request<3, 0, true>::sorted_target;
         AssertThat(sorted_target, Is().True());
 
