@@ -42,12 +42,12 @@ namespace adiar::internal
     ///
     /// \see __reduce_level
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename dd_policy, typename pq_t, typename arc_ifstream_t>
+    template <typename Policy, typename PriorityQueue, typename ArcStream>
     void
-    __reduce_level__fast(arc_ifstream_t& arcs,
-                         const typename dd_policy::label_type in_label,
-                         const typename dd_policy::label_type out_label,
-                         pq_t& pq,
+    __reduce_level__fast(ArcStream& arcs,
+                         const typename Policy::label_type in_label,
+                         const typename Policy::label_type out_label,
+                         PriorityQueue& pq,
                          node_ofstream& out,
                          [[maybe_unused]] statistics::reduce_t& stats = internal::stats_reduce)
     {
@@ -61,7 +61,7 @@ namespace adiar::internal
                        pq.terminals(true) + arcs.unread_terminals(true));
 
       // Pull out all nodes from pq and terminal_arcs for this level
-      typename dd_policy::id_type out_id = dd_policy::max_id;
+      typename Policy::id_type out_id = Policy::max_id;
 
       while (pq.can_pull()
              || (arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == in_label)) {
@@ -78,7 +78,7 @@ namespace adiar::internal
 
         // Output node
         adiar_assert(out_id > 0, "Should still have more ids left");
-        const typename dd_policy::node_type out_node(
+        const typename Policy::node_type out_node(
           out_label, out_id--, e_low.target(), e_high.target());
         out.unsafe_push(out_node);
 
@@ -103,8 +103,8 @@ namespace adiar::internal
       // Add number of nodes to level information, if any nodes were pushed to the output.
       // Furthermore, mark as unsorted if at least two nodes were output (their order might
       // very much have been wrong).
-      if (out_id != dd_policy::max_id) {
-        const size_t width = dd_policy::max_id - out_id;
+      if (out_id != Policy::max_id) {
+        const size_t width = Policy::max_id - out_id;
         out.unsafe_push(level_info(out_label, width));
 
         if (width > 1u) { out.unsafe_set_sorted(false); }
@@ -115,15 +115,15 @@ namespace adiar::internal
       __reduce_level__epilogue<>(arcs, pq, out, terminal_value);
     }
 
-    template <typename dd_policy, typename pq_t, typename arc_ifstream_t>
+    template <typename Policy, typename PriorityQueue, typename ArcStream>
     void
-    __reduce_level__fast(arc_ifstream_t& arcs,
-                         const typename dd_policy::label_type label,
-                         pq_t& pq,
+    __reduce_level__fast(ArcStream& arcs,
+                         const typename Policy::label_type label,
+                         PriorityQueue& pq,
                          node_ofstream& out,
                          statistics::reduce_t& stats = internal::stats_reduce)
     {
-      return __reduce_level__fast<dd_policy, pq_t, arc_ifstream_t>(
+      return __reduce_level__fast<Policy, PriorityQueue, ArcStream>(
         arcs, label, label, pq, out, stats);
     }
 
@@ -140,22 +140,19 @@ namespace adiar::internal
       ///
       /// \see sorter nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <memory_mode MemoryMode, typename element_t, typename element_comp_t>
+      template <memory_mode MemoryMode, typename T, typename Comp>
       class roots_sorter
       {
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using value_type = element_t;
-
-        static_assert(value_type::inputs == 1 && value_type::sorted_target,
-                      "Request should be on a single input, and hence sorted");
+        using value_type = T;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the element comparator.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using value_comp_type = element_comp_t;
+        using value_comp_type = Comp;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Memory mode of sorter.
@@ -315,7 +312,7 @@ namespace adiar::internal
         /// \details This leaves the other in an illegal state that requires a call to `reset()`.
         ////////////////////////////////////////////////////////////////////////////////////////////
         void
-        move(roots_sorter<mem_mode, element_t, element_comp_t>& o)
+        move(roots_sorter<MemoryMode, T, Comp>& o)
         {
           _sorter_ptr = std::move(o._sorter_ptr);
           _max_source = o._max_source;
@@ -347,8 +344,8 @@ namespace adiar::internal
       //////////////////////////////////////////////////////////////////////////////////////////////
       /// \brief Default priority queue for the Outer Up Sweep.
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <size_t look_ahead, memory_mode mem_mode>
-      using up__pq_t = reduce_priority_queue<look_ahead, mem_mode>;
+      template <size_t LookAhead, memory_mode MemoryMode>
+      using up__pq_t = reduce_priority_queue<LookAhead, MemoryMode>;
 
       //////////////////////////////////////////////////////////////////////////////////////////////
       /// \brief Decorator for the Reduce priority queue that either forwards to itself or to a
@@ -359,37 +356,37 @@ namespace adiar::internal
       ///
       /// \see pq_t, levelized_priority_queue, nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename outer_pq_t, typename outer_roots_t>
+      template <typename OuterPriorityQueue, typename OuterRoots>
       class up__pq_decorator
       {
       public:
-        ////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements.
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        using value_type = typename outer_pq_t::value_type;
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        using value_type = typename OuterPriorityQueue::value_type;
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the element comparator.
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        using value_comp_type = typename outer_pq_t::value_comp_type;
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        using value_comp_type = typename OuterPriorityQueue::value_comp_type;
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Memory mode (same as decorated priority queue).
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr memory_mode mem_mode = outer_pq_t::mem_mode;
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        static constexpr memory_mode mem_mode = OuterPriorityQueue::mem_mode;
 
       private:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Reference to the outer sweep's (levelized) priority queue.
         ////////////////////////////////////////////////////////////////////////////////////////////
         // TODO (optimisation): public inheritance?
-        outer_pq_t& _outer_pq;
+        OuterPriorityQueue& _outer_pq;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Reference to the sorter in the outer sweep that contains the root requests
         ///        generated for the next inner sweep.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        outer_roots_t& _outer_roots;
+        OuterRoots& _outer_roots;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of a level.
@@ -404,17 +401,17 @@ namespace adiar::internal
         const level_type _next_inner;
 
       public:
-        ////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Value to reflect 'out of levels'.
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr level_type no_label = outer_pq_t::no_label;
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        static constexpr level_type no_label = OuterPriorityQueue::no_label;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Instantiate decorator.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        up__pq_decorator(outer_pq_t& outer_pq,
-                         outer_roots_t& outer_roots,
+        up__pq_decorator(OuterPriorityQueue& outer_pq,
+                         OuterRoots& outer_roots,
                          const level_type next_inner)
           : _outer_pq(outer_pq)
           , _outer_roots(outer_roots)
@@ -536,7 +533,7 @@ namespace adiar::internal
         /// \see request request_with_data
         ////////////////////////////////////////////////////////////////////////////////////////////
         void
-        push(const typename outer_roots_t::value_type& e)
+        push(const typename OuterRoots::value_type& e)
         {
           adiar_assert(e.data.source.is_nil() || e.data.source.label() < _next_inner);
           if (e.target.first().is_terminal()) {
@@ -598,11 +595,11 @@ namespace adiar::internal
       /// \brief Class to obtain from the Inner Down Sweep what is the next level (ahead of the
       ///        current one being processed).
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename nesting_policy>
+      template <typename Policy>
       class inner_iterator
       {
       public:
-        using level_type = typename nesting_policy::pointer_type::label_type;
+        using level_type = typename Policy::pointer_type::label_type;
 
       public:
         ////////////////////////////////////////////////////////////////////////
@@ -614,11 +611,10 @@ namespace adiar::internal
 
       private:
         level_info_ifstream<> _lis;
-        nesting_policy& _policy_impl;
+        Policy& _policy_impl;
 
       public:
-        inner_iterator(const typename nesting_policy::shared_arc_file_type& dag,
-                       nesting_policy& policy_impl)
+        inner_iterator(const typename Policy::shared_arc_file_type& dag, Policy& policy_impl)
           : _lis(dag)
           , _policy_impl(policy_impl)
         {}
@@ -657,26 +653,26 @@ namespace adiar::internal
       ///
       /// \see levelized_priority_queue, nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename inner_pq_t, typename outer_roots_t>
+      template <typename InnerPriorityQueue, typename OuterRoots>
       class down__pq_decorator
       {
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using value_type = typename inner_pq_t::value_type;
+        using value_type = typename InnerPriorityQueue::value_type;
 
-        // TODO: static_assert(inner_pq_t::value_type == outer_roots_t::value_type);
+        // TODO: static_assert(InnerPriorityQueue::value_type == OuterRoots::value_type);
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the element comparator.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using value_comp_type = typename inner_pq_t::value_comp_type;
+        using value_comp_type = typename InnerPriorityQueue::value_comp_type;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Memory mode (same as decorated priority queue).
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr memory_mode mem_mode = inner_pq_t::mem_mode;
+        static constexpr memory_mode mem_mode = InnerPriorityQueue::mem_mode;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements in the priority queue / sorter.
@@ -688,7 +684,7 @@ namespace adiar::internal
         /// \brief Reference to the inner sweep's (levelized) priority queue.
         ////////////////////////////////////////////////////////////////////////////////////////////
         // TODO (optimisation): public inheritance?
-        inner_pq_t& _inner_pq;
+        InnerPriorityQueue& _inner_pq;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Instantiation of the comparator between elements.
@@ -699,19 +695,19 @@ namespace adiar::internal
         /// \brief Reference to the sorter in the outer sweep that contains the root requests
         ///        generated for the next inner sweep.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        outer_roots_t& _outer_roots;
+        OuterRoots& _outer_roots;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Value to reflect 'out of levels'.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr level_type no_label = inner_pq_t::no_label;
+        static constexpr level_type no_label = InnerPriorityQueue::no_label;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Instantiate decorator.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        down__pq_decorator(inner_pq_t& inner_pq, outer_roots_t& outer_roots)
+        down__pq_decorator(InnerPriorityQueue& inner_pq, OuterRoots& outer_roots)
           : _inner_pq(inner_pq)
           , _outer_roots(outer_roots)
         {}
@@ -921,12 +917,12 @@ namespace adiar::internal
       /// \par Side Effects:
       ///      Sorts and resets the given `outer_roots` sorter.
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename nesting_policy, typename outer_roots_t>
-      typename nesting_policy::__dd_type
+      template <typename Policy, typename OuterRoots>
+      typename Policy::__dd_type
       down(const exec_policy& ep,
-           nesting_policy& policy_impl,
-           const typename nesting_policy::shared_node_file_type& outer_file,
-           outer_roots_t& outer_roots,
+           Policy& policy_impl,
+           const typename Policy::shared_node_file_type& outer_file,
+           OuterRoots& outer_roots,
            const size_t inner_memory)
       {
         adiar_assert(outer_roots.size() > 0, "Nested Sweep needs one or more roots");
@@ -939,7 +935,7 @@ namespace adiar::internal
         //
         // To avoid having to do the boiler-plate yourself, use `down__sweep_switch` below (assuming
         // your algorithm fits).
-        const typename nesting_policy::__dd_type res =
+        const typename Policy::__dd_type res =
           policy_impl.sweep(ep, outer_file, outer_roots, inner_memory);
 
         outer_roots.reset();
@@ -950,12 +946,12 @@ namespace adiar::internal
       /// \brief Implements the default boiler-plate behaviour in the Inner Down Sweep to (1) switch
       ///        based on `memory_mode` and (2) decorate the priority queue and the `roots_sorter`.
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename nesting_policy, typename outer_roots_t>
-      inline typename nesting_policy::__dd_type
+      template <typename Policy, typename OuterRoots>
+      inline typename Policy::__dd_type
       down__sweep_switch(const exec_policy& ep,
-                         nesting_policy& policy_impl,
-                         const typename nesting_policy::shared_node_file_type& outer_file,
-                         outer_roots_t& outer_roots,
+                         Policy& policy_impl,
+                         const typename Policy::shared_node_file_type& outer_file,
+                         OuterRoots& outer_roots,
                          const size_t inner_memory,
                          statistics::__alg_base::__lpq_t& lpq_stats)
       {
@@ -966,7 +962,7 @@ namespace adiar::internal
         //
         // We then may derive an upper bound on the size of auxiliary data structures and check
         // whether we can run them with a faster internal memory variant.
-        const size_t inner_stream_memory = nesting_policy::stream_memory();
+        const size_t inner_stream_memory = Policy::stream_memory();
         adiar_assert(inner_stream_memory <= inner_memory,
                      "There should be enough memory to include all streams");
 
@@ -1005,7 +1001,7 @@ namespace adiar::internal
         const size_t inner_pq_bound = policy_impl.pq_bound(outer_file, outer_roots.size());
 
         const size_t inner_pq_fits =
-          nesting_policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(
+          Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(
             inner_pq_memory);
 
         const bool external_only =
@@ -1016,22 +1012,22 @@ namespace adiar::internal
         const size_t inner_pq_max_size =
           internal_only ? std::min(inner_pq_fits, inner_pq_bound) : inner_pq_bound;
 
-        // TODO (bdd_compose): ask 'nesting_policy' implementation for the initalizer list
+        // TODO (bdd_compose): ask 'Policy' implementation for the initalizer list
         if (!external_only
-            && inner_pq_max_size <= no_lookahead_bound(outer_roots_t::value_type::cardinality)) {
+            && inner_pq_max_size <= no_lookahead_bound(OuterRoots::value_type::cardinality)) {
 #ifdef ADIAR_STATS
           lpq_stats.unbucketed += 1u;
 #endif
           adiar_assert(inner_pq_max_size <= inner_pq_fits,
                        "'no_lookahead' implies it should (in practice) satisfy the '<='");
 
-          using inner_pq_t = typename nesting_policy::template pq_t<0, memory_mode::Internal>;
-          inner_pq_t inner_pq({ typename nesting_policy::dd_type(outer_file) },
-                              inner_pq_memory,
-                              inner_pq_max_size,
-                              lpq_stats);
+          using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal>;
+          InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
+                                      inner_pq_memory,
+                                      inner_pq_max_size,
+                                      lpq_stats);
 
-          using decorator_t = down__pq_decorator<inner_pq_t, outer_roots_t>;
+          using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
           decorator_t decorated_pq(inner_pq, outer_roots);
 
           return use_random_access
@@ -1041,14 +1037,14 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
           lpq_stats.internal += 1u;
 #endif
-          using inner_pq_t =
-            typename nesting_policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
-          inner_pq_t inner_pq({ typename nesting_policy::dd_type(outer_file) },
-                              inner_pq_memory,
-                              inner_pq_max_size,
-                              lpq_stats);
+          using InnerPriorityQueue =
+            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
+          InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
+                                      inner_pq_memory,
+                                      inner_pq_max_size,
+                                      lpq_stats);
 
-          using decorator_t = down__pq_decorator<inner_pq_t, outer_roots_t>;
+          using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
           decorator_t decorated_pq(inner_pq, outer_roots);
 
           return use_random_access
@@ -1058,14 +1054,14 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
           lpq_stats.external += 1u;
 #endif
-          using inner_pq_t =
-            typename nesting_policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
-          inner_pq_t inner_pq({ typename nesting_policy::dd_type(outer_file) },
-                              inner_pq_memory,
-                              inner_pq_max_size,
-                              lpq_stats);
+          using InnerPriorityQueue =
+            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
+          InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
+                                      inner_pq_memory,
+                                      inner_pq_max_size,
+                                      lpq_stats);
 
-          using decorator_t = down__pq_decorator<inner_pq_t, outer_roots_t>;
+          using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
           decorator_t decorated_pq(inner_pq, outer_roots);
 
           return use_random_access
@@ -1077,8 +1073,8 @@ namespace adiar::internal
       //////////////////////////////////////////////////////////////////////////////////////////////
       /// \brief Default priority queue for the Inner Up Sweep.
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <size_t look_ahead, memory_mode mem_mode>
-      using up__pq_t = outer::up__pq_t<look_ahead, mem_mode>;
+      template <size_t LookAhead, memory_mode MemoryMode>
+      using up__pq_t = outer::up__pq_t<LookAhead, MemoryMode>;
 
       //////////////////////////////////////////////////////////////////////////////////////////////
       /// \brief   Decorator for a (levelized) priority queue that either forwards it to an outer
@@ -1090,24 +1086,24 @@ namespace adiar::internal
       ///
       /// \see levelized_priority_queue, nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename inner_pq_t, typename outer_pq_t>
+      template <typename InnerPriorityQueue, typename OuterPriorityQueue>
       class up__pq_decorator
       {
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using value_type = typename inner_pq_t::value_type;
+        using value_type = typename InnerPriorityQueue::value_type;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the element comparator.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using value_comp_type = typename inner_pq_t::value_comp_type;
+        using value_comp_type = typename InnerPriorityQueue::value_comp_type;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Memory mode (same as decorated priority queue).
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr memory_mode mem_mode = inner_pq_t::mem_mode;
+        static constexpr memory_mode mem_mode = InnerPriorityQueue::mem_mode;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements in the priority queue / sorter.
@@ -1119,7 +1115,7 @@ namespace adiar::internal
         /// \brief Reference to the inner sweep's (levelized) priority queue.
         ////////////////////////////////////////////////////////////////////////////////////////////
         // TODO (optimisation): public inheritance?
-        inner_pq_t& _inner_pq;
+        InnerPriorityQueue& _inner_pq;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Instantiation of the comparator between elements.
@@ -1129,19 +1125,19 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Reference to the outer sweep's (levelized) priority queue.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        outer_pq_t& _outer_pq;
+        OuterPriorityQueue& _outer_pq;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Value to reflect 'out of levels'.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr level_type no_label = inner_pq_t::no_label;
+        static constexpr level_type no_label = InnerPriorityQueue::no_label;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Instantiate decorator.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        up__pq_decorator(inner_pq_t& inner_pq, outer_pq_t& outer_pq)
+        up__pq_decorator(InnerPriorityQueue& inner_pq, OuterPriorityQueue& outer_pq)
           : _inner_pq(inner_pq)
           , _outer_pq(outer_pq)
         {}
@@ -1430,13 +1426,13 @@ namespace adiar::internal
       ///
       /// \see nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename nesting_policy, typename inner_pq_t, typename outer_pq_t>
+      template <typename Policy, typename InnerPriorityQueue, typename OuterPriorityQueue>
       inline void
       up(const exec_policy& /*ep*/,
          const arc_ifstream<>& outer_arcs,
-         outer_pq_t& outer_pq,
+         OuterPriorityQueue& outer_pq,
          node_ofstream& outer_ofstream,
-         const typename nesting_policy::shared_arc_file_type& inner_arcs_file,
+         const typename Policy::shared_arc_file_type& inner_arcs_file,
          const size_t inner_pq_memory,
          const size_t inner_pq_max_size,
          const size_t inner_sorters_memory,
@@ -1454,12 +1450,12 @@ namespace adiar::internal
         level_info_ifstream<> inner_levels(inner_arcs_file);
 
         // Set up (decorated) priority queue
-        inner_pq_t inner_pq({ inner_arcs_file },
-                            inner_pq_memory,
-                            inner_pq_max_size,
-                            nested_sweeping::stats.inner_up.lpq);
+        InnerPriorityQueue inner_pq({ inner_arcs_file },
+                                    inner_pq_memory,
+                                    inner_pq_max_size,
+                                    nested_sweeping::stats.inner_up.lpq);
 
-        using decorator_t = up__pq_decorator<inner_pq_t, outer_pq_t>;
+        using decorator_t = up__pq_decorator<InnerPriorityQueue, OuterPriorityQueue>;
         decorator_t decorated_pq(inner_pq, outer_pq);
 
         const size_t internal_sorter_can_fit =
@@ -1471,7 +1467,7 @@ namespace adiar::internal
                        "If there is a level, then there should also be something for it.");
           const level_info inner_level_info = inner_levels.pull();
 
-          const typename nesting_policy::label_type level = inner_level_info.level();
+          const typename Policy::label_type level = inner_level_info.level();
 
           adiar_assert(!decorated_pq.has_current_level() || level == decorated_pq.current_level(),
                        "level and priority queue should be in sync");
@@ -1480,32 +1476,32 @@ namespace adiar::internal
           nested_sweeping::stats.inner_up.reduced_levels += 1u;
 #endif
 
-          if ((!nesting_policy::final_canonical || !is_last_inner) && nesting_policy::fast_reduce) {
+          if ((!Policy::final_canonical || !is_last_inner) && Policy::fast_reduce) {
 #ifdef ADIAR_STATS
             nested_sweeping::stats.inner_up.reduced_levels__fast += 1u;
 #endif
 
-            nested_sweeping::__reduce_level__fast<nesting_policy>(
+            nested_sweeping::__reduce_level__fast<Policy>(
               decorated_arcs, level, decorated_pq, outer_ofstream, stats.inner_up);
           } else {
             const size_t unreduced_width = inner_level_info.width();
 
             if (unreduced_width <= internal_sorter_can_fit) {
-              __reduce_level<nesting_policy, internal_sorter>(decorated_arcs,
-                                                              level,
-                                                              decorated_pq,
-                                                              outer_ofstream,
-                                                              inner_sorters_memory,
-                                                              unreduced_width,
-                                                              stats.inner_up);
+              __reduce_level<Policy, internal_sorter>(decorated_arcs,
+                                                      level,
+                                                      decorated_pq,
+                                                      outer_ofstream,
+                                                      inner_sorters_memory,
+                                                      unreduced_width,
+                                                      stats.inner_up);
             } else {
-              __reduce_level<nesting_policy, external_sorter>(decorated_arcs,
-                                                              level,
-                                                              decorated_pq,
-                                                              outer_ofstream,
-                                                              inner_sorters_memory,
-                                                              unreduced_width,
-                                                              stats.inner_up);
+              __reduce_level<Policy, external_sorter>(decorated_arcs,
+                                                      level,
+                                                      decorated_pq,
+                                                      outer_ofstream,
+                                                      inner_sorters_memory,
+                                                      unreduced_width,
+                                                      stats.inner_up);
             }
           }
         }
@@ -1524,13 +1520,13 @@ namespace adiar::internal
       ///
       /// \see nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <typename nesting_policy, typename outer_pq_t>
+      template <typename Policy, typename OuterPriorityQueue>
       void
       up(const exec_policy& ep,
          const arc_ifstream<>& outer_arcs,
-         outer_pq_t& outer_pq,
+         OuterPriorityQueue& outer_pq,
          node_ofstream& outer_ofstream,
-         const typename nesting_policy::shared_arc_file_type& inner_arcs_file,
+         const typename Policy::shared_arc_file_type& inner_arcs_file,
          const size_t inner_memory,
          const bool is_last_inner)
       {
@@ -1555,8 +1551,8 @@ namespace adiar::internal
         size_t inner_pq_bound = std::max<size_t>(inner_arcs_file->max_1level_cut, 1);
 
         // If 'fast_reduce' will be used, then the priority queue is a 2-level cut
-        if constexpr (nesting_policy::fast_reduce) {
-          if (!nesting_policy::final_canonical || !is_last_inner) {
+        if constexpr (Policy::fast_reduce) {
+          if (!Policy::final_canonical || !is_last_inner) {
             inner_pq_bound = (inner_pq_bound * 3u) / 2u;
           }
         }
@@ -1573,8 +1569,8 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
           stats.inner_up.lpq.unbucketed += 1u;
 #endif
-          using inner_pq_t = up__pq_t<0, memory_mode::Internal>;
-          return up<nesting_policy, inner_pq_t>(ep,
+          using InnerPriorityQueue = up__pq_t<0, memory_mode::Internal>;
+          return up<Policy, InnerPriorityQueue>(ep,
                                                 outer_arcs,
                                                 outer_pq,
                                                 outer_ofstream,
@@ -1588,8 +1584,8 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
           stats.inner_up.lpq.internal += 1u;
 #endif
-          using inner_pq_t = up__pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
-          return up<nesting_policy, inner_pq_t>(ep,
+          using InnerPriorityQueue = up__pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
+          return up<Policy, InnerPriorityQueue>(ep,
                                                 outer_arcs,
                                                 outer_pq,
                                                 outer_ofstream,
@@ -1602,8 +1598,8 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
           stats.inner_up.lpq.external += 1u;
 #endif
-          using inner_pq_t = up__pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
-          return up<nesting_policy, inner_pq_t>(ep,
+          using InnerPriorityQueue = up__pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
+          return up<Policy, InnerPriorityQueue>(ep,
                                                 outer_arcs,
                                                 outer_pq,
                                                 outer_ofstream,
@@ -1621,25 +1617,25 @@ namespace adiar::internal
   /// \brief Primary logic for the framework for I/O-efficient translation of recursive functions
   ///        that re-recurse on (a single) intermediate result.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename nesting_policy, size_t outer_look_ahead, memory_mode outer_mem_mode>
-  typename nesting_policy::dd_type
+  template <typename Policy, size_t OuterLookAhead, memory_mode OuterMemoryMode>
+  typename Policy::dd_type
   __nested_sweep(const exec_policy& ep,
-                 const typename nesting_policy::shared_arc_file_type& dag,
-                 nesting_policy& policy_impl,
+                 const typename Policy::shared_arc_file_type& dag,
+                 Policy& policy_impl,
                  const size_t outer_pq_memory,
                  const size_t outer_roots_memory,
                  const size_t outer_pq_roots_max,
                  const size_t inner_memory)
   {
-    using level_type            = typename nesting_policy::label_type;
-    using reduced_t             = typename nesting_policy::dd_type;
-    using unreduced_t           = typename nesting_policy::__dd_type;
-    using request_t             = typename nesting_policy::request_t;
-    using request_pred_t        = typename nesting_policy::request_pred_t;
-    using shared_arc_file_type  = typename nesting_policy::shared_arc_file_type;
-    using shared_node_file_type = typename nesting_policy::shared_node_file_type;
+    using level_type            = typename Policy::label_type;
+    using reduced_t             = typename Policy::dd_type;
+    using unreduced_t           = typename Policy::__dd_type;
+    using request_t             = typename Policy::request_t;
+    using request_pred_t        = typename Policy::request_pred_t;
+    using shared_arc_file_type  = typename Policy::shared_arc_file_type;
+    using shared_node_file_type = typename Policy::shared_node_file_type;
 
-    using inner_iter_t = nested_sweeping::outer::inner_iterator<nesting_policy>;
+    using inner_iter_t = nested_sweeping::outer::inner_iterator<Policy>;
     inner_iter_t inner_iter(dag, policy_impl);
 
     level_type next_inner = inner_iter.next_inner();
@@ -1649,7 +1645,7 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       nested_sweeping::stats.skips += 1u;
 #endif
-      return reduce(ep, policy_impl, typename nesting_policy::__dd_type(dag, ep));
+      return reduce(ep, policy_impl, typename Policy::__dd_type(dag, ep));
     }
 #ifdef ADIAR_STATS
     nested_sweeping::stats.runs += 1u;
@@ -1662,7 +1658,7 @@ namespace adiar::internal
     arc_ifstream<> outer_arcs(dag);
 
     // Set up (intermediate) output
-    shared_node_file_type outer_file = __reduce_init_output<nesting_policy>();
+    shared_node_file_type outer_file = __reduce_init_output<Policy>();
 
     node_ofstream outer_ofstream(outer_file);
 
@@ -1674,8 +1670,8 @@ namespace adiar::internal
     adiar_assert(outer_pq_memory + outer_roots_memory + inner_memory < memory_available(),
                  "Enough memory should be left priority queue and inner sweep");
 
-    using outer_pq_t = nested_sweeping::outer::up__pq_t<outer_look_ahead, outer_mem_mode>;
-    outer_pq_t outer_pq(
+    using OuterPriorityQueue = nested_sweeping::outer::up__pq_t<OuterLookAhead, OuterMemoryMode>;
+    OuterPriorityQueue outer_pq(
       { dag }, outer_pq_memory, outer_pq_roots_max, nested_sweeping::stats.outer_up.lpq);
 
     // Outer Up Sweep: Use the 'inner_memory' for the per-level data structures
@@ -1702,13 +1698,13 @@ namespace adiar::internal
     //
     // The arcs in 'outer_roots' are always between nodes that cross some level of the input. That
     // is, these arcs always constitute a 1-level cut of the input.
-    using outer_roots_t =
-      nested_sweeping::outer::roots_sorter<outer_mem_mode, request_t, request_pred_t>;
-    outer_roots_t outer_roots(outer_roots_memory, outer_pq_roots_max);
+    using OuterRoots =
+      nested_sweeping::outer::roots_sorter<OuterMemoryMode, request_t, request_pred_t>;
+    OuterRoots outer_roots(outer_roots_memory, outer_pq_roots_max);
 
     // Decorator that acts as 'outer_pq' but moves arcs to 'outer_roots'.
     using outer_pq_decorator_t =
-      nested_sweeping::outer::up__pq_decorator<outer_pq_t, outer_roots_t>;
+      nested_sweeping::outer::up__pq_decorator<OuterPriorityQueue, OuterRoots>;
 
     while (outer_levels.can_pull()) {
       adiar_assert(outer_arcs.can_pull_terminal() || !outer_pq.empty(),
@@ -1733,38 +1729,38 @@ namespace adiar::internal
         nested_sweeping::stats.outer_up.reduced_levels += 1u;
 #endif
 
-        if constexpr (!nesting_policy::final_canonical && nesting_policy::fast_reduce) {
+        if constexpr (!Policy::final_canonical && Policy::fast_reduce) {
 #ifdef ADIAR_STATS
           nested_sweeping::stats.outer_up.reduced_levels__fast += 1u;
 #endif
 
-          nested_sweeping::__reduce_level__fast<nesting_policy>(outer_arcs,
-                                                                outer_level.level(),
-                                                                out_level,
-                                                                outer_pq,
-                                                                outer_ofstream,
-                                                                nested_sweeping::stats.outer_up);
+          nested_sweeping::__reduce_level__fast<Policy>(outer_arcs,
+                                                        outer_level.level(),
+                                                        out_level,
+                                                        outer_pq,
+                                                        outer_ofstream,
+                                                        nested_sweeping::stats.outer_up);
         } else {
           const size_t unreduced_width = outer_level.width();
 
           if (unreduced_width <= outer_internal_sorter_can_fit) {
-            __reduce_level<nesting_policy, internal_sorter>(outer_arcs,
-                                                            outer_level.level(),
-                                                            out_level,
-                                                            outer_pq,
-                                                            outer_ofstream,
-                                                            outer_sorters_memory,
-                                                            unreduced_width,
-                                                            nested_sweeping::stats.outer_up);
+            __reduce_level<Policy, internal_sorter>(outer_arcs,
+                                                    outer_level.level(),
+                                                    out_level,
+                                                    outer_pq,
+                                                    outer_ofstream,
+                                                    outer_sorters_memory,
+                                                    unreduced_width,
+                                                    nested_sweeping::stats.outer_up);
           } else {
-            __reduce_level<nesting_policy, external_sorter>(outer_arcs,
-                                                            outer_level.level(),
-                                                            out_level,
-                                                            outer_pq,
-                                                            outer_ofstream,
-                                                            outer_sorters_memory,
-                                                            unreduced_width,
-                                                            nested_sweeping::stats.outer_up);
+            __reduce_level<Policy, external_sorter>(outer_arcs,
+                                                    outer_level.level(),
+                                                    out_level,
+                                                    outer_pq,
+                                                    outer_ofstream,
+                                                    outer_sorters_memory,
+                                                    unreduced_width,
+                                                    nested_sweeping::stats.outer_up);
           }
         }
 
@@ -1781,38 +1777,38 @@ namespace adiar::internal
         nested_sweeping::stats.outer_up.reduced_levels += 1u;
 #endif
 
-        if constexpr (nesting_policy::fast_reduce) {
+        if constexpr (Policy::fast_reduce) {
 #ifdef ADIAR_STATS
           nested_sweeping::stats.outer_up.reduced_levels__fast += 1u;
 #endif
 
-          nested_sweeping::__reduce_level__fast<nesting_policy>(outer_arcs,
-                                                                outer_level.level(),
-                                                                out_level,
-                                                                outer_pq_decorator,
-                                                                outer_ofstream,
-                                                                nested_sweeping::stats.outer_up);
+          nested_sweeping::__reduce_level__fast<Policy>(outer_arcs,
+                                                        outer_level.level(),
+                                                        out_level,
+                                                        outer_pq_decorator,
+                                                        outer_ofstream,
+                                                        nested_sweeping::stats.outer_up);
         } else {
           const size_t unreduced_width = outer_level.width();
 
           if (unreduced_width <= outer_internal_sorter_can_fit) {
-            __reduce_level<nesting_policy, internal_sorter>(outer_arcs,
-                                                            outer_level.level(),
-                                                            out_level,
-                                                            outer_pq_decorator,
-                                                            outer_ofstream,
-                                                            outer_sorters_memory,
-                                                            unreduced_width,
-                                                            nested_sweeping::stats.outer_up);
+            __reduce_level<Policy, internal_sorter>(outer_arcs,
+                                                    outer_level.level(),
+                                                    out_level,
+                                                    outer_pq_decorator,
+                                                    outer_ofstream,
+                                                    outer_sorters_memory,
+                                                    unreduced_width,
+                                                    nested_sweeping::stats.outer_up);
           } else {
-            __reduce_level<nesting_policy, external_sorter>(outer_arcs,
-                                                            outer_level.level(),
-                                                            out_level,
-                                                            outer_pq_decorator,
-                                                            outer_ofstream,
-                                                            outer_sorters_memory,
-                                                            unreduced_width,
-                                                            nested_sweeping::stats.outer_up);
+            __reduce_level<Policy, external_sorter>(outer_arcs,
+                                                    outer_level.level(),
+                                                    out_level,
+                                                    outer_pq_decorator,
+                                                    outer_ofstream,
+                                                    outer_sorters_memory,
+                                                    unreduced_width,
+                                                    nested_sweeping::stats.outer_up);
           }
         }
 
@@ -1845,7 +1841,7 @@ namespace adiar::internal
           const node n = node_of(e_low, e_high);
 
           // Apply Reduction rule 1?
-          const node::pointer_type reduction_rule_ret = nesting_policy::reduction_rule(n);
+          const node::pointer_type reduction_rule_ret = Policy::reduction_rule(n);
           if (reduction_rule_ret != n.uid()) {
             // If so, preserve child in inner sweep
             if (!outer_levels.can_pull()) {
@@ -1956,11 +1952,11 @@ namespace adiar::internal
         const shared_arc_file_type inner_arcs =
           inner_unreduced.template get<shared_arc_file_type>();
 
-        outer_file = __reduce_init_output<nesting_policy>();
+        outer_file = __reduce_init_output<Policy>();
         outer_ofstream.open(outer_file);
 
         if (is_last_inner) {
-          nested_sweeping::inner::up<nesting_policy>(
+          nested_sweeping::inner::up<Policy>(
             ep, outer_arcs, outer_pq, outer_ofstream, inner_arcs, inner_memory, is_last_inner);
         } else {
           adiar_assert(next_inner < outer_level.level(),
@@ -1968,13 +1964,13 @@ namespace adiar::internal
 
           outer_pq_decorator_t outer_pq_decorator(outer_pq, outer_roots, next_inner);
 
-          nested_sweeping::inner::up<nesting_policy>(ep,
-                                                     outer_arcs,
-                                                     outer_pq_decorator,
-                                                     outer_ofstream,
-                                                     inner_arcs,
-                                                     inner_memory,
-                                                     is_last_inner);
+          nested_sweeping::inner::up<Policy>(ep,
+                                             outer_arcs,
+                                             outer_pq_decorator,
+                                             outer_ofstream,
+                                             inner_arcs,
+                                             inner_memory,
+                                             is_last_inner);
         }
       } else if (outer_roots.size() > 0) {
         // ---------------------------------------------------------------------
@@ -1983,13 +1979,13 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
         nested_sweeping::stats.outer_up.skipped_nested_levels += 1u;
 #endif
-        adiar_assert(next_inner <= nesting_policy::pointer_type::max_label,
+        adiar_assert(next_inner <= Policy::pointer_type::max_label,
                      "Has another later sweep to do possible garbage collection");
 
         adiar_assert(outer_roots_memory <= inner_memory,
                      "Enough memory is left for a temporary root sorter");
 
-        outer_roots_t tmp_outer_roots(outer_roots_memory, outer_pq_roots_max);
+        OuterRoots tmp_outer_roots(outer_roots_memory, outer_pq_roots_max);
         outer_pq_decorator_t outer_pq_decorator(outer_pq, tmp_outer_roots, next_inner);
 
         outer_roots.sort();
@@ -2010,7 +2006,7 @@ namespace adiar::internal
 #endif
         if (outer_ofstream.size() != 0) {
           outer_ofstream.close();
-          outer_file = __reduce_init_output<nesting_policy>();
+          outer_file = __reduce_init_output<Policy>();
           outer_ofstream.open(outer_file);
         }
       }
@@ -2031,22 +2027,23 @@ namespace adiar::internal
 
         const size_t terminal_stop_level = outer_arcs.can_pull_terminal()
           ? outer_arcs.peek_terminal().source().label()
-          : outer_pq_t::no_label;
+          : OuterPriorityQueue::no_label;
 
         const size_t outer_roots_stop_level =
-          !outer_roots.empty() ? outer_roots.deepest_source() : outer_pq_t::no_label;
+          !outer_roots.empty() ? outer_roots.deepest_source() : OuterPriorityQueue::no_label;
 
-        adiar_assert(terminal_stop_level != outer_pq_t::no_label
-                       || outer_roots_stop_level != outer_pq_t::no_label || !outer_pq.empty(),
+        adiar_assert(terminal_stop_level != OuterPriorityQueue::no_label
+                       || outer_roots_stop_level != OuterPriorityQueue::no_label
+                       || !outer_pq.empty(),
                      "There must be some (known) level ready to be forwarded to.");
 
-        const size_t stop_level = terminal_stop_level == outer_pq_t::no_label
+        const size_t stop_level = terminal_stop_level == OuterPriorityQueue::no_label
           ? outer_roots_stop_level
-          : outer_roots_stop_level == outer_pq_t::no_label
+          : outer_roots_stop_level == OuterPriorityQueue::no_label
           ? terminal_stop_level
           : std::max(terminal_stop_level, outer_roots_stop_level);
 
-        adiar_assert(stop_level != outer_pq_t::no_label || !outer_pq.empty(),
+        adiar_assert(stop_level != OuterPriorityQueue::no_label || !outer_pq.empty(),
                      "There must be some (known) level ready to be forwarded to.");
 
         outer_pq.setup_next_level(stop_level);
@@ -2067,7 +2064,7 @@ namespace adiar::internal
   /// \brief Framework for I/O-efficient translation of recursive functions that re-recurse on
   ///        intermediate results.
   ///
-  /// \tparam nesting_policy Policy that includes (a) the semantics of the decision diagram, (b) at
+  /// \tparam Policy         Policy that includes (a) the semantics of the decision diagram, (b) at
   ///                        run-time a predicate for the levels to sweep on (may abuse it is only
   ///                        ever asked once per level and bottom-up), and (c) provides the logic
   ///                        for each inner downwards sweep that manipulates the graph.
@@ -2079,17 +2076,15 @@ namespace adiar::internal
   /// \param policy_impl     Provides the non-static parts of the inner logic that determines when
   ///                        to start the nested sweep.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename nesting_policy>
-  typename nesting_policy::dd_type
-  nested_sweep(const exec_policy& ep,
-               const typename nesting_policy::__dd_type& input,
-               nesting_policy& policy_impl)
+  template <typename Policy>
+  typename Policy::dd_type
+  nested_sweep(const exec_policy& ep, const typename Policy::__dd_type& input, Policy& policy_impl)
   {
-    using reduced_t             = typename nesting_policy::dd_type;
-    using request_t             = typename nesting_policy::request_t;
-    using request_pred_t        = typename nesting_policy::request_pred_t;
-    using shared_arc_file_type  = typename nesting_policy::shared_arc_file_type;
-    using shared_node_file_type = typename nesting_policy::shared_node_file_type;
+    using reduced_t             = typename Policy::dd_type;
+    using request_t             = typename Policy::request_t;
+    using request_pred_t        = typename Policy::request_pred_t;
+    using shared_arc_file_type  = typename Policy::shared_arc_file_type;
+    using shared_node_file_type = typename Policy::shared_node_file_type;
 
     adiar_assert(!input.empty(), "Input for Nested Sweeping should always be non-empty");
 
@@ -2122,7 +2117,7 @@ namespace adiar::internal
       - arc_ifstream<>::memory_usage()
       - level_info_ifstream<>::memory_usage()
       // Inner Iterator
-      - nested_sweeping::outer::inner_iterator<nesting_policy>::memory_usage()
+      - nested_sweeping::outer::inner_iterator<Policy>::memory_usage()
       // Output streams
       - node_ofstream::memory_usage();
 
@@ -2159,38 +2154,36 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       nested_sweeping::stats.outer_up.lpq.unbucketed += 1u;
 #endif
-      return __nested_sweep<nesting_policy, 0, memory_mode::Internal>(ep,
-                                                                      dag,
-                                                                      policy_impl,
-                                                                      outer_pq_memory,
-                                                                      outer_roots_memory,
-                                                                      outer_pq_roots_max,
-                                                                      inner_memory);
+      return __nested_sweep<Policy, 0, memory_mode::Internal>(ep,
+                                                              dag,
+                                                              policy_impl,
+                                                              outer_pq_memory,
+                                                              outer_roots_memory,
+                                                              outer_pq_roots_max,
+                                                              inner_memory);
     } else if (!external_only && outer_pq_roots_max <= outer_pq_memory_fits
                && outer_pq_roots_max <= outer_roots_memory_fits) {
 #ifdef ADIAR_STATS
       nested_sweeping::stats.outer_up.lpq.internal += 1u;
 #endif
-      return __nested_sweep<nesting_policy, ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>(
-        ep,
-        dag,
-        policy_impl,
-        outer_pq_memory,
-        outer_roots_memory,
-        outer_pq_roots_max,
-        inner_memory);
+      return __nested_sweep<Policy, ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>(ep,
+                                                                                dag,
+                                                                                policy_impl,
+                                                                                outer_pq_memory,
+                                                                                outer_roots_memory,
+                                                                                outer_pq_roots_max,
+                                                                                inner_memory);
     } else {
 #ifdef ADIAR_STATS
       nested_sweeping::stats.outer_up.lpq.external += 1u;
 #endif
-      return __nested_sweep<nesting_policy, ADIAR_LPQ_LOOKAHEAD, memory_mode::External>(
-        ep,
-        dag,
-        policy_impl,
-        outer_pq_memory,
-        outer_roots_memory,
-        outer_pq_roots_max,
-        inner_memory);
+      return __nested_sweep<Policy, ADIAR_LPQ_LOOKAHEAD, memory_mode::External>(ep,
+                                                                                dag,
+                                                                                policy_impl,
+                                                                                outer_pq_memory,
+                                                                                outer_roots_memory,
+                                                                                outer_pq_roots_max,
+                                                                                inner_memory);
     }
   }
 }
