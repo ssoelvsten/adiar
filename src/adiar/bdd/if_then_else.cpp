@@ -599,65 +599,65 @@ namespace adiar
 #ifdef ADIAR_STATS
       stats_prod3.lpq.unbucketed += 1u;
 #endif
-      using pq_1_type = ite_priority_queue_1_t<0, internal::memory_mode::Internal>;
-      using pq_2_type = ite_priority_queue_2_t<internal::memory_mode::Internal>;
-      using pq_3_type = ite_priority_queue_3_t<internal::memory_mode::Internal>;
+      using PriorityQueue_1 = ite_priority_queue_1_t<0, internal::memory_mode::Internal>;
+      using PriorityQueue_2 = ite_priority_queue_2_t<internal::memory_mode::Internal>;
+      using PriorityQueue_3 = ite_priority_queue_3_t<internal::memory_mode::Internal>;
 
-      return __bdd_ite<pq_1_type, pq_2_type, pq_3_type>(ep,
-                                                        f,
-                                                        g,
-                                                        h,
-                                                        pq_1_internal_memory,
-                                                        max_pq_1_size,
-                                                        pq_2_internal_memory,
-                                                        max_pq_2_size,
-                                                        pq_3_internal_memory,
-                                                        max_pq_3_size);
+      return __bdd_ite<PriorityQueue_1, PriorityQueue_2, PriorityQueue_3>(ep,
+                                                                          f,
+                                                                          g,
+                                                                          h,
+                                                                          pq_1_internal_memory,
+                                                                          max_pq_1_size,
+                                                                          pq_2_internal_memory,
+                                                                          max_pq_2_size,
+                                                                          pq_3_internal_memory,
+                                                                          max_pq_3_size);
 
     } else if (!external_only && max_pq_1_size <= pq_1_memory_fits
                && max_pq_2_size <= pq_2_memory_fits && max_pq_3_size <= pq_3_memory_fits) {
 #ifdef ADIAR_STATS
       stats_prod3.lpq.internal += 1u;
 #endif
-      using pq_1_type =
+      using PriorityQueue_1 =
         ite_priority_queue_1_t<ADIAR_LPQ_LOOKAHEAD, internal::memory_mode::Internal>;
-      using pq_2_type = ite_priority_queue_2_t<internal::memory_mode::Internal>;
-      using pq_3_type = ite_priority_queue_3_t<internal::memory_mode::Internal>;
+      using PriorityQueue_2 = ite_priority_queue_2_t<internal::memory_mode::Internal>;
+      using PriorityQueue_3 = ite_priority_queue_3_t<internal::memory_mode::Internal>;
 
-      return __bdd_ite<pq_1_type, pq_2_type, pq_3_type>(ep,
-                                                        f,
-                                                        g,
-                                                        h,
-                                                        pq_1_internal_memory,
-                                                        max_pq_1_size,
-                                                        pq_2_internal_memory,
-                                                        max_pq_2_size,
-                                                        pq_3_internal_memory,
-                                                        max_pq_3_size);
+      return __bdd_ite<PriorityQueue_1, PriorityQueue_2, PriorityQueue_3>(ep,
+                                                                          f,
+                                                                          g,
+                                                                          h,
+                                                                          pq_1_internal_memory,
+                                                                          max_pq_1_size,
+                                                                          pq_2_internal_memory,
+                                                                          max_pq_2_size,
+                                                                          pq_3_internal_memory,
+                                                                          max_pq_3_size);
 
     } else {
 #ifdef ADIAR_STATS
       stats_prod3.lpq.external += 1u;
 #endif
-      using pq_1_type =
+      using PriorityQueue_1 =
         ite_priority_queue_1_t<ADIAR_LPQ_LOOKAHEAD, internal::memory_mode::External>;
-      using pq_2_type = ite_priority_queue_2_t<internal::memory_mode::External>;
-      using pq_3_type = ite_priority_queue_3_t<internal::memory_mode::External>;
+      using PriorityQueue_2 = ite_priority_queue_2_t<internal::memory_mode::External>;
+      using PriorityQueue_3 = ite_priority_queue_3_t<internal::memory_mode::External>;
 
       const size_t pq_1_memory = aux_available_memory / 3;
       const size_t pq_2_memory = pq_1_memory;
       const size_t pq_3_memory = pq_1_memory;
 
-      return __bdd_ite<pq_1_type, pq_2_type, pq_3_type>(ep,
-                                                        f,
-                                                        g,
-                                                        h,
-                                                        pq_1_memory,
-                                                        max_pq_1_size,
-                                                        pq_2_memory,
-                                                        max_pq_2_size,
-                                                        pq_3_memory,
-                                                        max_pq_3_size);
+      return __bdd_ite<PriorityQueue_1, PriorityQueue_2, PriorityQueue_3>(ep,
+                                                                          f,
+                                                                          g,
+                                                                          h,
+                                                                          pq_1_memory,
+                                                                          max_pq_1_size,
+                                                                          pq_2_memory,
+                                                                          max_pq_2_size,
+                                                                          pq_3_memory,
+                                                                          max_pq_3_size);
     }
   }
 
