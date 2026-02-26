@@ -1086,6 +1086,602 @@ go_bandit([]() {
       });
     });
 
+    describe("O(N/B) zipping cases", [&]() {
+      it("merely zips disjunct levels if possible [1]", [&]() {
+        shared_levelized_file<bdd::node_type> bdd_x1_and_x3;
+        /*
+        //                   1      ---- x1
+        //                  / \
+        //                  F 2     ---- x3
+        //                   / \
+        //                   T F
+        */
+
+        {
+          node_ofstream nw_x1_and_x3(bdd_x1_and_x3);
+          nw_x1_and_x3 << node(3, 42, terminal_F, terminal_T)               // 2
+                       << node(1, 0, terminal_F, bdd::pointer_type(3, 42)); // 1
+        }
+
+        __bdd out = bdd_ite(bdd_x0, bdd_x2, bdd_x1_and_x3);
+        AssertThat(out.get<__bdd::shared_node_file_type>()->sorted, Is().True());
+        AssertThat(out.get<__bdd::shared_node_file_type>()->indexable, Is().False());
+        AssertThat(out.get<__bdd::shared_node_file_type>()->is_canonical(), Is().False());
+
+        node_test_ifstream ns(out);
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(3, 42, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(2, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(1, 0, terminal_F, bdd::pointer_type(3, 42))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(0, 0, bdd::pointer_type(1, 0), bdd::pointer_type(2, 0))));
+
+        AssertThat(ns.can_pull(), Is().False());
+
+        level_info_test_ifstream levels(out);
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(3, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
+
+        AssertThat(levels.can_pull(), Is().False());
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(3u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(5u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(3u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(5u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
+                   Is().EqualTo(3u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
+                   Is().EqualTo(2u));
+      });
+
+      it("merely zips disjunct levels if possible [2]", [&]() {
+        shared_levelized_file<bdd::node_type> bdd_then;
+        /*
+        //                   _1_      ---- x2
+        //                  /   \
+        //                  2   3     ---- x3
+        //                 / \ / \
+        //                 T 4 T 5    ---- x4
+        //                  / \ / \
+        //                  F T T 6   ---- x6
+        //                       / \
+        //                       T F
+        */
+
+        {
+          node_ofstream nw_then(bdd_then);
+          nw_then << node(6, 1, terminal_T, terminal_F)                            // 6
+                  << node(4, 1, terminal_T, bdd::pointer_type(6, 1))               // 5
+                  << node(4, 0, terminal_F, terminal_T)                            // 4
+                  << node(3, 2, terminal_T, bdd::pointer_type(4, 1))               // 3
+                  << node(3, 0, terminal_T, bdd::pointer_type(4, 0))               // 2
+                  << node(2, 0, bdd::pointer_type(3, 0), bdd::pointer_type(3, 2)); // 1
+        }
+
+        shared_levelized_file<bdd::node_type> bdd_else;
+        /*
+        //                  _1_      ---- x5
+        //                 /   \
+        //                 2   3     ---- x8
+        //                / \ / \
+        //                T F F T
+        */
+
+        {
+          node_ofstream nw_else(bdd_else);
+          nw_else << node(8, 1, terminal_T, terminal_F)                           // 3
+                  << node(8, 0, terminal_F, terminal_T)                           // 2
+                  << node(5, 0, bdd::pointer_type(8, 0), bdd::pointer_type(8, 1)) // 1
+            ;
+        }
+
+        __bdd out = bdd_ite(bdd_not(bdd_x0_xor_x1), bdd_then, bdd_else);
+        AssertThat(out.get<__bdd::shared_node_file_type>()->sorted, Is().False());
+        AssertThat(out.get<__bdd::shared_node_file_type>()->indexable, Is().False());
+        AssertThat(out.get<__bdd::shared_node_file_type>()->is_canonical(), Is().False());
+
+        node_test_ifstream ns(out);
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(8, 1, terminal_T, terminal_F)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(8, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(6, 1, terminal_T, terminal_F)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(5, 0, bdd::pointer_type(8, 0), bdd::pointer_type(8, 1))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(4, 1, terminal_T, bdd::pointer_type(6, 1))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(4, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(3, 2, terminal_T, bdd::pointer_type(4, 1))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(3, 0, terminal_T, bdd::pointer_type(4, 0))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(2, 0, bdd::pointer_type(3, 0), bdd::pointer_type(3, 2))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(1, 1, bdd::pointer_type(5, 0), bdd::pointer_type(2, 0))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(1, 0, bdd::pointer_type(2, 0), bdd::pointer_type(5, 0))));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(0, 0, bdd::pointer_type(1, 0), bdd::pointer_type(1, 1))));
+
+        AssertThat(ns.can_pull(), Is().False());
+
+        level_info_test_ifstream levels(out);
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(8, 2u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(6, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(5, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(4, 2u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(3, 2u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 2u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
+
+        AssertThat(levels.can_pull(), Is().False());
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(4u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(4u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(7u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(11u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(4u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(4u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(7u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(11u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
+                   Is().EqualTo(4u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
+                   Is().EqualTo(7u));
+      });
+
+      it("can derive canonicity when zipping with one-node 'if'", [&]() {
+        shared_levelized_file<bdd::node_type> bdd_if;
+        {
+          node_ofstream nw_if(bdd_if);
+          nw_if << node(0, bdd::max_id, terminal_T, terminal_F);
+        }
+
+        shared_levelized_file<bdd::node_type> bdd_a;
+        {
+          node_ofstream nw_a(bdd_a);
+          nw_a << node(2, bdd::max_id, terminal_F, terminal_T);
+        }
+
+        shared_levelized_file<bdd::node_type> bdd_b;
+        {
+          node_ofstream nw_b(bdd_b);
+          nw_b << node(1, bdd::max_id, terminal_T, terminal_F);
+        }
+
+        bdd out_1 = bdd_ite(bdd_if, bdd_a, bdd_b);
+        AssertThat(bdd_iscanonical(out_1), Is().True());
+
+        bdd out_1n = bdd_ite(bdd_not(bdd_if), bdd_a, bdd_b);
+        AssertThat(bdd_iscanonical(out_1n), Is().True());
+
+        bdd out_2 = bdd_ite(bdd_if, bdd_b, bdd_a);
+        AssertThat(bdd_iscanonical(out_2), Is().True());
+
+        bdd out_2n = bdd_ite(bdd_not(bdd_if), bdd_b, bdd_a);
+        AssertThat(bdd_iscanonical(out_2n), Is().True());
+      });
+
+      it("can derive canonicity when zipping negated 'then' or 'else'", [&]() {
+        shared_levelized_file<bdd::node_type> bdd_if;
+        {
+          node_ofstream nw_if(bdd_if);
+          nw_if << node(0, bdd::max_id, terminal_T, terminal_F);
+        }
+        AssertThat(bdd_iscanonical(bdd(bdd_if)), Is().True());
+
+        shared_levelized_file<bdd::node_type> bdd_a;
+        {
+          node_ofstream nw_a(bdd_a);
+          nw_a << node(2, bdd::max_id, terminal_F, terminal_T);
+        }
+        AssertThat(bdd_iscanonical(bdd(bdd_a)), Is().True());
+
+        shared_levelized_file<bdd::node_type> bdd_b;
+        {
+          node_ofstream nw_b(bdd_b);
+          nw_b << node(3, bdd::max_id, terminal_F, terminal_T)
+               << node(3, bdd::max_id - 1, terminal_T, terminal_F)
+               << node(1,
+                       bdd::max_id,
+                       bdd::pointer_type(3, bdd::max_id),
+                       bdd::pointer_type(3, bdd::max_id));
+        }
+        AssertThat(bdd_iscanonical(bdd(bdd_b)), Is().True());
+
+        shared_levelized_file<bdd::node_type> bdd_c;
+        {
+          node_ofstream nw_c(bdd_c);
+          nw_c << node(1, bdd::max_id, terminal_T, terminal_F);
+        }
+        AssertThat(bdd_iscanonical(bdd(bdd_c)), Is().True());
+
+        bdd out_1 = bdd_ite(bdd_if, bdd_not(bdd_a), bdd_b);
+        AssertThat(bdd_iscanonical(out_1), Is().True());
+
+        bdd out_2 = bdd_ite(bdd_if, bdd_a, bdd_not(bdd_b));
+        AssertThat(out_2->sorted, Is().False());
+        AssertThat(out_2->indexable, Is().True());
+        AssertThat(bdd_iscanonical(out_2), Is().False());
+
+        bdd out_3 = bdd_ite(bdd_if, bdd_a, bdd_not(bdd_c));
+        AssertThat(out_3->sorted, Is().True());
+        AssertThat(out_3->indexable, Is().True());
+        AssertThat(bdd_iscanonical(out_3), Is().True());
+
+        bdd out_4 = bdd_ite(bdd_if, bdd_not(bdd_b), bdd_not(bdd_a));
+        AssertThat(out_4->sorted, Is().False());
+        AssertThat(out_4->indexable, Is().True());
+        AssertThat(bdd_iscanonical(out_4), Is().False());
+      });
+
+      it("can derive canonicity when zipping 'if' with multiple nodes on a level", [&]() {
+        shared_levelized_file<bdd::node_type> bdd_if;
+        {
+          node_ofstream nw_if(bdd_if);
+          nw_if << node(1, bdd::max_id, terminal_T, terminal_T)
+                << node(1, bdd::max_id - 1, terminal_F, terminal_F)
+                << node(0,
+                        bdd::max_id,
+                        bdd::pointer_type(1, bdd::max_id - 1),
+                        bdd::pointer_type(1, bdd::max_id));
+        }
+
+        shared_levelized_file<bdd::node_type> bdd_a;
+        {
+          node_ofstream nw_a(bdd_a);
+          nw_a << node(3, bdd::max_id, terminal_F, terminal_T);
+        }
+
+        shared_levelized_file<bdd::node_type> bdd_b;
+        {
+          node_ofstream nw_b(bdd_b);
+          nw_b << node(2, bdd::max_id, terminal_T, terminal_F);
+        }
+
+        bdd out_1 = bdd_ite(bdd_if, bdd_a, bdd_b);
+        AssertThat(out_1->sorted, Is().True());
+        AssertThat(out_1->indexable, Is().True());
+        AssertThat(bdd_iscanonical(out_1), Is().True());
+
+        bdd out_2 = bdd_ite(bdd_not(bdd_if), bdd_a, bdd_b);
+        AssertThat(out_2->sorted, Is().False());
+        AssertThat(out_2->indexable, Is().True());
+        AssertThat(bdd_iscanonical(out_2), Is().False());
+
+        bdd out_3 = bdd_ite(bdd_not(bdd_if), bdd_b, bdd_a);
+        AssertThat(out_3->sorted, Is().True());
+        AssertThat(out_3->indexable, Is().True());
+        AssertThat(bdd_iscanonical(out_3), Is().True());
+      });
+
+      it("does not zip if bdd_then is not beyond max_var of bdd_if", [&]() {
+        __bdd out = bdd_ite(bdd_x1, bdd_x0, bdd_x2);
+
+        arc_test_ifstream arcs(out);
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(0, 0), false, bdd::pointer_type(1, 0) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(0, 0), true, bdd::pointer_type(1, 1) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 0), false, bdd::pointer_type(2, 0) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 1), false, bdd::pointer_type(2, 0) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().False());
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 0), true, terminal_F }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 1), true, terminal_T }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), false, terminal_F }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), true, terminal_T }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().False());
+
+        level_info_test_ifstream levels(out);
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 2u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
+
+        AssertThat(levels.can_pull(), Is().False());
+
+        AssertThat(out.get<__bdd::shared_arc_file_type>()->max_1level_cut,
+                   Is().GreaterThanOrEqualTo(2u));
+
+        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[false],
+                   Is().EqualTo(2u));
+        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[true],
+                   Is().EqualTo(2u));
+      });
+
+      it("does not zip if bdd_else is not beyond max_var of bdd_if", [&]() {
+        __bdd out = bdd_ite(bdd_x1, bdd_x2, bdd_x0);
+
+        arc_test_ifstream arcs(out);
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(0, 0), false, bdd::pointer_type(1, 0) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(0, 0), true, bdd::pointer_type(1, 1) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 0), true, bdd::pointer_type(2, 0) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().True());
+        AssertThat(arcs.pull_internal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 1), true, bdd::pointer_type(2, 0) }));
+
+        AssertThat(arcs.can_pull_internal(), Is().False());
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 0), false, terminal_F }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(1, 1), false, terminal_T }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), false, terminal_F }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().True());
+        AssertThat(arcs.pull_terminal(),
+                   Is().EqualTo(arc{ bdd::uid_type(2, 0), true, terminal_T }));
+
+        AssertThat(arcs.can_pull_terminal(), Is().False());
+
+        level_info_test_ifstream levels(out);
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 2u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
+
+        AssertThat(levels.can_pull(), Is().False());
+
+        AssertThat(out.get<__bdd::shared_arc_file_type>()->max_1level_cut,
+                   Is().GreaterThanOrEqualTo(2u));
+
+        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[false],
+                   Is().EqualTo(2u));
+        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[true],
+                   Is().EqualTo(2u));
+      });
+
+      it("zips shifted x0 ? x0(+1) : x0(+2)", [&]() {
+        /*
+        //              1        ---- x0
+        //             / \
+        //            /  2       ---- x1
+        //            | / \
+        //            3 F T      ---- x2
+        //           / \
+        //           F T
+        */
+        __bdd out = bdd_ite(bdd(bdd_x0, false, +0), bdd(bdd_x0, false, +1), bdd(bdd_x0, false, +2));
+
+        node_test_ifstream ns(out);
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(2, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(1, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(0, 0, bdd::pointer_type(2, 0), bdd::pointer_type(1, 0))));
+
+        level_info_test_ifstream levels(out);
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
+
+        AssertThat(levels.can_pull(), Is().False());
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(1u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(4u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(1u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(4u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
+                   Is().EqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
+                   Is().EqualTo(2u));
+      });
+
+      it("zips shifted x0 ? x0(+2) : x0(+1)", [&]() {
+        /*
+        //              1        ---- x0
+        //             / \
+        //            2   \      ---- x1
+        //           / \  |
+        //           F T  3      ---- x2
+        //               / \
+        //               F T
+        */
+        __bdd out = bdd_ite(bdd(bdd_x0, false, +0), bdd(bdd_x0, false, +2), bdd(bdd_x0, false, +1));
+
+        node_test_ifstream ns(out);
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(2, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(), Is().EqualTo(node(1, 0, terminal_F, terminal_T)));
+
+        AssertThat(ns.can_pull(), Is().True());
+        AssertThat(ns.pull(),
+                   Is().EqualTo(node(0, 0, bdd::pointer_type(1, 0), bdd::pointer_type(2, 0))));
+
+        level_info_test_ifstream levels(out);
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 1u)));
+
+        AssertThat(levels.can_pull(), Is().True());
+        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
+
+        AssertThat(levels.can_pull(), Is().False());
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(1u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(4u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
+                   Is().GreaterThanOrEqualTo(1u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
+                   Is().GreaterThanOrEqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
+                   Is().GreaterThanOrEqualTo(4u));
+
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
+                   Is().EqualTo(2u));
+        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
+                   Is().EqualTo(2u));
+      });
+    });
+
     describe("'prod3(...)' cases", [&]() {
       it("computes x0 ? ~x1 : x1", [&]() {
         /*
@@ -2520,602 +3116,6 @@ go_bandit([]() {
                    Is().EqualTo(5u));
         AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[true],
                    Is().EqualTo(5u));
-      });
-    });
-
-    describe("O(N/B) zipping cases", [&]() {
-      it("merely zips disjunct levels if possible [1]", [&]() {
-        shared_levelized_file<bdd::node_type> bdd_x1_and_x3;
-        /*
-        //                   1      ---- x1
-        //                  / \
-        //                  F 2     ---- x3
-        //                   / \
-        //                   T F
-        */
-
-        {
-          node_ofstream nw_x1_and_x3(bdd_x1_and_x3);
-          nw_x1_and_x3 << node(3, 42, terminal_F, terminal_T)               // 2
-                       << node(1, 0, terminal_F, bdd::pointer_type(3, 42)); // 1
-        }
-
-        __bdd out = bdd_ite(bdd_x0, bdd_x2, bdd_x1_and_x3);
-        AssertThat(out.get<__bdd::shared_node_file_type>()->sorted, Is().True());
-        AssertThat(out.get<__bdd::shared_node_file_type>()->indexable, Is().False());
-        AssertThat(out.get<__bdd::shared_node_file_type>()->is_canonical(), Is().False());
-
-        node_test_ifstream ns(out);
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(3, 42, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(2, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(1, 0, terminal_F, bdd::pointer_type(3, 42))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(0, 0, bdd::pointer_type(1, 0), bdd::pointer_type(2, 0))));
-
-        AssertThat(ns.can_pull(), Is().False());
-
-        level_info_test_ifstream levels(out);
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(3, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
-
-        AssertThat(levels.can_pull(), Is().False());
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(3u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(5u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(3u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(5u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
-                   Is().EqualTo(3u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
-                   Is().EqualTo(2u));
-      });
-
-      it("merely zips disjunct levels if possible [2]", [&]() {
-        shared_levelized_file<bdd::node_type> bdd_then;
-        /*
-        //                   _1_      ---- x2
-        //                  /   \
-        //                  2   3     ---- x3
-        //                 / \ / \
-        //                 T 4 T 5    ---- x4
-        //                  / \ / \
-        //                  F T T 6   ---- x6
-        //                       / \
-        //                       T F
-        */
-
-        {
-          node_ofstream nw_then(bdd_then);
-          nw_then << node(6, 1, terminal_T, terminal_F)                            // 6
-                  << node(4, 1, terminal_T, bdd::pointer_type(6, 1))               // 5
-                  << node(4, 0, terminal_F, terminal_T)                            // 4
-                  << node(3, 2, terminal_T, bdd::pointer_type(4, 1))               // 3
-                  << node(3, 0, terminal_T, bdd::pointer_type(4, 0))               // 2
-                  << node(2, 0, bdd::pointer_type(3, 0), bdd::pointer_type(3, 2)); // 1
-        }
-
-        shared_levelized_file<bdd::node_type> bdd_else;
-        /*
-        //                  _1_      ---- x5
-        //                 /   \
-        //                 2   3     ---- x8
-        //                / \ / \
-        //                T F F T
-        */
-
-        {
-          node_ofstream nw_else(bdd_else);
-          nw_else << node(8, 1, terminal_T, terminal_F)                           // 3
-                  << node(8, 0, terminal_F, terminal_T)                           // 2
-                  << node(5, 0, bdd::pointer_type(8, 0), bdd::pointer_type(8, 1)) // 1
-            ;
-        }
-
-        __bdd out = bdd_ite(bdd_not(bdd_x0_xor_x1), bdd_then, bdd_else);
-        AssertThat(out.get<__bdd::shared_node_file_type>()->sorted, Is().False());
-        AssertThat(out.get<__bdd::shared_node_file_type>()->indexable, Is().False());
-        AssertThat(out.get<__bdd::shared_node_file_type>()->is_canonical(), Is().False());
-
-        node_test_ifstream ns(out);
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(8, 1, terminal_T, terminal_F)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(8, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(6, 1, terminal_T, terminal_F)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(5, 0, bdd::pointer_type(8, 0), bdd::pointer_type(8, 1))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(4, 1, terminal_T, bdd::pointer_type(6, 1))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(4, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(3, 2, terminal_T, bdd::pointer_type(4, 1))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(3, 0, terminal_T, bdd::pointer_type(4, 0))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(2, 0, bdd::pointer_type(3, 0), bdd::pointer_type(3, 2))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(1, 1, bdd::pointer_type(5, 0), bdd::pointer_type(2, 0))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(1, 0, bdd::pointer_type(2, 0), bdd::pointer_type(5, 0))));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(0, 0, bdd::pointer_type(1, 0), bdd::pointer_type(1, 1))));
-
-        AssertThat(ns.can_pull(), Is().False());
-
-        level_info_test_ifstream levels(out);
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(8, 2u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(6, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(5, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(4, 2u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(3, 2u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 2u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
-
-        AssertThat(levels.can_pull(), Is().False());
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(4u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(4u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(7u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(11u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(4u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(4u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(7u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(11u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
-                   Is().EqualTo(4u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
-                   Is().EqualTo(7u));
-      });
-
-      it("can derive canonicity when zipping with one-node 'if'", [&]() {
-        shared_levelized_file<bdd::node_type> bdd_if;
-        {
-          node_ofstream nw_if(bdd_if);
-          nw_if << node(0, bdd::max_id, terminal_T, terminal_F);
-        }
-
-        shared_levelized_file<bdd::node_type> bdd_a;
-        {
-          node_ofstream nw_a(bdd_a);
-          nw_a << node(2, bdd::max_id, terminal_F, terminal_T);
-        }
-
-        shared_levelized_file<bdd::node_type> bdd_b;
-        {
-          node_ofstream nw_b(bdd_b);
-          nw_b << node(1, bdd::max_id, terminal_T, terminal_F);
-        }
-
-        bdd out_1 = bdd_ite(bdd_if, bdd_a, bdd_b);
-        AssertThat(bdd_iscanonical(out_1), Is().True());
-
-        bdd out_1n = bdd_ite(bdd_not(bdd_if), bdd_a, bdd_b);
-        AssertThat(bdd_iscanonical(out_1n), Is().True());
-
-        bdd out_2 = bdd_ite(bdd_if, bdd_b, bdd_a);
-        AssertThat(bdd_iscanonical(out_2), Is().True());
-
-        bdd out_2n = bdd_ite(bdd_not(bdd_if), bdd_b, bdd_a);
-        AssertThat(bdd_iscanonical(out_2n), Is().True());
-      });
-
-      it("can derive canonicity when zipping negated 'then' or 'else'", [&]() {
-        shared_levelized_file<bdd::node_type> bdd_if;
-        {
-          node_ofstream nw_if(bdd_if);
-          nw_if << node(0, bdd::max_id, terminal_T, terminal_F);
-        }
-        AssertThat(bdd_iscanonical(bdd(bdd_if)), Is().True());
-
-        shared_levelized_file<bdd::node_type> bdd_a;
-        {
-          node_ofstream nw_a(bdd_a);
-          nw_a << node(2, bdd::max_id, terminal_F, terminal_T);
-        }
-        AssertThat(bdd_iscanonical(bdd(bdd_a)), Is().True());
-
-        shared_levelized_file<bdd::node_type> bdd_b;
-        {
-          node_ofstream nw_b(bdd_b);
-          nw_b << node(3, bdd::max_id, terminal_F, terminal_T)
-               << node(3, bdd::max_id - 1, terminal_T, terminal_F)
-               << node(1,
-                       bdd::max_id,
-                       bdd::pointer_type(3, bdd::max_id),
-                       bdd::pointer_type(3, bdd::max_id));
-        }
-        AssertThat(bdd_iscanonical(bdd(bdd_b)), Is().True());
-
-        shared_levelized_file<bdd::node_type> bdd_c;
-        {
-          node_ofstream nw_c(bdd_c);
-          nw_c << node(1, bdd::max_id, terminal_T, terminal_F);
-        }
-        AssertThat(bdd_iscanonical(bdd(bdd_c)), Is().True());
-
-        bdd out_1 = bdd_ite(bdd_if, bdd_not(bdd_a), bdd_b);
-        AssertThat(bdd_iscanonical(out_1), Is().True());
-
-        bdd out_2 = bdd_ite(bdd_if, bdd_a, bdd_not(bdd_b));
-        AssertThat(out_2->sorted, Is().False());
-        AssertThat(out_2->indexable, Is().True());
-        AssertThat(bdd_iscanonical(out_2), Is().False());
-
-        bdd out_3 = bdd_ite(bdd_if, bdd_a, bdd_not(bdd_c));
-        AssertThat(out_3->sorted, Is().True());
-        AssertThat(out_3->indexable, Is().True());
-        AssertThat(bdd_iscanonical(out_3), Is().True());
-
-        bdd out_4 = bdd_ite(bdd_if, bdd_not(bdd_b), bdd_not(bdd_a));
-        AssertThat(out_4->sorted, Is().False());
-        AssertThat(out_4->indexable, Is().True());
-        AssertThat(bdd_iscanonical(out_4), Is().False());
-      });
-
-      it("can derive canonicity when zipping 'if' with multiple nodes on a level", [&]() {
-        shared_levelized_file<bdd::node_type> bdd_if;
-        {
-          node_ofstream nw_if(bdd_if);
-          nw_if << node(1, bdd::max_id, terminal_T, terminal_T)
-                << node(1, bdd::max_id - 1, terminal_F, terminal_F)
-                << node(0,
-                        bdd::max_id,
-                        bdd::pointer_type(1, bdd::max_id - 1),
-                        bdd::pointer_type(1, bdd::max_id));
-        }
-
-        shared_levelized_file<bdd::node_type> bdd_a;
-        {
-          node_ofstream nw_a(bdd_a);
-          nw_a << node(3, bdd::max_id, terminal_F, terminal_T);
-        }
-
-        shared_levelized_file<bdd::node_type> bdd_b;
-        {
-          node_ofstream nw_b(bdd_b);
-          nw_b << node(2, bdd::max_id, terminal_T, terminal_F);
-        }
-
-        bdd out_1 = bdd_ite(bdd_if, bdd_a, bdd_b);
-        AssertThat(out_1->sorted, Is().True());
-        AssertThat(out_1->indexable, Is().True());
-        AssertThat(bdd_iscanonical(out_1), Is().True());
-
-        bdd out_2 = bdd_ite(bdd_not(bdd_if), bdd_a, bdd_b);
-        AssertThat(out_2->sorted, Is().False());
-        AssertThat(out_2->indexable, Is().True());
-        AssertThat(bdd_iscanonical(out_2), Is().False());
-
-        bdd out_3 = bdd_ite(bdd_not(bdd_if), bdd_b, bdd_a);
-        AssertThat(out_3->sorted, Is().True());
-        AssertThat(out_3->indexable, Is().True());
-        AssertThat(bdd_iscanonical(out_3), Is().True());
-      });
-
-      it("does not zip if bdd_then is not beyond max_var of bdd_if", [&]() {
-        __bdd out = bdd_ite(bdd_x1, bdd_x0, bdd_x2);
-
-        arc_test_ifstream arcs(out);
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(0, 0), false, bdd::pointer_type(1, 0) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(0, 0), true, bdd::pointer_type(1, 1) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 0), false, bdd::pointer_type(2, 0) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 1), false, bdd::pointer_type(2, 0) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().False());
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 0), true, terminal_F }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 1), true, terminal_T }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(2, 0), false, terminal_F }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(2, 0), true, terminal_T }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().False());
-
-        level_info_test_ifstream levels(out);
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 2u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
-
-        AssertThat(levels.can_pull(), Is().False());
-
-        AssertThat(out.get<__bdd::shared_arc_file_type>()->max_1level_cut,
-                   Is().GreaterThanOrEqualTo(2u));
-
-        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[false],
-                   Is().EqualTo(2u));
-        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[true],
-                   Is().EqualTo(2u));
-      });
-
-      it("does not zip if bdd_else is not beyond max_var of bdd_if", [&]() {
-        __bdd out = bdd_ite(bdd_x1, bdd_x2, bdd_x0);
-
-        arc_test_ifstream arcs(out);
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(0, 0), false, bdd::pointer_type(1, 0) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(0, 0), true, bdd::pointer_type(1, 1) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 0), true, bdd::pointer_type(2, 0) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().True());
-        AssertThat(arcs.pull_internal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 1), true, bdd::pointer_type(2, 0) }));
-
-        AssertThat(arcs.can_pull_internal(), Is().False());
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 0), false, terminal_F }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(1, 1), false, terminal_T }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(2, 0), false, terminal_F }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().True());
-        AssertThat(arcs.pull_terminal(),
-                   Is().EqualTo(arc{ bdd::uid_type(2, 0), true, terminal_T }));
-
-        AssertThat(arcs.can_pull_terminal(), Is().False());
-
-        level_info_test_ifstream levels(out);
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 2u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
-
-        AssertThat(levels.can_pull(), Is().False());
-
-        AssertThat(out.get<__bdd::shared_arc_file_type>()->max_1level_cut,
-                   Is().GreaterThanOrEqualTo(2u));
-
-        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[false],
-                   Is().EqualTo(2u));
-        AssertThat(out.get<__bdd::shared_arc_file_type>()->number_of_terminals[true],
-                   Is().EqualTo(2u));
-      });
-
-      it("zips shifted x0 ? x0(+1) : x0(+2)", [&]() {
-        /*
-        //              1        ---- x0
-        //             / \
-        //            /  2       ---- x1
-        //            | / \
-        //            3 F T      ---- x2
-        //           / \
-        //           F T
-        */
-        __bdd out = bdd_ite(bdd(bdd_x0, false, +0), bdd(bdd_x0, false, +1), bdd(bdd_x0, false, +2));
-
-        node_test_ifstream ns(out);
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(2, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(1, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(0, 0, bdd::pointer_type(2, 0), bdd::pointer_type(1, 0))));
-
-        level_info_test_ifstream levels(out);
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
-
-        AssertThat(levels.can_pull(), Is().False());
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(1u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(4u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(1u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(4u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
-                   Is().EqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
-                   Is().EqualTo(2u));
-      });
-
-      it("zips shifted x0 ? x0(+2) : x0(+1)", [&]() {
-        /*
-        //              1        ---- x0
-        //             / \
-        //            2   \      ---- x1
-        //           / \  |
-        //           F T  3      ---- x2
-        //               / \
-        //               F T
-        */
-        __bdd out = bdd_ite(bdd(bdd_x0, false, +0), bdd(bdd_x0, false, +2), bdd(bdd_x0, false, +1));
-
-        node_test_ifstream ns(out);
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(2, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(), Is().EqualTo(node(1, 0, terminal_F, terminal_T)));
-
-        AssertThat(ns.can_pull(), Is().True());
-        AssertThat(ns.pull(),
-                   Is().EqualTo(node(0, 0, bdd::pointer_type(1, 0), bdd::pointer_type(2, 0))));
-
-        level_info_test_ifstream levels(out);
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(2, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(1, 1u)));
-
-        AssertThat(levels.can_pull(), Is().True());
-        AssertThat(levels.pull(), Is().EqualTo(level_info(0, 1u)));
-
-        AssertThat(levels.can_pull(), Is().False());
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(1u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_1level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(4u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal],
-                   Is().GreaterThanOrEqualTo(1u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_False],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::Internal_True],
-                   Is().GreaterThanOrEqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->max_2level_cut[cut::All],
-                   Is().GreaterThanOrEqualTo(4u));
-
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[false],
-                   Is().EqualTo(2u));
-        AssertThat(out.get<__bdd::shared_node_file_type>()->number_of_terminals[true],
-                   Is().EqualTo(2u));
       });
     });
   });
