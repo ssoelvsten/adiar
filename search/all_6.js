@@ -22,5 +22,5 @@ var searchData=
   ['arge_19',['Lars Arge',['../page__cite.html#autotoc_md43',1,'']]],
   ['assignment_20',['assignment',['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642',1,'adiar']]],
   ['assignments_21',['Satisfying Assignments',['../page__basic.html#autotoc_md15',1,'']]],
-  ['auto_22',['auto',['../classadiar_1_1exec__policy.html#a24984bb43a1a8929b858011949155b18a06b9281e396db002010bde1de57262eb',1,'adiar::exec_policy::Auto'],['../classadiar_1_1exec__policy.html#a34534681bd89bb97b4cfc8bcbe3c19bba06b9281e396db002010bde1de57262eb',1,'adiar::exec_policy::Auto']]]
+  ['auto_22',['auto',['../namespaceadiar.html#a4679f9678ef99959f046aea209221af0a06b9281e396db002010bde1de57262eb',1,'adiar::Auto'],['../classadiar_1_1exec__policy.html#a24984bb43a1a8929b858011949155b18a06b9281e396db002010bde1de57262eb',1,'adiar::exec_policy::Auto'],['../classadiar_1_1exec__policy.html#a34534681bd89bb97b4cfc8bcbe3c19bba06b9281e396db002010bde1de57262eb',1,'adiar::exec_policy::Auto']]]
 ];
