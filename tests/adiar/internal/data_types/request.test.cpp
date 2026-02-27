@@ -609,5 +609,70 @@ go_bandit([]() {
         });
       });
     });
+
+    describe("request_data<cardinality = 1> with parent", []() {
+      // TODO
+    });
+
+    describe("request_data<with_level>", []() {
+      using rt1 = request_data<1, with_level>;
+      using rt2 = request_data<2, with_level>;
+
+      describe(".level()", []() {
+        it("picks target level for {(0,_)} ~ 5", []() {
+          const rt1 req({ rt1::pointer_type(0, 0), {}, { 5 } });
+          AssertThat(req.level(), Is().EqualTo(0u));
+        });
+
+        it("picks target level for {(2,_)} ~ 3", []() {
+          const rt1 req({ rt1::pointer_type(2, 8), {}, { 3 } });
+          AssertThat(req.level(), Is().EqualTo(2u));
+        });
+
+        it("picks data level for {(2,_)} ~ 0", []() {
+          const rt1 req({ rt1::pointer_type(2, 8), {}, { 0 } });
+          AssertThat(req.level(), Is().EqualTo(0u));
+        });
+
+        it("picks data level for {(2,_)} ~ 1", []() {
+          const rt1 req({ rt1::pointer_type(2, 8), {}, { 1 } });
+          AssertThat(req.level(), Is().EqualTo(1u));
+        });
+
+        it("picks target level for {(max,_)} ~ None", []() {
+          const rt1 req(
+            { rt1::pointer_type(rt1::pointer_type::max_label, rt1::pointer_type::max_id),
+              {},
+              { with_level::no_level } });
+          AssertThat(req.level(), Is().EqualTo(rt1::pointer_type::max_label));
+        });
+
+        it("picks target level for {(0,_), T} ~ 2", []() {
+          const rt2 req({ { rt2::pointer_type(0, 0), rt2::pointer_type(true) }, {}, { 2 } });
+          AssertThat(req.level(), Is().EqualTo(0u));
+        });
+
+        it("picks target level for {(4,_), (2,_)} ~ 3", []() {
+          const rt2 req({ { rt2::pointer_type(4, 42), rt2::pointer_type(2, 8) }, {}, { 3 } });
+          AssertThat(req.level(), Is().EqualTo(2u));
+        });
+
+        it("picks data level for {(4,_), (3,_)} ~ 2", []() {
+          const rt2 req({ { rt2::pointer_type(4, 2), rt2::pointer_type(3, 0) }, {}, { 2 } });
+          AssertThat(req.level(), Is().EqualTo(2u));
+        });
+
+        it("picks data level for {(3,_), (3,_)} ~ 1", []() {
+          const rt2 req({ { rt2::pointer_type(3, 2), rt2::pointer_type(3, 0) }, {}, { 1 } });
+          AssertThat(req.level(), Is().EqualTo(1u));
+        });
+
+        it("picks target level for {(0,_), T} ~ None", []() {
+          const rt2 req(
+            { { rt2::pointer_type(0, 0), rt2::pointer_type(true) }, {}, { with_level::no_level } });
+          AssertThat(req.level(), Is().EqualTo(0u));
+        });
+      });
+    });
   });
 });

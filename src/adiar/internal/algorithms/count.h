@@ -50,10 +50,11 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////
   struct path_data
   {
+    static constexpr bool sort_on_tiebreak = false;
+    static constexpr bool has_level        = false;
+
     /// Sum of paths from parent
     uint64_t sum;
-
-    static constexpr bool sort_on_tiebreak = false;
   };
 
   //////////////////////////////////////////////////////////////////////////////

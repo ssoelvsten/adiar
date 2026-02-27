@@ -512,6 +512,18 @@ namespace adiar::internal
       : Request(t, nc)
       , data(d)
     {}
+
+    /* ==================================== RECURSION TARGET ==================================== */
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief The level at which this request should be resolved.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    typename Request::label_type
+    level() const
+    {
+      if constexpr (Data::has_level) { return std::min(Request::level(), this->data.level); }
+      return Request::level();
+    }
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -546,6 +558,11 @@ namespace adiar::internal
     inline bool
     operator()(const Request& a, const Request& b)
     {
+      if constexpr (Request::data_type::has_level) {
+        const Request::label_type a_level = a.level();
+        const Request::label_type b_level = b.level();
+        if (a_level != b_level) return a_level < b_level;
+      }
       if constexpr (Request::data_type::sort_on_tiebreak) {
         if (a.target == b.target) return a.data < b.data;
       }
@@ -564,6 +581,11 @@ namespace adiar::internal
     inline bool
     operator()(const Request& a, const Request& b)
     {
+      if constexpr (Request::data_type::has_level) {
+        const Request::label_type a_level = a.level();
+        const Request::label_type b_level = b.level();
+        if (a_level != b_level) return a_level < b_level;
+      }
       if constexpr (Request::data_type::sort_on_tiebreak) {
         if (a.target == b.target) return a.data < b.data;
       }
@@ -582,6 +604,11 @@ namespace adiar::internal
     inline bool
     operator()(const Request& a, const Request& b)
     {
+      if constexpr (Request::data_type::has_level) {
+        const Request::label_type a_level = a.level();
+        const Request::label_type b_level = b.level();
+        if (a_level != b_level) return a_level < b_level;
+      }
       if constexpr (Request::data_type::sort_on_tiebreak) {
         if (a.target == b.target) return a.data < b.data;
       }
@@ -608,6 +635,11 @@ namespace adiar::internal
 #endif
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief The fact that this data does not contain a level.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool has_level = false;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Pointer to the source of the request.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node::pointer_type source;
@@ -620,6 +652,33 @@ namespace adiar::internal
     {
       return this->source < o.source;
     }
+  };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Class to carry the parent of a recursion within `request_data`.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  class with_level
+  {
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Whether the level should be used as a tie-break.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool sort_on_tiebreak = false;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief The fact that this data contains a level (possibly `nil`).
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool has_level = true;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Level to be used if the level is invalid/non-existent.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr node::label_type no_level = node::pointer_type::nil_level;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Level at which something ought to happen.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    node::label_type level;
   };
 }
 
