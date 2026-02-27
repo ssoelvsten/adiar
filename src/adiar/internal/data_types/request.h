@@ -82,7 +82,7 @@ namespace adiar::internal
     pointer_type::label_type
     level() const
     {
-      return target.first().label();
+      return target.first().level();
     }
 
     /* ======================================= NODE CARRY ======================================= */
