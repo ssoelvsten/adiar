@@ -1391,37 +1391,16 @@ namespace adiar
   /// \param m
   ///    Function from BDD label to another (or itself).
   ///
-  /// \throws invalid_argument if `m` is not a monotonic relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_replace(const bdd& f, const function<bdd::label_type(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables in *f* according to the mapping in *m*.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_replace(const exec_policy& ep,
-              const bdd& f,
-              const function<bdd::label_type(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables in *f* according to the mapping in *m*.
-  ///
-  /// \param f
-  ///    BDD to replace variables within
-  ///
-  /// \param m
-  ///    Function from BDD label to another (or itself).
-  ///
   /// \param m_type
-  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
+  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic. By default,
+  ///    this value is inferred automatically.
   ///
   /// \throws invalid_argument if `m_type` classifies `m` as not monotonic.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bdd
   bdd_replace(const bdd& f,
               const function<bdd::label_type(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables in *f* according to the mapping in *m*.
@@ -1430,34 +1409,9 @@ namespace adiar
   bdd_replace(const exec_policy& ep,
               const bdd& f,
               const function<bdd::label_type(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   /// \cond
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables in *f* according to the mapping in *m*.
-  ///
-  /// \details Unlike the `bdd_replace(const bdd& f, ...)` variants, this saves *2N/B* I/Os by
-  ///          incorporating the renaming into the Reduce algorithm.
-  ///
-  /// \param f
-  ///    Possibly unreduced BDD to replace variables within
-  ///
-  /// \param m
-  ///    Function from BDD label to another (or itself).
-  ///
-  /// \throws invalid_argument if `m` is not monotonic.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_replace(__bdd&& f, const function<bdd::label_type(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables in *f* according to the mapping in *m*.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_replace(const exec_policy& ep,
-              __bdd&& f,
-              const function<bdd::label_type(bdd::label_type)>& m);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables in *f* according to the mapping in *m*.
@@ -1470,12 +1424,15 @@ namespace adiar
   ///    Function from BDD label to another (or itself).
   ///
   /// \param m_type
-  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
+  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic. By default,
+  ///    this value is inferred automatically.
   ///
   /// \throws invalid_argument if `m_type` classifies `m` as not monotonic.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bdd
-  bdd_replace(__bdd&& f, const function<bdd::label_type(bdd::label_type)>& m, replace_type m_type);
+  bdd_replace(__bdd&& f,
+              const function<bdd::label_type(bdd::label_type)>& m,
+              replace_type m_type = replace_type::Auto);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables in *f* according to the mapping in *m*.
@@ -1484,7 +1441,7 @@ namespace adiar
   bdd_replace(const exec_policy& ep,
               __bdd&& f,
               const function<bdd::label_type(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   /// \endcond
 
@@ -1536,41 +1493,9 @@ namespace adiar
   ///    an empty value are existentially quantified, i.e. the previously *current* state variables.
   ///    For all intends an purposes, this relabelling happens *after* quantification.
   ///
-  /// \returns \f$ (\exists x \in \{ x \mid \mathit{m}(x) = \text{None} \}
-  ///                        : (\mathit{states} \land \mathit{relation}))[x' \mapsto m(x')] \f$
-  ///
-  /// \throws invalid_argument if `m` is not a monotonic relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product, including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relnext(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Forwards step with the Relational Product, including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    A (partial) variable relabelling from *next* to *current*. Variables for which `m` returns
-  ///    an empty value are existentially quantified, i.e. the previously *current* state variables.
-  ///    For all intends an purposes, this relabelling happens *after* quantification.
-  ///
   /// \param m_type
-  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
+  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic. By default,
+  ///    this value is inferred automatically.
   ///
   /// \returns \f$ (\exists x \in \{ x \mid \mathit{m}(x) = \text{None} \}
   ///                        : (\mathit{states} \land \mathit{relation}))[x' \mapsto m(x')] \f$
@@ -1581,7 +1506,7 @@ namespace adiar
   bdd_relnext(const bdd& states,
               const bdd& relation,
               const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Forwards step with the Relational Product, including relabelling.
@@ -1591,7 +1516,7 @@ namespace adiar
               const bdd& states,
               const bdd& relation,
               const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Forwards step with the Relational Product for *disjoint* variable orderings,
@@ -1659,45 +1584,12 @@ namespace adiar
   /// \param m
   ///    A (partial) variable relabelling from *current* to *next*. Variables for which `m` returns
   ///    an empty value are existentially quantified, i.e. the *next* state variables (the
-  ///    previously *current* state variables). For all intends an purposes, this relabelling
-  ///    happens *prior* to conjunction.
-  ///
-  /// \returns \f$ (\exists x' \in \{ x' \mid \mathit{m}(x') = \text{None} \}
-  ///                        : (\mathit{states}[x \mapsto m(x)] \land \mathit{relation})) \f$
-  ///
-  /// \throws invalid_argument if `m` is not a monotonic relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product, including relabelling.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
-  bdd_relprev(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m);
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Backwards step with the Relational Product, including relabelling.
-  ///
-  /// \param states
-  ///    A symbolic representation of the *current* set of states.
-  ///
-  /// \param relation
-  ///    A relation between *current* and *next* states.
-  ///
-  /// \param m
-  ///    A (partial) variable relabelling from *current* to *next*. Variables for which `m` returns
-  ///    an empty value are existentially quantified, i.e. the *next* state variables (the
   ///    previously *current* state variables). For all intends and purposes, this relabelling
   ///    happens *prior* to conjunction.
   ///
   /// \param m_type
-  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic.
+  ///    Guarantees on the class of variable relabelling, e.g. whether it is monotonic. By default,
+  ///    this value is inferred automatically.
   ///
   /// \returns \f$ (\exists x' \in \{ x' \mid \mathit{m}(x') = \text{None} \}
   ///                        : (\mathit{states}[x \mapsto m(x)] \land \mathit{relation})) \f$
@@ -1708,7 +1600,7 @@ namespace adiar
   bdd_relprev(const bdd& states,
               const bdd& relation,
               const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Backwards step with the Relational Product, including relabelling.
@@ -1718,7 +1610,7 @@ namespace adiar
               const bdd& states,
               const bdd& relation,
               const function<optional<bdd::label_type>(bdd::label_type)>& m,
-              replace_type m_type);
+              replace_type m_type = replace_type::Auto);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Backwards step with the Relational Product for *disjoint* variable orderings,

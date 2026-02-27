@@ -61,8 +61,6 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Infer the replace type.
-  ///
-  /// \param ls A stream of `level_info` structs in *descending* order.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy, typename LevelInfoStream, typename ReplaceFunction>
   replace_type
@@ -121,6 +119,28 @@ namespace adiar::internal
     if (!shift) { return replace_type::Monotone; }
     if (!identity) { return replace_type::Shift; }
     return replace_type::Identity;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Infer the replace type.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Policy, typename ReplaceFunction>
+  replace_type
+  replace__infer_type(const typename Policy::dd_type& dd, const ReplaceFunction& m)
+  {
+    level_info_ifstream<false> ls(dd);
+    return __replace__infer_type<Policy>(ls, m);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Infer the replace type.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Policy, typename ReplaceFunction>
+  replace_type
+  replace__infer_type(const typename Policy::__dd_type& __dd, const ReplaceFunction& m)
+  {
+    level_info_ifstream<true> ls(__dd);
+    return __replace__infer_type<Policy>(ls, m);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,8 +257,16 @@ namespace adiar::internal
       return dd;
     }
 
+    const replace_type inferred_type =
+      m_type == replace_type::Auto ? replace__infer_type<Policy>(dd, m) : m_type;
+
     // Map internal nodes
-    switch (m_type) {
+    switch (inferred_type) {
+      // LCOV_EXCL_START
+    case replace_type::Auto:
+      adiar_unreachable();
+      // LCOV_EXCL_STOP
+
     case replace_type::Non_Monotone:
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
@@ -269,21 +297,6 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables based on the given (total) map.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy>
-  typename Policy::dd_type
-  replace(const exec_policy& ep, const typename Policy::dd_type& dd, const replace_func<Policy>& m)
-  {
-    replace_type m_type;
-    {
-      level_info_ifstream<false> ls(dd);
-      m_type = __replace__infer_type<Policy>(ls, m);
-    }
-    return replace<Policy>(ep, dd, m, m_type);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables based on the given (total) map.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy, bool check_reduced = true>
   typename Policy::dd_type
   replace(const exec_policy& ep,
@@ -300,8 +313,16 @@ namespace adiar::internal
       }
     }
 
+    const replace_type inferred_type =
+      m_type == replace_type::Auto ? replace__infer_type<Policy>(__dd, m) : m_type;
+
     // Otherwise, map while reducing
-    switch (m_type) {
+    switch (inferred_type) {
+      // LCOV_EXCL_START
+    case replace_type::Auto:
+      adiar_unreachable();
+      // LCOV_EXCL_STOP
+
     case replace_type::Non_Monotone:
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
@@ -333,39 +354,6 @@ namespace adiar::internal
   {
     const exec_policy ep = __dd._policy;
     return replace<Policy>(ep, std::move(__dd), m, m_type);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables based on the given (total) map.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy>
-  typename Policy::dd_type
-  replace(const exec_policy& ep, typename Policy::__dd_type&& __dd, const replace_func<Policy>& m)
-  {
-    // Is it already reduced?
-    if (__dd.template has<typename Policy::shared_node_file_type>()) {
-      const typename Policy::dd_type dd(__dd.template get<typename Policy::shared_node_file_type>(),
-                                        __dd._negate);
-      return replace<Policy>(ep, dd, m);
-    }
-
-    replace_type m_type;
-    {
-      level_info_ifstream<true> ls(__dd);
-      m_type = __replace__infer_type<Policy>(ls, m);
-    }
-    return replace<Policy, false>(ep, std::move(__dd), m, m_type);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replace variables based on the given (total) map.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy>
-  typename Policy::dd_type
-  replace(typename Policy::__dd_type&& __dd, const replace_func<Policy>& m)
-  {
-    const exec_policy ep = __dd._policy;
-    return replace<Policy>(ep, std::move(__dd), m);
   }
 }
 
