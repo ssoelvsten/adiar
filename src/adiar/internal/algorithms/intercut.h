@@ -99,14 +99,11 @@ namespace adiar::internal
             const typename Policy::label_type curr_level,
             const typename Policy::label_type next_cut)
     {
-      const typename Policy::label_type target_level = target.level();
-
       if (target.is_terminal() && !cut_terminal<Policy>(curr_level, next_cut, target.value())) {
         aw.push_terminal(arc(source, target));
         return;
       }
-      // TODO: remove std::min?
-      pq.push(intercut_request({ target }, {}, { source, std::min(target_level, next_cut) }));
+      pq.push(intercut_request({ target }, {}, { source, next_cut }));
     }
   };
 
@@ -183,7 +180,7 @@ namespace adiar::internal
                               max_pq_size,
                               stats_intercut.lpq);
     intercut_pq.push(
-      intercut_request({ n.uid() }, {}, { ptr_uint64::nil(), std::min(*ls, n.label()) }));
+      intercut_request({ n.uid() }, {}, { ptr_uint64::nil(), *ls }));
 
     // Process nodes of the decision diagram in topological order
     while (!intercut_pq.empty()) {
@@ -197,14 +194,13 @@ namespace adiar::internal
       // always kept ahead of the current level (until it is empty).
       const bool hit_level = ls != hit_levels.end() && out_label == *ls;
       if (hit_level) { ++ls; }
-      const typename Policy::label_type l = ls == hit_levels.end() ? Policy::max_label + 1 : *ls;
+      const typename Policy::label_type next_hit = ls == hit_levels.end() ? with_level::no_level : *ls;
 
       // Update max 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, intercut_pq.size());
 
-      // Resolve requests that end at the cut for this level
-      while (!intercut_pq.empty_level()
-             && intercut_pq.peek().target[0].level() == intercut_pq.peek().level()) {
+      // Resolve requests with targets at this level
+      while (!intercut_pq.empty_level() && intercut_pq.peek().target[0].level() == out_label) {
         while (n.uid() < intercut_pq.top().target[0]) { n = in_nodes.pull(); }
 
         adiar_assert(n.uid() == intercut_pq.top().target[0], "should always find desired node");
@@ -215,7 +211,7 @@ namespace adiar::internal
           const intercut_rec_skipto rs = std::get<intercut_rec_skipto>(r);
 
           if (rs.tgt.is_terminal() && intercut_pq.top().data.source.is_nil()
-              && !cut_terminal<Policy>(out_label, l, rs.tgt.value())) {
+              && !cut_terminal<Policy>(out_label, next_hit, rs.tgt.value())) {
             return Policy::terminal(rs.tgt.value());
           }
           // TODO: The 'rs.tgt.is_terminal() && cut_terminal(...)' case can be handled even better
@@ -223,25 +219,25 @@ namespace adiar::internal
           //       the remaining labels.
 
           intercut_in__pq<Policy, intercut_out__pq<Policy>>(
-            aw, intercut_pq, out_label, n.uid(), rs.tgt, l);
+            aw, intercut_pq, out_label, n.uid(), rs.tgt, next_hit);
         } else {
           const intercut_rec_output ro = std::get<intercut_rec_output>(r);
           const node::uid_type out_uid(out_label, out_id++);
 
           intercut_out__pq<Policy>::forward(
-            aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_label, l);
+            aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_label, next_hit);
 
           intercut_out__pq<Policy>::forward(
-            aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_label, l);
+            aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_label, next_hit);
 
           intercut_in__pq<Policy, intercut_out__ofstream>(
-            aw, intercut_pq, out_label, n.uid(), out_uid, l);
+            aw, intercut_pq, out_label, n.uid(), out_uid, next_hit);
         }
       }
 
-      // Resolve requests that end after the cut for this level
+      // Resolve requests with targets beyond this level, i.e. edges that should be cut.
       while (!intercut_pq.empty_level()) {
-        adiar_assert(out_label <= l,
+        adiar_assert(out_label <= next_hit,
                      "the last iteration in this case is for the very last label to cut on");
 
         const intercut_request request = intercut_pq.top();
@@ -249,13 +245,13 @@ namespace adiar::internal
         const node::uid_type out_uid(out_label, out_id++);
 
         intercut_out__pq<Policy>::forward(
-          aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_label, l);
+          aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_label, next_hit);
 
         intercut_out__pq<Policy>::forward(
-          aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_label, l);
+          aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_label, next_hit);
 
         intercut_in__pq<Policy, intercut_out__ofstream>(
-          aw, intercut_pq, out_label, request.target[0], out_uid, l);
+          aw, intercut_pq, out_label, request.target[0], out_uid, next_hit);
       }
 
       // Update meta data
