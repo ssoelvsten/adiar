@@ -46,9 +46,14 @@ namespace adiar::internal
   // Data structures
   struct optmin_data
   {
-    double cost;
-    node::pointer_type source;
     static constexpr bool sort_on_tiebreak = false;
+    static constexpr bool has_level        = false;
+
+    /// Cost of path
+    double cost;
+
+    /// Parent pointer (TODO: use `with_parent`?)
+    node::pointer_type source;
   };
 
   using optmin_request = request_data<1, optmin_data>;

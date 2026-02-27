@@ -15,6 +15,9 @@ namespace adiar
   // SatCount Policy
   struct sat_data
   {
+    static constexpr bool sort_on_tiebreak = true;
+    static constexpr bool has_level        = false;
+
     /// Sum of satisfying assignments up to parent
     uint64_t sum;
 
@@ -27,8 +30,6 @@ namespace adiar
     {
       return this->levels_visited < o.levels_visited;
     }
-
-    static constexpr bool sort_on_tiebreak = true;
   };
 
   class sat_count_policy : public bdd_policy
