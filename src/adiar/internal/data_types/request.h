@@ -530,91 +530,49 @@ namespace adiar::internal
   // Priority queue functions
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Level/Lexicographical ordering on a request's target(s). Ties are (potentially) broken
-  ///        on the data.
+  /// \brief Level/Lexicographical ordering on a request's target(s) and the accompanying data.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Request, size_t idx = 0>
-  struct request_data_lt
+  template <typename Request, typename RequestComp>
+  struct __request_data_lt
   {
     /// \copydoc request_data_lt
     inline bool
     operator()(const Request& a, const Request& b)
     {
+      if constexpr (Request::data_type::has_level) {
+        if (a.data.level < b.data.level) return true;
+        if (a.data.level > b.data.level) return false;
+      }
       if constexpr (Request::data_type::sort_on_tiebreak) {
         if (a.target == b.target) return a.data < b.data;
       }
-      return request_lt<Request, idx>()(a, b);
+      return RequestComp()(a, b);
     }
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering based on the first target in sorted order. Ties are (potentially) broken on
-  ///        the data.
+  /// \brief Level/Lexicographical ordering on a request's target(s).
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Request>
-  struct request_data_first_lt
-  {
-    /// \copydoc request_first_lt
-    inline bool
-    operator()(const Request& a, const Request& b)
-    {
-      if constexpr (Request::data_type::has_level) {
-        const Request::label_type a_level = a.level();
-        const Request::label_type b_level = b.level();
-        if (a_level != b_level) return a_level < b_level;
-      }
-      if constexpr (Request::data_type::sort_on_tiebreak) {
-        if (a.target == b.target) return a.data < b.data;
-      }
-      return request_first_lt<Request>()(a, b);
-    }
-  };
+  template <typename Request, size_t idx = 0>
+  using request_data_lt = __request_data_lt<Request, request_lt<Request, idx>>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering based on the second target in sorted order. Ties are (potentially) broken on
-  ///        the data.
+  /// \brief Ordering based on the first target in sorted order.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Request>
-  struct request_data_second_lt
-  {
-    /// \copydoc request_second_lt
-    inline bool
-    operator()(const Request& a, const Request& b)
-    {
-      if constexpr (Request::data_type::has_level) {
-        const Request::label_type a_level = a.level();
-        const Request::label_type b_level = b.level();
-        if (a_level != b_level) return a_level < b_level;
-      }
-      if constexpr (Request::data_type::sort_on_tiebreak) {
-        if (a.target == b.target) return a.data < b.data;
-      }
-      return request_second_lt<Request>()(a, b);
-    }
-  };
+  using request_data_first_lt = __request_data_lt<Request, request_first_lt<Request>>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Ordering based on the third target in sorted order. Ties are (potentially) broken on
-  ///        the data.
+  /// \brief Ordering based on the second target in sorted order.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Request>
-  struct request_data_third_lt
-  {
-    /// \copydoc request_third_lt
-    inline bool
-    operator()(const Request& a, const Request& b)
-    {
-      if constexpr (Request::data_type::has_level) {
-        const Request::label_type a_level = a.level();
-        const Request::label_type b_level = b.level();
-        if (a_level != b_level) return a_level < b_level;
-      }
-      if constexpr (Request::data_type::sort_on_tiebreak) {
-        if (a.target == b.target) return a.data < b.data;
-      }
-      return request_third_lt<Request>()(a, b);
-    }
-  };
+  using request_data_second_lt = __request_data_lt<Request, request_second_lt<Request>>;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Ordering based on the third target in sorted order.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Request>
+  using request_data_third_lt = __request_data_lt<Request, request_third_lt<Request>>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Class to carry the parent of a recursion within `request_data`.
