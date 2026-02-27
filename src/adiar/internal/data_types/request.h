@@ -680,6 +680,53 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node::label_type level;
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Class to carry the parent of a recursion within `request_data`.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  class with_parent_and_level
+    : public with_parent
+    , public with_level
+  {
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Whether parts of this data should be used as a tie-break.
+    ///
+    /// \details We inherit the tie breaking from `with_parent`
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool sort_on_tiebreak = with_parent::sort_on_tiebreak;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Comparator to break ties based on the parent.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    inline bool
+    operator<(const with_parent_and_level& o) const
+    {
+      return with_parent::operator<(o);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief The fact that this data contains a level (possibly `nil`).
+    ///
+    /// \details We inherit the existence of a level from `with_level`
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    static constexpr bool has_level = with_level::has_level;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    with_parent_and_level()                             = default;
+    with_parent_and_level(const with_parent_and_level&) = default;
+    ~with_parent_and_level()                            = default;
+
+    with_parent_and_level(const node::pointer_type& source)
+      : with_parent{ source }
+      , with_level{ with_level::no_level }
+    {}
+
+    with_parent_and_level(const node::pointer_type& source, node::label_type level)
+      : with_parent{ source }
+      , with_level{ level }
+    {}
+  };
 }
 
 #endif // ADIAR_INTERNAL_DATA_TYPES_REQUEST_H
