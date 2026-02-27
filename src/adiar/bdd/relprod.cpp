@@ -299,7 +299,16 @@ namespace adiar
   {
     __bdd tmp_1 = bdd_relprod__and(ep, states, relation, m);
 
-    switch (m_type) {
+    const replace_type inferred_type = m_type == replace_type::Auto
+      ? internal::replace__infer_type<bdd_policy>(relation, m)
+      : m_type;
+
+    switch (inferred_type) {
+      // LCOV_EXCL_START
+    case replace_type::Auto:
+      adiar_unreachable();
+      // LCOV_EXCL_STOP
+
     case replace_type::Non_Monotone:
 #ifdef ADIAR_STATS
       internal::stats_replace.nested_sweeps += 1u;
@@ -328,28 +337,6 @@ namespace adiar
               replace_type m_type)
   {
     return bdd_relnext(exec_policy(), states, relation, m, m_type);
-  }
-
-  bdd
-  bdd_relnext(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m)
-  {
-    replace_type m_type;
-    {
-      internal::level_info_ifstream<false> ls(relation);
-      m_type = internal::__replace__infer_type<bdd_policy>(ls, m);
-    }
-    return bdd_relnext(ep, states, relation, m, m_type);
-  }
-
-  bdd
-  bdd_relnext(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m)
-  {
-    return bdd_relnext(exec_policy(), states, relation, m);
   }
 
   bdd
@@ -411,29 +398,6 @@ namespace adiar
               replace_type m_type)
   {
     return bdd_relprev(exec_policy(), states, relation, m, m_type);
-  }
-
-  bdd
-  bdd_relprev(const exec_policy& ep,
-              const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m)
-  {
-    replace_type m_type;
-    {
-      internal::level_info_ifstream<false> ls(states);
-      m_type = internal::__replace__infer_type<bdd_policy>(ls, m);
-    }
-
-    return bdd_relprev(ep, states, relation, m, m_type);
-  }
-
-  bdd
-  bdd_relprev(const bdd& states,
-              const bdd& relation,
-              const function<optional<bdd::label_type>(bdd::label_type)>& m)
-  {
-    return bdd_relprev(exec_policy(), states, relation, m);
   }
 
   bdd

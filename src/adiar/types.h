@@ -30,6 +30,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   enum class replace_type : signed char
   {
+    /** Derives the `replace_type` via a small pre-processing step. */
+    Auto = -1,
+
     /** Any variable remapping without any guarantees on `m`. */
     Non_Monotone = 8, // TODO
 
