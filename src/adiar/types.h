@@ -31,19 +31,38 @@ namespace adiar
   enum class replace_type : signed char
   {
     /** Any variable remapping without any guarantees on `m`. */
-    Non_Monotone = 3,
+    Non_Monotone = 8, // TODO
+
+    /* (Combination of 'Jump_Up' and 'Jump_Down'): Variable remapping which only swaps one pair of
+                                                   variables in separate blocks.
+    */
+    // Swap = 7, // TODO
+
+    /* (Single-sweep version of 'Non_Monotone'): Variable remapping, only moving some variables up
+                                                 without crossing other variables that are moving.
+    */
+    // Jump_Up = 6, // TODO
+
+    /* (Single-sweep version of 'Non_Monotone'): Variable remapping, only moving some variables down
+                                                 without crossing other variables that are moving.
+    */
+    // Jump_Down = 5, // TODO
+
+    /* Variable remapping, only swapping variables that are adjacent to each other.
+     */
+    // Swap_Adjacent = 4, // TODO
 
     /** For any `x < y` then the mapped values preserve that order, i.e. `m(x) < m(y)`. */
-    Monotone = 2,
+    Monotone = 3,
 
-    /* TODO (faster version of 'Monotone'): `m(x) = ax + b` for some integers `a` and `b`. */
-    // Affine = 1,
+    /* (faster version of 'Monotone'): `m(x) = ax + b` for some integers `a` and `b`. */
+    // Affine = 2, // TODO: Is there a use-case where this type of on-the-fly remapping is needed?
 
     /** (faster version of 'Monotone'): `m(x) = x + b` for an integer `b`. */
-    Shift = 0,
+    Shift = 1,
 
     /** Nothing needs to be done, as `m(x) = x`. */
-    Identity = -1
+    Identity = 0
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
