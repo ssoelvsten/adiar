@@ -540,8 +540,9 @@ namespace adiar::internal
     operator()(const Request& a, const Request& b)
     {
       if constexpr (Request::data_type::has_level) {
-        if (a.data.level < b.data.level) return true;
-        if (a.data.level > b.data.level) return false;
+        const typename Request::label_type a_level = a.level();
+        const typename Request::label_type b_level = b.level();
+        if (a_level != b_level) return a_level < b_level;
       }
       if constexpr (Request::data_type::sort_on_tiebreak) {
         if (a.target == b.target) return a.data < b.data;
