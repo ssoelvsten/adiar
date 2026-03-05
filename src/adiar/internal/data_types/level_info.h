@@ -192,6 +192,10 @@ namespace adiar::internal
   }
 
   /* ============================================ LEVELS ======================================== */
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Shift the level (and label) by the given amount.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   inline level_info
   shift_replace(const level_info& li, const level_info::signed_level_type levels)
   {
