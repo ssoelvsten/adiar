@@ -72,22 +72,6 @@ public:
 namespace snowhouse
 {
   template <>
-  struct Stringizer<node>
-  {
-    static std::string
-    ToString(const adiar::internal::node& n)
-    {
-      std::stringstream stream;
-      if (n.is_terminal()) {
-        stream << "node: " << n.value();
-      } else {
-        stream << "node: (" << n.uid() << ", " << n.low() << ", " << n.high() << ")";
-      }
-      return stream.str();
-    }
-  };
-
-  template <>
   struct Stringizer<level_info>
   {
     static std::string
