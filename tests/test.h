@@ -71,35 +71,6 @@ public:
 // TODO: move into '<<'/'toString' methods in each respective data type.
 namespace snowhouse
 {
-  std::string
-  string_of_adiar_ptr(adiar::internal::ptr_uint64 p)
-  {
-    std::stringstream stream;
-    if (p.is_nil()) {
-      stream << "nil";
-    } else if (p.is_terminal()) {
-      stream << p.value();
-    } else { // p.is_node()
-      stream << "(x" << p.label() << ", " << p.id() << ")";
-    }
-
-    if (p.is_flagged()) { stream << "'"; }
-
-    return stream.str();
-  }
-
-  std::string
-  string_of_adiar_uid(adiar::internal::uid_uint64 u)
-  {
-    std::stringstream stream;
-    if (u.is_terminal()) {
-      stream << u.value();
-    } else { // u.is_node()
-      stream << "(x" << u.label() << ", " << u.id() << ")";
-    }
-    return stream.str();
-  }
-
   template <>
   struct Stringizer<arc>
   {
@@ -107,8 +78,8 @@ namespace snowhouse
     ToString(const adiar::internal::arc& a)
     {
       std::stringstream stream;
-      stream << "arc: " << string_of_adiar_ptr(a.source()) << " " << (a.out_idx() ? "--->" : "- ->")
-             << " " << string_of_adiar_ptr(a.target());
+      stream << "arc: " << a.source() << " " << (a.out_idx() ? "--->" : "- ->") << " "
+             << a.target();
       return stream.str();
     }
   };
@@ -123,8 +94,7 @@ namespace snowhouse
       if (n.is_terminal()) {
         stream << "node: " << n.value();
       } else {
-        stream << "node: (" << string_of_adiar_uid(n.uid()) << ", " << string_of_adiar_ptr(n.low())
-               << ", " << string_of_adiar_ptr(n.high()) << ")";
+        stream << "node: (" << n.uid() << ", " << n.low() << ", " << n.high() << ")";
       }
       return stream.str();
     }

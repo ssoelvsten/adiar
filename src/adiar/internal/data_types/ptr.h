@@ -2,7 +2,9 @@
 #define ADIAR_INTERNAL_DATA_TYPES_PTR_H
 
 #include <limits>
+#include <ostream>
 #include <stdint.h>
+#include <string>
 
 #include <adiar/internal/assert.h>
 
@@ -769,7 +771,38 @@ namespace adiar::internal
       // entire level field will stay as-is.
       return ptr_uint64(this->_raw | o._raw);
     }
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the pointer value and its meta data.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      std::stringstream stream;
+      if (this->is_nil()) {
+        stream << "nil";
+      } else if (this->is_terminal()) {
+        stream << this->value();
+      } else { // this->is_node()
+        // TODO: also include `out_idx`?
+        stream << "(" << this->level() << ";" << this->id() << ")";
+      }
+
+      if (this->is_flagged()) { stream << "'"; }
+
+      return stream.str();
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline std::ostream&
+  operator<<(std::ostream& os, const ptr_uint64& p)
+  {
+    return os << p.to_string();
+  }
 
   /* ======================================= BOOLEAN FLAG ======================================= */
 
@@ -894,6 +927,18 @@ namespace adiar::internal
   /* ======================================== CONVERSION ======================================== */
 
   // TODO: Conversion constructor from node
+}
+
+namespace std
+{
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the pointer value and its meta data.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline string
+  to_string(const adiar::internal::ptr_uint64& p)
+  {
+    return p.to_string();
+  }
 }
 
 #endif // ADIAR_INTERNAL_DATA_TYPES_PTR_H
