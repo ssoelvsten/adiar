@@ -978,6 +978,37 @@ go_bandit([]() {
       });
 
       describe("ordering ( < )", [&]() {
+        it("prints nil", []() { AssertThat(ptr_uint64::nil().to_string(), Is().EqualTo("nil")); });
+
+        it("prints nil false terminal",
+           []() { AssertThat(flag(ptr_uint64::nil()).to_string(), Is().EqualTo("nil'")); });
+
+        it("prints false terminal",
+           []() { AssertThat(ptr_uint64(false).to_string(), Is().EqualTo("0")); });
+
+        it("prints flagged false terminal",
+           []() { AssertThat(flag(ptr_uint64(false)).to_string(), Is().EqualTo("0'")); });
+
+        it("prints true terminal",
+           []() { AssertThat(ptr_uint64(true).to_string(), Is().EqualTo("1")); });
+
+        it("prints true false terminal",
+           []() { AssertThat(flag(ptr_uint64(true)).to_string(), Is().EqualTo("1'")); });
+
+        it("prints (0,0) internal node",
+           []() { AssertThat(ptr_uint64(0, 0).to_string(), Is().EqualTo("(0;0)")); });
+
+        it("prints (0,0) internal node",
+           []() { AssertThat(flag(ptr_uint64(0, 0)).to_string(), Is().EqualTo("(0;0)'")); });
+
+        it("prints (4,2) internal node",
+           []() { AssertThat(ptr_uint64(4, 2).to_string(), Is().EqualTo("(4;2)")); });
+
+        it("prints (4,2) internal node",
+           []() { AssertThat(flag(ptr_uint64(4, 2)).to_string(), Is().EqualTo("(4;2)'")); });
+      });
+
+      describe("ordering ( < )", [&]() {
         it("should sort by label, then by id", [&]() {
           const ptr_uint64 node_1_2 = ptr_uint64(1, 2);
           const ptr_uint64 node_2_1 = ptr_uint64(2, 1);
