@@ -205,6 +205,23 @@ go_bandit([]() {
           AssertThat(lt_rl, Is().False());
         });
       });
+
+      describe("to_string()", []() {
+        it("prints (0)", []() {
+          const tuple<int, 1> t = { 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0)"));
+        });
+
+        it("prints (1)", []() {
+          const tuple<int, 1> t = { 1 };
+          AssertThat(t.to_string(), Is().EqualTo("(1)"));
+        });
+
+        it("prints (42)", []() {
+          const tuple<int, 1> t = { 42 };
+          AssertThat(t.to_string(), Is().EqualTo("(42)"));
+        });
+      });
     });
 
     describe("tuple<int, 2>", []() {
@@ -567,6 +584,28 @@ go_bandit([]() {
 
           const bool lt_rl = tuple_second_lt<tuple<int, 2>>()(t2, t1);
           AssertThat(lt_rl, Is().False());
+        });
+      });
+
+      describe("to_string()", []() {
+        it("prints (0,0)", []() {
+          const tuple<int, 2> t = { 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 0)"));
+        });
+
+        it("prints (1,0)", []() {
+          const tuple<int, 2> t = { 1, 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(1, 0)"));
+        });
+
+        it("prints (0,2)", []() {
+          const tuple<int, 2> t = { 0, 2 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 2)"));
+        });
+
+        it("prints (4,2)", []() {
+          const tuple<int, 2> t = { 4, 2 };
+          AssertThat(t.to_string(), Is().EqualTo("(4, 2)"));
         });
       });
     });
@@ -1173,6 +1212,33 @@ go_bandit([]() {
 
           const bool lt_rl = tuple_third_lt<tuple<int, 3>>()(t2, t1);
           AssertThat(lt_rl, Is().False());
+        });
+      });
+
+      describe("to_string()", []() {
+        it("prints (0,0,0)", []() {
+          const tuple<int, 3> t = { 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 0, 0)"));
+        });
+
+        it("prints (1,0,2)", []() {
+          const tuple<int, 3> t = { 1, 0, 2 };
+          AssertThat(t.to_string(), Is().EqualTo("(1, 0, 2)"));
+        });
+
+        it("prints (0,2,3)", []() {
+          const tuple<int, 3> t = { 0, 2, 3 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 2, 3)"));
+        });
+
+        it("prints (3,1,0)", []() {
+          const tuple<int, 3> t = { 3, 1, 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(3, 1, 0)"));
+        });
+
+        it("prints (0,4,2)", []() {
+          const tuple<int, 3> t = { 0, 4, 2 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 4, 2)"));
         });
       });
     });
@@ -1871,6 +1937,38 @@ go_bandit([]() {
 
           const bool lt_rl = tuple_fourth_lt<tuple<int, 4>>()(t2, t1);
           AssertThat(lt_rl, Is().False());
+        });
+      });
+
+      describe("to_string()", []() {
+        it("prints (0,0,0,0)", []() {
+          const tuple<int, 4> t = { 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 0, 0, 0)"));
+        });
+
+        it("prints (1,0,0,0)", []() {
+          const tuple<int, 4> t = { 1, 0, 0, 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(1, 0, 0, 0)"));
+        });
+
+        it("prints (0,1,0,0)", []() {
+          const tuple<int, 4> t = { 0, 1, 0, 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 1, 0, 0)"));
+        });
+
+        it("prints (0,0,1,0)", []() {
+          const tuple<int, 4> t = { 0, 0, 1, 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 0, 1, 0)"));
+        });
+
+        it("prints (0,0,0,1)", []() {
+          const tuple<int, 4> t = { 0, 0, 0, 1 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 0, 0, 1)"));
+        });
+
+        it("prints (0,4,2,0)", []() {
+          const tuple<int, 4> t = { 0, 4, 2, 0 };
+          AssertThat(t.to_string(), Is().EqualTo("(0, 4, 2, 0)"));
         });
       });
     });

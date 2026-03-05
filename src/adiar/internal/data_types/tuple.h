@@ -468,7 +468,36 @@ namespace adiar::internal
     {
       return (*this > o) || (*this == o);
     }
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the tuple.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      std::stringstream stream;
+
+      stream << "(";
+      for (size_t i = 0; i < cardinality; ++i) {
+        stream << this->at(i);
+        if (i < cardinality - 1) { stream << ", "; }
+      }
+      stream << ")";
+
+      return stream.str();
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename T, uint8_t Cardinality, bool IsSorted>
+  inline std::ostream&
+  operator<<(std::ostream& os, const tuple<T, Cardinality, IsSorted>& t)
+  {
+    return os << t.to_string();
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Non-lexicographical comparators
@@ -543,6 +572,19 @@ namespace adiar::internal
         (a.fourth() == b.fourth() && a < b);
     }
   };
+}
+
+namespace std
+{
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the arc.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename T, uint8_t Cardinality, bool IsSorted>
+  inline string
+  to_string(const adiar::internal::tuple<T, Cardinality, IsSorted>& t)
+  {
+    return t.to_string();
+  }
 }
 
 #endif // ADIAR_INTERNAL_DATA_TYPES_TUPLE_H
