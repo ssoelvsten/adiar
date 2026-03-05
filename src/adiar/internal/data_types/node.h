@@ -1,6 +1,9 @@
 #ifndef ADIAR_INTERNAL_DATA_TYPES_NODE_H
 #define ADIAR_INTERNAL_DATA_TYPES_NODE_H
 
+#include <ostream>
+#include <string>
+
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/ptr.h>
 #include <adiar/internal/data_types/tuple.h>
@@ -414,7 +417,35 @@ namespace adiar::internal
       }
       return node(this->_uid, !this->_children[false], !this->_children[true]);
     }
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the node.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      std::stringstream stream;
+
+      stream << "{";
+      if (this->is_terminal()) {
+        stream << this->value();
+      } else {
+        stream << this->uid() << " | " << this->low() << " " << this->high();
+      }
+      stream << "}";
+      return stream.str();
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline std::ostream&
+  operator<<(std::ostream& os, const node& n)
+  {
+    return os << n.to_string();
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Ordering of node in comparison to a pointer.
@@ -508,6 +539,18 @@ namespace adiar::internal
     const node::pointer_type n_high(shift_replace(n.high(), levels));
 
     return node(n_uid, n_low, n_high);
+  }
+}
+
+namespace std
+{
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the node.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline string
+  to_string(const adiar::internal::node& n)
+  {
+    return n.to_string();
   }
 }
 

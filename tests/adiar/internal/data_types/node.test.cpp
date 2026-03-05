@@ -153,6 +153,43 @@ go_bandit([]() {
             AssertThat(n.is_true(), Is().False());
           });
         });
+
+        describe("to_string()", [&]() {
+          it("prints false terminal", []() {
+            const node n = node(false);
+            AssertThat(n.to_string(), Is().EqualTo("{0}"));
+          });
+
+          it("prints true terminal", []() {
+            const node n = node(true);
+            AssertThat(n.to_string(), Is().EqualTo("{1}"));
+          });
+
+          it("prints x0 node", [&]() {
+            const node n = node(0, 0, terminal_F, terminal_T);
+            AssertThat(n.to_string(), Is().EqualTo("{(0;0) | 0 1}"));
+          });
+
+          it("prints x0 node (flagged)", [&]() {
+            const node n = node(0, 0, terminal_F, flag(terminal_F));
+            AssertThat(n.to_string(), Is().EqualTo("{(0;0) | 0 0'}"));
+          });
+
+          it("prints ~x0 node", [&]() {
+            const node n = node(0, 0, terminal_T, terminal_F);
+            AssertThat(n.to_string(), Is().EqualTo("{(0;0) | 1 0}"));
+          });
+
+          it("prints ~x0 node (flagged)", [&]() {
+            const node n = node(0, 0, flag(terminal_F), terminal_F);
+            AssertThat(n.to_string(), Is().EqualTo("{(0;0) | 0' 0}"));
+          });
+
+          it("prints x1 node with children x4 and x2", [&]() {
+            const node n = node(1, 3, ptr_uint64(4, 0), ptr_uint64(2, 1));
+            AssertThat(n.to_string(), Is().EqualTo("{(1;3) | (4;0) (2;1)}"));
+          });
+        });
       });
 
       describe("comparators [node]", [&]() {
