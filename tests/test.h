@@ -72,19 +72,6 @@ public:
 namespace snowhouse
 {
   template <>
-  struct Stringizer<arc>
-  {
-    static std::string
-    ToString(const adiar::internal::arc& a)
-    {
-      std::stringstream stream;
-      stream << "arc: " << a.source() << " " << (a.out_idx() ? "--->" : "- ->") << " "
-             << a.target();
-      return stream.str();
-    }
-  };
-
-  template <>
   struct Stringizer<node>
   {
     static std::string
