@@ -162,7 +162,34 @@ namespace adiar::internal
     {
       return *this;
     }
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the arc.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      std::stringstream stream;
+
+      stream << "{ ";
+      stream << this->level() << " (x" << this->label() << ")";
+      stream << " | ";
+      stream << "width: " << this->width();
+      stream << " }";
+
+      return stream.str();
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline std::ostream&
+  operator<<(std::ostream& os, const level_info& li)
+  {
+    return os << li.to_string();
+  }
 
   /* ============================================ LEVELS ======================================== */
   inline level_info
@@ -179,6 +206,18 @@ namespace adiar::internal
       static_cast<level_type>(static_cast<signed_level_type>(li.level()) + levels);
 
     return level_info(new_level, li.width());
+  }
+}
+
+namespace std
+{
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the arc.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline string
+  to_string(const adiar::internal::level_info& li)
+  {
+    return li.to_string();
   }
 }
 

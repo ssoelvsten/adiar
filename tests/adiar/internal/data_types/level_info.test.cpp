@@ -65,6 +65,18 @@ go_bandit([]() {
       });
     });
 
+    describe("to_string()", [] {
+      it("prints { level: 0 (x0), size: 1 }", [&]() {
+        const level_info li(0, 1);
+        AssertThat(li.to_string(), Is().EqualTo("{ 0 (x0) | width: 1 }"));
+      });
+
+      it("prints { level: 4 (x4), size: 2 }", [&]() {
+        const level_info li(4, 2);
+        AssertThat(li.to_string(), Is().EqualTo("{ 4 (x4) | width: 2 }"));
+      });
+    });
+
     describe("operator ==", [&] {
       it("checks (0,1) == (0,1)", [&]() {
         const level_info li_1(0, 1);

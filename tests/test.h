@@ -66,27 +66,6 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// To improve the error messages
-//
-// TODO: move into '<<'/'toString' methods in each respective data type.
-namespace snowhouse
-{
-  template <>
-  struct Stringizer<level_info>
-  {
-    static std::string
-    ToString(const adiar::internal::level_info& m)
-    {
-      std::stringstream stream;
-      stream << "level_info: ("
-             << "x" << m.label() << " (" << m.level() << ")"
-             << ", #nodes = " << m.width() << ")";
-      return stream.str();
-    }
-  };
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 // For unit testing levelized_file<int> (local stack and shared heap variants).
 namespace adiar::internal
 {
