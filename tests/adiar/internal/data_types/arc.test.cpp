@@ -194,6 +194,28 @@ go_bandit([]() {
           AssertThat(!a, Is().EqualTo(arc{ ptr_uint64(1, 0), terminal_F }));
         });
       });
+
+      describe("to_string()", [&] {
+        it("prints \"(0;2) - -> (4;2)\"", [&]() {
+          const arc a = { ptr_uint64(0, 2, false), ptr_uint64(4, 2) };
+          AssertThat(a.to_string(), Is().EqualTo("(0;2) - -> (4;2)"));
+        });
+
+        it("prints \"(0;2) ---> (4;2)'\"", [&]() {
+          const arc a = { ptr_uint64(0, 2, true), flag(ptr_uint64(4, 2)) };
+          AssertThat(a.to_string(), Is().EqualTo("(0;2) ---> (4;2)'"));
+        });
+
+        it("prints \"(3;8) - -> F\"", [&]() {
+          const arc a = { flag(ptr_uint64(3, 8, false)), ptr_uint64(false) };
+          AssertThat(a.to_string(), Is().EqualTo("(3;8)' - -> 0"));
+        });
+
+        it("prints \"nil - -> 1\"", [&]() {
+          const arc a = { ptr_uint64::nil(), terminal_T };
+          AssertThat(a.to_string(), Is().EqualTo("nil ---> 1"));
+        });
+      });
     });
   });
 });

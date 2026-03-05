@@ -1,6 +1,9 @@
 #ifndef ADIAR_INTERNAL_DATA_TYPES_ARC_H
 #define ADIAR_INTERNAL_DATA_TYPES_ARC_H
 
+#include <ostream>
+#include <string>
+
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/ptr.h>
 #include <adiar/internal/data_types/uid.h>
@@ -218,7 +221,33 @@ namespace adiar::internal
     {
       return arc(this->_source, !this->_target);
     }
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the arc.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      std::stringstream stream;
+
+      const std::string arrow =
+        !this->source().is_node() || this->source().out_idx() ? " ---> " : " - -> ";
+
+      stream << this->source() << arrow << this->target();
+
+      return stream.str();
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline std::ostream&
+  operator<<(std::ostream& os, const arc& a)
+  {
+    return os << a.to_string();
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Sorting predicate: First on unique identifier of the source, and secondly on whether it
@@ -250,6 +279,18 @@ namespace adiar::internal
         ;
     }
   };
+}
+
+namespace std
+{
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the arc.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline string
+  to_string(const adiar::internal::arc& a)
+  {
+    return a.to_string();
+  }
 }
 
 #endif // ADIAR_INTERNAL_DATA_TYPES_ARC_H
