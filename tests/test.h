@@ -10,12 +10,11 @@ using namespace bandit;
 
 #include <adiar/adiar.h>
 
-////////////////////////////////////////////////////////////////////////////////
-// To improve the relationship between the tests and the algorithms, we will not
-// reverse the order in which we read the output.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// To improve the relationship between the tests and the algorithms, we will not reverse the order
+// in which we read the output.
 //
-// We also do a few little hacks, to read unreduced output from the file_union
-// class.
+// We also do a few little hacks, to read unreduced output from the file_union class.
 #include <adiar/internal/io/arc_ifstream.h>
 #include <adiar/internal/io/arc_ofstream.h>
 #include <adiar/internal/io/node_ifstream.h>
@@ -66,7 +65,7 @@ public:
   {}
 };
 
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // To improve the error messages
 //
 // TODO: move into '<<'/'toString' methods in each respective data type.
@@ -146,7 +145,7 @@ namespace snowhouse
   };
 }
 
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // For unit testing levelized_file<int> (local stack and shared heap variants).
 namespace adiar::internal
 {
@@ -163,16 +162,14 @@ namespace adiar::internal
   };
 }
 
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // Main
 int
 main(int argc, char* argv[])
 {
 #ifdef NDEBUG
-  std::cerr << "Warning: Internal assertions are not enabled!" << std::endl << std::endl;
-  ;
-
-  std::cerr << "Warning: Some tests may fail due to ties in ordering" << std::endl << std::endl;
+  std::cerr << "Warning: Internal assertions are not enabled!\n"
+            << "Warning: Some tests may fail due to ties in ordering" << std::endl;
 #endif
 
 #ifndef ADIAR_TEST_NO_INIT
