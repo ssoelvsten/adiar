@@ -179,8 +179,7 @@ namespace adiar::internal
                               pq_memory,
                               max_pq_size,
                               stats_intercut.lpq);
-    intercut_pq.push(
-      intercut_request({ n.uid() }, {}, { ptr_uint64::nil(), *ls }));
+    intercut_pq.push(intercut_request({ n.uid() }, {}, { ptr_uint64::nil(), *ls }));
 
     // Process nodes of the decision diagram in topological order
     while (!intercut_pq.empty()) {
@@ -194,7 +193,8 @@ namespace adiar::internal
       // always kept ahead of the current level (until it is empty).
       const bool hit_level = ls != hit_levels.end() && out_label == *ls;
       if (hit_level) { ++ls; }
-      const typename Policy::label_type next_hit = ls == hit_levels.end() ? with_level::no_level : *ls;
+      const typename Policy::label_type next_hit =
+        ls == hit_levels.end() ? with_level::no_level : *ls;
 
       // Update max 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, intercut_pq.size());
