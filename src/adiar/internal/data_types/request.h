@@ -376,7 +376,7 @@ namespace adiar::internal
     {
       // Get `to_string` of base class and remove the original ']}' ending
       std::string base_string = base::to_string();
-      base_string.erase(base_string.end()-2, base_string.end());
+      base_string.erase(base_string.end() - 2, base_string.end());
 
       // Create a new ending with the non-empty carry
       std::stringstream stream;
@@ -584,7 +584,7 @@ namespace adiar::internal
     {
       // Get `to_string` of base class and remove the original ']}' ending
       std::string base_string = Request::to_string();
-      base_string.erase(base_string.end()-2, base_string.end());
+      base_string.erase(base_string.end() - 2, base_string.end());
 
       // Create a new ending with the data
       std::stringstream stream;

@@ -334,15 +334,15 @@ go_bandit([]() {
 
         it("prints for (0,0) and (4,2) targets and non-empty node carry", []() {
           const request<2, 1> req(
-                                  { request<2>::pointer_type(1, 1), request<2>::pointer_type(1, 0) },
-                                  { { { request<2>::pointer_type(2, 1), request<2>::pointer_type(2, 0) } } });
+            { request<2>::pointer_type(1, 1), request<2>::pointer_type(1, 0) },
+            { { { request<2>::pointer_type(2, 1), request<2>::pointer_type(2, 0) } } });
           AssertThat(req.to_string(), Is().EqualTo("{((1;1), (1;0)) | [((2;1), (2;0))]}"));
         });
 
         it("prints for (0,0) and (4,2) targets and non-empty node carry", []() {
           const request<2, 1> req(
-                                  { request<2>::pointer_type(0, 0), request<2>::pointer_type(4, 2) },
-                                  { { { request<2>::pointer_type(5, 1), request<2>::pointer_type(true) } } });
+            { request<2>::pointer_type(0, 0), request<2>::pointer_type(4, 2) },
+            { { { request<2>::pointer_type(5, 1), request<2>::pointer_type(true) } } });
           AssertThat(req.to_string(), Is().EqualTo("{((0;0), (4;2)) | [((5;1), 1)]}"));
         });
       });
@@ -714,21 +714,22 @@ go_bandit([]() {
 
         it("prints for node carry of one pair of children", []() {
           const request<3, 1> req(
-                                  { request<3>::pointer_type(1u, 1u),
-                                    request<3>::pointer_type(1u, 0u),
-                                    request<3>::pointer_type(1u, 2u) },
-                                  { { { request<3>::pointer_type(2u, 1u), request<3>::pointer_type(2u, 0u) } } });
+            { request<3>::pointer_type(1u, 1u),
+              request<3>::pointer_type(1u, 0u),
+              request<3>::pointer_type(1u, 2u) },
+            { { { request<3>::pointer_type(2u, 1u), request<3>::pointer_type(2u, 0u) } } });
           AssertThat(req.to_string(), Is().EqualTo("{((1;1), (1;0), (1;2)) | [((2;1), (2;0))]}"));
         });
 
         it("prints for node carry of two pairs of children", []() {
           const request<3, 2> req(
-                                  { request<3>::pointer_type(1u, 1u),
-                                    request<3>::pointer_type(1u, 0u),
-                                    request<3>::pointer_type(1u, 2u) },
-                                  { { { request<3>::pointer_type(2u, 1u), request<3>::pointer_type(2u, 0u) },
-                                      { request<3>::pointer_type(2u, 0u), request<3>::pointer_type(false) } } });
-          AssertThat(req.to_string(), Is().EqualTo("{((1;1), (1;0), (1;2)) | [((2;1), (2;0)), ((2;0), 0)]}"));
+            { request<3>::pointer_type(1u, 1u),
+              request<3>::pointer_type(1u, 0u),
+              request<3>::pointer_type(1u, 2u) },
+            { { { request<3>::pointer_type(2u, 1u), request<3>::pointer_type(2u, 0u) },
+                { request<3>::pointer_type(2u, 0u), request<3>::pointer_type(false) } } });
+          AssertThat(req.to_string(),
+                     Is().EqualTo("{((1;1), (1;0), (1;2)) | [((2;1), (2;0)), ((2;0), 0)]}"));
         });
       });
     });
@@ -739,12 +740,14 @@ go_bandit([]() {
 
       describe("to_string()", []() {
         it("prints for (4,2) target and nil parent", []() {
-          const rt1 req({ rt1::pointer_type(4,2), {}, { rt1::pointer_type::nil() } });
+          const rt1 req({ rt1::pointer_type(4, 2), {}, { rt1::pointer_type::nil() } });
           AssertThat(req.to_string(), Is().EqualTo("{((4;2)) | [] | {nil}}"));
         });
 
         it("prints for (4,2) and (2,4) targets and level 7", []() {
-          const rt2 req({ {rt2::pointer_type(4,2), rt2::pointer_type(2,4)}, {}, { rt2::pointer_type(1,0) } });
+          const rt2 req({ { rt2::pointer_type(4, 2), rt2::pointer_type(2, 4) },
+                          {},
+                          { rt2::pointer_type(1, 0) } });
           AssertThat(req.to_string(), Is().EqualTo("{((4;2), (2;4)) | [] | {(1;0)}}"));
         });
       });
@@ -812,12 +815,12 @@ go_bandit([]() {
 
       describe("to_string()", []() {
         it("prints for (4,2) target and level 3", []() {
-          const rt1 req({ rt1::pointer_type(4,2), {}, { 3 } });
+          const rt1 req({ rt1::pointer_type(4, 2), {}, { 3 } });
           AssertThat(req.to_string(), Is().EqualTo("{((4;2)) | [] | {3}}"));
         });
 
         it("prints for (4,2) and (2,4) targets and level 7", []() {
-          const rt2 req({ {rt1::pointer_type(4,2), rt1::pointer_type(2,4)}, {}, { 7 } });
+          const rt2 req({ { rt1::pointer_type(4, 2), rt1::pointer_type(2, 4) }, {}, { 7 } });
           AssertThat(req.to_string(), Is().EqualTo("{((4;2), (2;4)) | [] | {7}}"));
         });
 
@@ -839,12 +842,14 @@ go_bandit([]() {
 
       describe("to_string()", []() {
         it("prints for (4,2) target and nil parent", []() {
-          const rt1 req({ rt1::pointer_type(4,2), {}, { rt1::pointer_type::nil(), 3 } });
+          const rt1 req({ rt1::pointer_type(4, 2), {}, { rt1::pointer_type::nil(), 3 } });
           AssertThat(req.to_string(), Is().EqualTo("{((4;2)) | [] | {nil, 3}}"));
         });
 
         it("prints for (1,0) and (1,1) targets and (0,0) parent and level 2", []() {
-          const rt2 req({ {rt2::pointer_type(1,0), rt2::pointer_type(1,1)}, {}, { rt2::pointer_type(0,0), 2 } });
+          const rt2 req({ { rt2::pointer_type(1, 0), rt2::pointer_type(1, 1) },
+                          {},
+                          { rt2::pointer_type(0, 0), 2 } });
           AssertThat(req.to_string(), Is().EqualTo("{((1;0), (1;1)) | [] | {(0;0), 2}}"));
         });
       });
