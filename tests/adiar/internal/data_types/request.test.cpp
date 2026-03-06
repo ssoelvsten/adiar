@@ -733,8 +733,21 @@ go_bandit([]() {
       });
     });
 
-    describe("request_data<cardinality = 1> with parent", []() {
-      // TODO
+    describe("request_data<with_parent>", []() {
+      using rt1 = request_data<1, with_parent>;
+      using rt2 = request_data<2, with_parent>;
+
+      describe("to_string()", []() {
+        it("prints for (4,2) target and nil parent", []() {
+          const rt1 req({ rt1::pointer_type(4,2), {}, { rt1::pointer_type::nil() } });
+          AssertThat(req.to_string(), Is().EqualTo("{((4;2)) | [] | {nil}}"));
+        });
+
+        it("prints for (4,2) and (2,4) targets and level 7", []() {
+          const rt2 req({ {rt2::pointer_type(4,2), rt2::pointer_type(2,4)}, {}, { rt2::pointer_type(1,0) } });
+          AssertThat(req.to_string(), Is().EqualTo("{((4;2), (2;4)) | [] | {(1;0)}}"));
+        });
+      });
     });
 
     describe("request_data<with_level>", []() {
@@ -794,6 +807,45 @@ go_bandit([]() {
           const rt2 req(
             { { rt2::pointer_type(0, 0), rt2::pointer_type(true) }, {}, { with_level::no_level } });
           AssertThat(req.level(), Is().EqualTo(0u));
+        });
+      });
+
+      describe("to_string()", []() {
+        it("prints for (4,2) target and level 3", []() {
+          const rt1 req({ rt1::pointer_type(4,2), {}, { 3 } });
+          AssertThat(req.to_string(), Is().EqualTo("{((4;2)) | [] | {3}}"));
+        });
+
+        it("prints for (4,2) and (2,4) targets and level 7", []() {
+          const rt2 req({ {rt1::pointer_type(4,2), rt1::pointer_type(2,4)}, {}, { 7 } });
+          AssertThat(req.to_string(), Is().EqualTo("{((4;2), (2;4)) | [] | {7}}"));
+        });
+
+        it("prints for F target and level 42", []() {
+          const rt1 req({ rt1::pointer_type(false), {}, { 21 } });
+          AssertThat(req.to_string(), Is().EqualTo("{(0) | [] | {21}}"));
+        });
+
+        it("prints for T target and level 42", []() {
+          const rt1 req({ rt1::pointer_type(true), {}, { 42 } });
+          AssertThat(req.to_string(), Is().EqualTo("{(1) | [] | {42}}"));
+        });
+      });
+    });
+
+    describe("request_data<with_parent_and_level>", []() {
+      using rt1 = request_data<1, with_parent_and_level>;
+      using rt2 = request_data<2, with_parent_and_level>;
+
+      describe("to_string()", []() {
+        it("prints for (4,2) target and nil parent", []() {
+          const rt1 req({ rt1::pointer_type(4,2), {}, { rt1::pointer_type::nil(), 3 } });
+          AssertThat(req.to_string(), Is().EqualTo("{((4;2)) | [] | {nil, 3}}"));
+        });
+
+        it("prints for (1,0) and (1,1) targets and (0,0) parent and level 2", []() {
+          const rt2 req({ {rt2::pointer_type(1,0), rt2::pointer_type(1,1)}, {}, { rt2::pointer_type(0,0), 2 } });
+          AssertThat(req.to_string(), Is().EqualTo("{((1;0), (1;1)) | [] | {(0;0), 2}}"));
         });
       });
     });
