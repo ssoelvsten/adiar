@@ -408,12 +408,10 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Level/Lexicographical ordering on a request' target(s).
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // TODO: request_lt without `idx` for a pure lexicographical ordering...
-  //  - Flip parameters, make `idx = 0` default.
-  //  - Optimise for default case.
   template <typename Request, size_t idx = 0>
   struct request_lt
   {
+    // TODO: Add `if constexpr` for `idx != 0` case
     static_assert(idx == 0, "Non-lexicographical ordering not (yet) supported.");
 
     /// \copydoc request_lt
