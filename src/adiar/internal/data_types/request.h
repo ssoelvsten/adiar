@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <string>
 
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/node.h>
@@ -217,6 +218,21 @@ namespace adiar::internal
     request(const target_t& t, const std::array<children_type, node_carry_size>& /*nc*/)
       : request(t)
     {}
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the request.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      std::stringstream stream;
+
+      stream << "{" << this->target << " | []}";
+      return stream.str();
+    }
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -348,7 +364,41 @@ namespace adiar::internal
       : base(t)
       , node_carry(nc)
     {}
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the request.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      // Get `to_string` of base class and remove the original ']}' ending
+      std::string base_string = base::to_string();
+      base_string.erase(base_string.end()-2, base_string.end());
+
+      // Create a new ending with the non-empty carry
+      std::stringstream stream;
+
+      for (uint8_t n_idx = 0u; n_idx < this->node_carry_size; ++n_idx) {
+        stream << this->node_carry[n_idx];
+        if (n_idx < this->node_carry_size - 1) { stream << ", "; }
+      }
+
+      stream << "]}";
+
+      return base_string.append(stream.str());
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <uint8_t Cardinality, uint8_t NodeCarrySize, bool Sorted>
+  inline std::ostream&
+  operator<<(std::ostream& os, const request<Cardinality, NodeCarrySize, Sorted>& r)
+  {
+    return os << r.to_string();
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Priority queue functions
@@ -686,6 +736,19 @@ namespace adiar::internal
       , with_level{ level }
     {}
   };
+}
+
+namespace std
+{
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the request.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <uint8_t Cardinality, uint8_t NodeCarrySize, bool Sorted>
+  inline string
+  to_string(const adiar::internal::request<Cardinality, NodeCarrySize, Sorted>& r)
+  {
+    return r.to_string();
+  }
 }
 
 #endif // ADIAR_INTERNAL_DATA_TYPES_REQUEST_H
