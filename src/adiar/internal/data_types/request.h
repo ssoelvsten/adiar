@@ -574,7 +574,36 @@ namespace adiar::internal
       if constexpr (Data::has_level) { return std::min(Request::level(), this->data.level); }
       return Request::level();
     }
+
+    /* ========================================== DEBUG ========================================= */
+
+  public:
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the request.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      // Get `to_string` of base class and remove the original ']}' ending
+      std::string base_string = Request::to_string();
+      base_string.erase(base_string.end()-2, base_string.end());
+
+      // Create a new ending with the data
+      std::stringstream stream;
+
+      stream << "] | {" << this->data.to_string() << "}}";
+
+      return base_string.append(stream.str());
+    }
   };
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <uint8_t Cardinality, typename Data, uint8_t NodeCarrySize, bool Sorted>
+  inline std::ostream&
+  operator<<(std::ostream& os, const request_data<Cardinality, Data, NodeCarrySize, Sorted>& r)
+  {
+    return os << r.to_string();
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Priority queue functions
@@ -661,6 +690,15 @@ namespace adiar::internal
     {
       return this->source < o.source;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the parent data.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      return source.to_string();
+    }
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -688,6 +726,15 @@ namespace adiar::internal
     /// \brief Level at which something ought to happen.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node::label_type level;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the level data.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      return std::to_string(level);
+    }
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -735,6 +782,15 @@ namespace adiar::internal
       : with_parent{ source }
       , with_level{ level }
     {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief String representation of the parent and level data.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::string
+    to_string() const
+    {
+      return with_parent::to_string() + ", " + with_level::to_string();
+    }
   };
 }
 
@@ -746,6 +802,16 @@ namespace std
   template <uint8_t Cardinality, uint8_t NodeCarrySize, bool Sorted>
   inline string
   to_string(const adiar::internal::request<Cardinality, NodeCarrySize, Sorted>& r)
+  {
+    return r.to_string();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief String representation of the request with data.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <uint8_t Cardinality, typename Data, uint8_t NodeCarrySize, bool Sorted>
+  inline string
+  to_string(const adiar::internal::request_data<Cardinality, Data, NodeCarrySize, Sorted>& r)
   {
     return r.to_string();
   }
