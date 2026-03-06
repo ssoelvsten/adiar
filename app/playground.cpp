@@ -29,6 +29,8 @@ main(int argc, char* argv[])
   {
     // ===== Your code starts here =====
 
+    std::cout << "hello world \n";
+
     // =====  Your code ends here  =====
   }
 
