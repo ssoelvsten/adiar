@@ -977,7 +977,7 @@ go_bandit([]() {
         });
       });
 
-      describe("ordering ( < )", [&]() {
+      describe("to_string()", [&]() {
         it("prints nil", []() { AssertThat(ptr_uint64::nil().to_string(), Is().EqualTo("nil")); });
 
         it("prints nil false terminal",
