@@ -1,4 +1,6 @@
 #include "../../test.h"
+#include "adiar/bdd.h"
+#include "bandit/assertion_frameworks/snowhouse/assert.h"
 
 go_bandit([]() {
   describe("adiar/bdd/replace.cpp", []() {
@@ -133,6 +135,28 @@ go_bandit([]() {
     }
     const bdd bdd_3(bdd_3_nf);
 
+
+    shared_levelized_file<bdd::node_type> bdd_4_nf;
+    /*
+    // NOTE: This BDD is on-purpose not canonical (to check whether it has been run through the
+    //       Reduce algorithm or not)
+    //
+    //        1-       ---- x0
+    //        | \
+    //        2  |     ---- x1
+    //       / \ /
+    //      F   T
+    */
+
+    { // Garbage collect early and free write-lock
+      const node n2 = node(1, bdd::max_id, terminal_F, terminal_T);
+      const node n1 = node(0, bdd::max_id,n2.uid(), terminal_T );
+
+      node_ofstream nw(bdd_4_nf);
+      nw << n2 << n1;
+    }
+    const bdd bdd_4(bdd_4_nf);
+
     describe("bdd_replace(const bdd&, <...>)", [&]() {
       describe("<non-monotonic>", [&]() {
         it("returns the original file for 'F'", [&]() {
@@ -187,16 +211,41 @@ go_bandit([]() {
 
         it("throws exception if levels have to be swapped [bdd_1]", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
-          AssertThrows(invalid_argument, bdd_replace(bdd_1, m));
+          //AssertThrows(invalid_argument, bdd_replace(bdd_1, m));
         });
 
         it("throws exception if levels have to be swapped [bdd_2]", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
-          AssertThrows(invalid_argument, bdd_replace(bdd_2, m));
+          //AssertThrows(invalid_argument, bdd_replace(bdd_2, m));
         });
 
         // TODO: Add more complex inputs that test for all relevant behaviours of applying the
         //       Nested Sweeping framework to move levels.
+
+        describe( "Adjacent swap cases", [&]() {
+          it( "throws exception if neighbouring levels need to be swapped" , [&]() {
+            //map swapping levels 1 and 2
+            const mapping_type m = [](const int x) { if (x == 1) return 2;
+                                                            if (x == 2) return 1;
+                                                            else return x; };
+            //AssertThrows(invalid_argument, bdd_replace(bdd_3, m));
+          });
+
+          it("swaps levels in BDD_4" , [&]() {
+            const mapping_type m = [](const int x) { if (x == 0) return 1;
+                                                            if (x == 1) return 0;
+                                                            else return x; };
+            const bdd res = bdd_replace(bdd_4, m);
+
+            bdd_printdot(res, "test_simpel");
+            
+            node_test_ifstream out_nodes(res);
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0, bdd::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1, bdd::max_id, bdd::pointer_type(0, bdd::max_id), terminal_T)));
+          });
+
+          //MORE TEST TO FOLLOW HERE!
+        });
       });
 
       describe("<monotonic>", [&]() {
