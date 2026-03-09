@@ -1,6 +1,10 @@
 #ifndef ADIAR_INTERNAL_ALGORITHMS_REPLACE_H
 #define ADIAR_INTERNAL_ALGORITHMS_REPLACE_H
 
+#include "adiar/bdd.h"
+#include "adiar/internal/data_types/request.h"
+#include "adiar/internal/data_types/uid.h"
+#include "adiar/internal/io/shared_file_ptr.h"
 #include <type_traits>
 
 #include <adiar/exception.h>
@@ -15,6 +19,7 @@
 #include <adiar/internal/io/node_file.h>
 #include <adiar/internal/io/node_ifstream.h>
 #include <adiar/internal/io/node_ofstream.h>
+//#include <adiar/internal/algorithms/reorder.h>
 
 namespace adiar::internal
 {
@@ -115,7 +120,7 @@ namespace adiar::internal
       prev_after  = next_after;
     }
 
-    if (!monotone) { return replace_type::Non_Monotone; }
+    if (!monotone) { return replace_type::Jump_Down; } //DUMMY!
     if (!shift) { return replace_type::Monotone; }
     if (!identity) { return replace_type::Shift; }
     return replace_type::Identity;
@@ -236,6 +241,143 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: Nested Sweeping for non-monotonic reorderings.
 
+  //entry for adjacant swap
+  template <typename Policy>
+  inline typename Policy::dd_type
+  replace__adj_swap_scan(const typename Policy::dd_type& dd, 
+                          const replace_func<Policy>& m) {
+      std::cout << "calls 100 \n";   
+      
+      //TDD say top level should be moved down 1
+      shared_levelized_file<bdd::node_type> out;
+      {
+        node_ofstream nw(out);
+        node_ifstream<true> in_nodes(dd); 
+        while(in_nodes.can_pull()){
+         node n = in_nodes.pull();
+          nw.unsafe_push(__replace(n, m));
+      }}
+      
+      return out; //DUMMY!
+  }
+
+
+  //types
+  template <uint8_t nodes_carried>
+  using cor_req_t = adiar::internal::request_data<2,adiar::internal::with_parent_and_level, nodes_carried>;
+
+  template <size_t look_ahead, adiar::internal::memory_mode mem_mode>
+  using cor_priority_queue_1_t =
+  adiar::internal::levelized_node_priority_queue<cor_req_t<0>,
+                                adiar::internal::request_data_first_lt<cor_req_t<0>>,
+                                look_ahead,
+                                mem_mode,
+                                1,
+                                0>;
+  //attempt
+
+
+  template<typename Policy>
+  tuple<tuple<typename Policy::pointer_type>>
+  reqFor(tuple<typename Policy::pointer_type> t, node v , typename Policy::label_type level) {
+      if (t[0].is_terminal() && t[1].is_terminal()) {
+        return { {t[0],t[0]}, {t[1],t[1]} };
+      }
+
+      if (t[0].is_terminal()) {
+        return { {t[0], v.low()}, {t[0], v.high()}};
+      }
+
+      return {t.first(), t.second()}; //DUMMY!
+  }
+  
+  template <typename Policy>
+  inline typename Policy::dd_type
+  replace__adj_swap_scan2(const typename Policy::dd_type& dd, 
+                          const replace_func<Policy>& m) {
+    //relabel all the nodes tm
+    shared_levelized_file<bdd::node_type> out;
+    {
+        node_ofstream nw(out);
+        node_ifstream<true> in_nodes(dd); 
+        while(in_nodes.can_pull()){
+         node n = in_nodes.pull();
+         nw.unsafe_push(__replace(n, m));
+      }
+    }
+
+    //prep in & out
+    // Set up output
+    shared_levelized_file<arc> out_arcs;
+    arc_ofstream aw(out_arcs);
+
+    // Set up input
+    node_ifstream<> in_nodes(out);
+    node root = in_nodes.pull();
+
+    //prep PQ1 (hardcoded for external + memory is whack)
+    const size_t aux_available_memory = internal::memory_available();
+    using pq_1_type = cor_priority_queue_1_t<ADIAR_LPQ_LOOKAHEAD, internal::memory_mode::External>;
+    const size_t pq_1_memory = aux_available_memory / 2;
+    statistics::levelized_priority_queue_t stats_test;
+    
+    //push initial request to PQ1 (based on root)
+    pq_1_type pq1({in_nodes},pq_1_memory,  aux_available_memory / 10, stats_test);
+    cor_req_t<0> init_req({root.low(), root.high()}, {}, {ptr_uint64::nil(), root.uid().label()});
+    pq1.push(init_req);
+
+    //let v be smalles node after root
+    node v = in_nodes.pull();
+
+    while (pq1.can_pull()) {
+      cor_req_t<0> r = pq1.top();
+      const typename Policy::pointer_type tseek = std::min(r.target.first().label(), r.data.level) ; //DUMMY
+
+      typename Policy::id_type id = 0; //DUMMY
+      typename Policy::label_type label = tseek.label;
+      //TODO update v up to tseek!!
+
+      tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.data.level);
+      tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+      tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
+      
+      const node::uid_type out_uid(label, id); //x_label,id
+      if (rlow[0].isterminal() && rlow[1].isterminal() && rlow[0] == rlow[1]) {
+        //push leaf arc from current
+        arc alow =  { out_uid.as_ptr(false), rlow[0] };
+        aw.push_terminal(alow);
+      } else {
+        //push request from current
+        cor_req_t<0> lreq({rlow[0],rlow[1]},{},{out_uid.as_ptr(false), r.data.level});
+        pq1.push(lreq);
+      }
+
+      if (rhigh[0].isterminal() && rhigh[1].isterminal() && rhigh[0] == rhigh[1]) {
+        //push leaf arc from current
+        arc ahigh =  { out_uid.as_ptr(true), rhigh[0] };
+        aw.push_terminal(ahigh);
+      } else {
+        //push request from current
+        cor_req_t<0> hreq({rhigh[0],rhigh[1]},{},{out_uid.as_ptr(true), r.data.level});
+        pq1.push(hreq);
+      }
+      
+      // forward incoming
+      while(pq1.has_top() && pq1.top().target == r.target) {
+        //dummy (should also consider level?)
+        const cor_req_t<0> r1 = pq1.pull();
+        if (r1.data.source != ptr_uint64::nil()) {
+          //push to out!
+          arc in = {r1.data.source , out_uid};
+          aw.push_internal(in);
+        }
+      } 
+    }
+    return aw;
+  }
+
+
+ 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // "Public" interface
 
@@ -272,7 +414,8 @@ namespace adiar::internal
       stats_replace.nested_sweeps += 1u;
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
-
+    case replace_type::Jump_Down:
+      return replace__adj_swap_scan<Policy>(dd,m);
     case replace_type::Monotone:
 #ifdef ADIAR_STATS
       stats_replace.monotonic_scans += 1u;
