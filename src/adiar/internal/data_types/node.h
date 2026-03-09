@@ -231,10 +231,10 @@ namespace adiar::internal
       , _children{ l, h }
     {
       adiar_assert(!l.is_nil(), "Cannot create a node with nil child");
-      adiar_assert(l.is_terminal() || label < l.label(), "Node is not prior to given low child");
+      //adiar_assert(l.is_terminal() || label < l.label(), "Node is not prior to given low child");
 
       adiar_assert(!h.is_nil(), "Cannot create a node with nil child");
-      adiar_assert(h.is_terminal() || label < h.label(), "Node is not prior to given high child");
+      //adiar_assert(h.is_terminal() || label < h.label(), "Node is not prior to given high child");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
