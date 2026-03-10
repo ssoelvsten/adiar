@@ -297,7 +297,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables based on the given (total) map.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy, bool check_reduced = true>
+  template <typename Policy>
   typename Policy::dd_type
   replace(const exec_policy& ep,
           typename Policy::__dd_type&& __dd,
@@ -305,12 +305,10 @@ namespace adiar::internal
           replace_type m_type)
   {
     // Is it already reduced?
-    if constexpr (check_reduced) {
-      if (__dd.template has<typename Policy::shared_node_file_type>()) {
-        const typename Policy::dd_type dd(
-          __dd.template get<typename Policy::shared_node_file_type>(), __dd._negate);
-        return replace<Policy>(ep, dd, m, m_type);
-      }
+    if (__dd.template has<typename Policy::shared_node_file_type>()) {
+      const typename Policy::dd_type dd(__dd.template get<typename Policy::shared_node_file_type>(),
+                                        __dd._negate);
+      return replace<Policy>(ep, dd, m, m_type);
     }
 
     const replace_type inferred_type =
