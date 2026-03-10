@@ -264,38 +264,41 @@ namespace adiar::internal
 
   //types
   template <uint8_t nodes_carried>
-  using cor_req_t = adiar::internal::request_data<2,adiar::internal::with_parent_and_level, nodes_carried>;
+  using cor_req_t = request_data<2,with_parent_and_level, nodes_carried>;
 
-  template <size_t look_ahead, adiar::internal::memory_mode mem_mode>
-  using cor_priority_queue_1_t =
-  adiar::internal::levelized_node_priority_queue<cor_req_t<0>,
-                                adiar::internal::request_data_first_lt<cor_req_t<0>>,
-                                look_ahead,
-                                mem_mode,
-                                1,
-                                0>;
+  template <memory_mode mem_mode>
+  using cor_priority_queue_1_t = priority_queue<mem_mode, cor_req_t<0>,
+                                request_data_first_lt<cor_req_t<0>>>;
   //attempt
 
 
-  template<typename Policy>
+    template<typename Policy>
   tuple<tuple<typename Policy::pointer_type>>
   reqFor(tuple<typename Policy::pointer_type> t, node v , typename Policy::label_type level) {
+      std::cout << "running reqFor\n";
       if (t[0].is_terminal() && t[1].is_terminal()) {
+        std::cout << " \t both terminal case\n";
         return { {t[0],t[0]}, {t[1],t[1]} };
       }
 
       if (t[0].is_terminal()) {
+        std::cout << " \t just t[0] terminal case\n";
         return { {t[0], v.low()}, {t[0], v.high()}};
       }
 
+      if (t[1].is_terminal()) {
+        std::cout << " \t just t[1] terminal case\n";
+        return { {v.low(), t[1]}, {v.high(), t[1]}};
+      }
+
+      std::cout << " \t hopefully never here!\n";
       return {t.first(), t.second()}; //DUMMY!
   }
   
   template <typename Policy>
   inline typename Policy::dd_type
-  replace__adj_swap_scan2(const typename Policy::dd_type& dd, 
+  relable_all(const typename Policy::dd_type& dd, 
                           const replace_func<Policy>& m) {
-    //relabel all the nodes tm
     shared_levelized_file<bdd::node_type> out;
     {
         node_ofstream nw(out);
@@ -303,10 +306,18 @@ namespace adiar::internal
         while(in_nodes.can_pull()){
          node n = in_nodes.pull();
          nw.unsafe_push(__replace(n, m));
-      }
+        }                      
     }
+    return out;
+  } 
 
-    //prep in & out
+  template <typename Policy>
+  inline typename Policy::__dd_type
+  replace__adj_swap_scan2(const typename Policy::dd_type& dd, 
+                          const replace_func<Policy>& m) {
+    //relabel all the nodes tm
+    bdd out = relable_all<Policy>(dd,m);
+    
     // Set up output
     shared_levelized_file<arc> out_arcs;
     arc_ofstream aw(out_arcs);
@@ -316,64 +327,80 @@ namespace adiar::internal
     node root = in_nodes.pull();
 
     //prep PQ1 (hardcoded for external + memory is whack)
-    const size_t aux_available_memory = internal::memory_available();
-    using pq_1_type = cor_priority_queue_1_t<ADIAR_LPQ_LOOKAHEAD, internal::memory_mode::External>;
+    const size_t aux_available_memory = memory_available();
+    using pq_1_type = cor_priority_queue_1_t<memory_mode::External>;
     const size_t pq_1_memory = aux_available_memory / 2;
-    statistics::levelized_priority_queue_t stats_test;
+    //statistics::levelized_priority_queue_t stats_test;
     
     //push initial request to PQ1 (based on root)
-    pq_1_type pq1({in_nodes},pq_1_memory,  aux_available_memory / 10, stats_test);
+    pq_1_type pq1(pq_1_memory,  aux_available_memory / 10);
     cor_req_t<0> init_req({root.low(), root.high()}, {}, {ptr_uint64::nil(), root.uid().label()});
     pq1.push(init_req);
 
-    //let v be smalles node after root
-    node v = in_nodes.pull();
+    //let v be smallest node after root
+    node v = (in_nodes.can_pull()) ? in_nodes.pull() : throw invalid_argument("what the hell man");
 
-    while (pq1.can_pull()) {
+    while (!pq1.empty()) {
       cor_req_t<0> r = pq1.top();
-      const typename Policy::pointer_type tseek = std::min(r.target.first().label(), r.data.level) ; //DUMMY
-
+      std::cout << "iter scan2 " << r << "\n";
+      const node::uid_type t_uid(r.data.level, 0); //id here is questionable..
+      const typename adiar::internal::ptr_uint64 tseek = (!r.target.first().is_terminal()) ? r.target.first() : t_uid; //DUMMY!
+      while (v.uid() < tseek && in_nodes.can_pull()) { v = in_nodes.pull(); }
       typename Policy::id_type id = 0; //DUMMY
-      typename Policy::label_type label = tseek.label;
-      //TODO update v up to tseek!!
+      typename Policy::label_type label = tseek.label() ;
+     
 
       tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.data.level);
       tuple<typename Policy::pointer_type> rlow = reqs[0]; 
       tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
       
       const node::uid_type out_uid(label, id); //x_label,id
-      if (rlow[0].isterminal() && rlow[1].isterminal() && rlow[0] == rlow[1]) {
+      const node::uid_type out_uid2(m(label), id); //x_m(label),id
+      if (rlow[0].is_terminal() && rlow[1].is_terminal() && rlow[0] == rlow[1]) {
         //push leaf arc from current
-        arc alow =  { out_uid.as_ptr(false), rlow[0] };
+        arc alow =  { out_uid2.as_ptr(false), rlow[0] };
+        std::cout<< "pushing term arc: " << alow << "\n";
         aw.push_terminal(alow);
       } else {
         //push request from current
-        cor_req_t<0> lreq({rlow[0],rlow[1]},{},{out_uid.as_ptr(false), r.data.level});
+        cor_req_t<0> lreq({rlow[0],rlow[1]},{},{out_uid2.as_ptr(false), r.data.level});
         pq1.push(lreq);
       }
 
-      if (rhigh[0].isterminal() && rhigh[1].isterminal() && rhigh[0] == rhigh[1]) {
+      if (rhigh[0].is_terminal() && rhigh[1].is_terminal() && rhigh[0] == rhigh[1]) {
         //push leaf arc from current
-        arc ahigh =  { out_uid.as_ptr(true), rhigh[0] };
+        arc ahigh =  { out_uid2.as_ptr(true), rhigh[0] };
+        std::cout<< "pushing term arc: " << ahigh << "\n";
         aw.push_terminal(ahigh);
       } else {
         //push request from current
-        cor_req_t<0> hreq({rhigh[0],rhigh[1]},{},{out_uid.as_ptr(true), r.data.level});
+        cor_req_t<0> hreq({rhigh[0],rhigh[1]},{},{out_uid2.as_ptr(true), r.data.level});
         pq1.push(hreq);
       }
       
       // forward incoming
-      while(pq1.has_top() && pq1.top().target == r.target) {
+
+      while((!pq1.empty()) && pq1.top().target == r.target) {
+        std::cout << "goes into while again?\n";
         //dummy (should also consider level?)
-        const cor_req_t<0> r1 = pq1.pull();
+        const cor_req_t<0> r1 = pq1.top(); //should not pop also?
+        pq1.pop();
+        std::cout << "has popped: " << r1 << "\n";
         if (r1.data.source != ptr_uint64::nil()) {
           //push to out!
-          arc in = {r1.data.source , out_uid};
+          arc in = {r1.data.source , out_uid2};
+          std::cout << "has pushed internal: " << in << "\n";
           aw.push_internal(in);
+          
         }
       } 
     }
-    return aw;
+    std::cout << "exited big loop!\n";
+     aw.close();  // shouldn't need to do this..
+     //in_nodes.close();
+
+     //return typename Policy::__dd_type(out_arcs, exec_policy::access::Auto);
+     return typename Policy::__dd_type(out_arcs,exec_policy::access::Auto);
   }
 
 
@@ -385,7 +412,7 @@ namespace adiar::internal
   /// \brief Replace variables based on the given (total) map.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  typename Policy::dd_type
+  typename Policy::__dd_type
   replace(const exec_policy& /*ep*/,
           const typename Policy::dd_type& dd,
           const replace_func<Policy>& m,
@@ -415,7 +442,7 @@ namespace adiar::internal
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
     case replace_type::Jump_Down:
-      return replace__adj_swap_scan<Policy>(dd,m);
+      return replace__adj_swap_scan2<Policy>(dd,m);
     case replace_type::Monotone:
 #ifdef ADIAR_STATS
       stats_replace.monotonic_scans += 1u;
