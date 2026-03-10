@@ -1397,7 +1397,7 @@ namespace adiar
   ///
   /// \throws invalid_argument if `m_type` classifies `m` as not monotonic.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
+  __bdd
   bdd_replace(const bdd& f,
               const function<bdd::label_type(bdd::label_type)>& m,
               replace_type m_type = replace_type::Auto);
@@ -1405,7 +1405,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables in *f* according to the mapping in *m*.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
+  __bdd
   bdd_replace(const exec_policy& ep,
               const bdd& f,
               const function<bdd::label_type(bdd::label_type)>& m,
@@ -1429,7 +1429,7 @@ namespace adiar
   ///
   /// \throws invalid_argument if `m_type` classifies `m` as not monotonic.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
+  __bdd
   bdd_replace(__bdd&& f,
               const function<bdd::label_type(bdd::label_type)>& m,
               replace_type m_type = replace_type::Auto);
@@ -1437,7 +1437,7 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables in *f* according to the mapping in *m*.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  bdd
+  __bdd
   bdd_replace(const exec_policy& ep,
               __bdd&& f,
               const function<bdd::label_type(bdd::label_type)>& m,
