@@ -1,5 +1,8 @@
 #include "../../test.h"
 #include "adiar/bdd.h"
+#include "adiar/bdd/bdd_policy.h"
+#include "adiar/exec_policy.h"
+#include "adiar/internal/algorithms/reduce.h"
 #include "bandit/assertion_frameworks/snowhouse/assert.h"
 
 go_bandit([]() {
@@ -138,8 +141,6 @@ go_bandit([]() {
 
     shared_levelized_file<bdd::node_type> bdd_4_nf;
     /*
-    // NOTE: This BDD is on-purpose not canonical (to check whether it has been run through the
-    //       Reduce algorithm or not)
     //
     //        1-       ---- x0
     //        | \
@@ -235,13 +236,20 @@ go_bandit([]() {
             const mapping_type m = [](const int x) { if (x == 0) return 1;
                                                             if (x == 1) return 0;
                                                             else return x; };
-            const bdd res = bdd_replace(bdd_4, m);
-
-            bdd_printdot(res, "test_simpel");
+            __bdd res = bdd_replace(bdd_4, m);
             
-            node_test_ifstream out_nodes(res);
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(0, bdd::max_id, terminal_F, terminal_T)));
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(1, bdd::max_id, bdd::pointer_type(0, bdd::max_id), terminal_T)));
+            arc_test_ifstream out_arcs(res);
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(), Is().EqualTo(arc{bdd::uid_type(0,0), false, terminal_F}));
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(), Is().EqualTo(arc{bdd::uid_type(0,0), true, terminal_T}));
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(), Is().EqualTo(arc{bdd::uid_type(1,0), true, terminal_T}));
+            
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(), Is().EqualTo(arc{bdd::uid_type(1,0),false, bdd::uid_type(0,0)}));
+            
+            
           });
 
           //MORE TEST TO FOLLOW HERE!
