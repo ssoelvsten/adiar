@@ -149,7 +149,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace the level in constant time
   ///
-  /// \remark This requires that the mapping, `m`, is *monotonic*.
+  /// \remark This requires that the mapping, `m`, is *monotonic* and *affine*.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   inline typename Policy::dd_type
