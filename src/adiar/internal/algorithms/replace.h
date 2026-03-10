@@ -243,7 +243,7 @@ namespace adiar::internal
   /// \brief Replace variables based on the given (total) map.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  typename Policy::dd_type
+  typename Policy::__dd_type
   replace(const exec_policy& /*ep*/,
           const typename Policy::dd_type& dd,
           const replace_func<Policy>& m,
@@ -298,7 +298,7 @@ namespace adiar::internal
   /// \brief Replace variables based on the given (total) map.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  typename Policy::dd_type
+  typename Policy::__dd_type
   replace(const exec_policy& ep,
           typename Policy::__dd_type&& __dd,
           const replace_func<Policy>& m,
@@ -306,8 +306,8 @@ namespace adiar::internal
   {
     // Is it already reduced?
     if (__dd.template has<typename Policy::shared_node_file_type>()) {
-      const typename Policy::dd_type dd(__dd.template get<typename Policy::shared_node_file_type>(),
-                                        __dd._negate);
+      const typename Policy::dd_type dd(
+        __dd.template get<typename Policy::shared_node_file_type>(), __dd._negate, __dd._shift);
       return replace<Policy>(ep, dd, m, m_type);
     }
 
@@ -347,7 +347,7 @@ namespace adiar::internal
   /// \brief Replace variables based on the given (total) map.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
-  typename Policy::dd_type
+  typename Policy::__dd_type
   replace(typename Policy::__dd_type&& __dd, const replace_func<Policy>& m, replace_type m_type)
   {
     const exec_policy ep = __dd._policy;
