@@ -506,16 +506,12 @@ namespace adiar::internal
       default: return ct;
       }
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Friends
-    friend class __dd;
   };
 
   inline __dd::__dd(const dd& dd)
-    : _union(dd._file)
-    , _negate(dd._negate)
-    , _shift(dd._shift)
+    : _union(dd.file_ptr())
+    , _negate(dd.is_negated())
+    , _shift(dd.shift())
   {}
 
   /// \cond
