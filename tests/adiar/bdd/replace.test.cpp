@@ -310,13 +310,17 @@ go_bandit([]() {
             */
             const mapping_type m = [](const int x) { if (x == 0) return 3;
                                                      return x; };
-            __bdd res = bdd_replace(bdd_4, m);
+            __bdd res = bdd_replace(bdd_1, m);
 
             arc_test_ifstream out_arcs(res);
 
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
                        Is().EqualTo(arc{bdd::uid_type(2,0),false, bdd::uid_type(3,0)}));
+            
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(),
+                       Is().EqualTo(arc{bdd::uid_type(1,0),false, bdd::uid_type(3,0)}));
 
             AssertThat(out_arcs.can_pull_internal(), Is().False());
 
@@ -486,7 +490,7 @@ go_bandit([]() {
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,0), false, terminal_F}));
+                       Is().EqualTo(arc{bdd::uid_type(1,0), false, terminal_F}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
