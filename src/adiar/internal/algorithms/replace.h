@@ -2,6 +2,7 @@
 #define ADIAR_INTERNAL_ALGORITHMS_REPLACE_H
 
 #include "adiar/bdd.h"
+#include "adiar/internal/data_types/ptr.h"
 #include "adiar/internal/data_types/request.h"
 #include "adiar/internal/data_types/uid.h"
 #include "adiar/internal/io/shared_file_ptr.h"
@@ -241,27 +242,6 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: Nested Sweeping for non-monotonic reorderings.
 
-  //entry for adjacant swap
-  template <typename Policy>
-  inline typename Policy::dd_type
-  replace__adj_swap_scan(const typename Policy::dd_type& dd, 
-                          const replace_func<Policy>& m) {
-      std::cout << "calls 100 \n";   
-      
-      //TDD say top level should be moved down 1
-      shared_levelized_file<bdd::node_type> out;
-      {
-        node_ofstream nw(out);
-        node_ifstream<true> in_nodes(dd); 
-        while(in_nodes.can_pull()){
-         node n = in_nodes.pull();
-          nw.unsafe_push(__replace(n, m));
-      }}
-      
-      return out; //DUMMY!
-  }
-
-
   //types
   template <uint8_t nodes_carried>
   using cor_req_t = request_data<2,with_parent_and_level, nodes_carried>;
@@ -272,27 +252,61 @@ namespace adiar::internal
   //attempt
 
 
-    template<typename Policy>
+  template<typename Policy, typename pq_t>
+  inline void 
+  pusher(pq_t& pq, 
+         arc_ofstream& out_stream, 
+         ptr_uint64 source, 
+         tuple<typename Policy::pointer_type>& target, 
+         typename Policy::label_type& level) {
+
+    if (target[0].is_terminal() && target[1].is_terminal() && target[0] == target[1]) {
+        //push leaf arc from current
+        arc alow =  {source, target[0]};
+        std::cout<< "pushing term arc: " << alow << "\n";
+        out_stream.push_terminal(alow);
+      } else {
+        //push request from current
+        cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
+        pq.push(lreq);
+      }
+  }
+
+  template<typename Policy>
   tuple<tuple<typename Policy::pointer_type>>
   reqFor(tuple<typename Policy::pointer_type> t, node v , typename Policy::label_type level) {
       std::cout << "running reqFor\n";
-      if (t[0].is_terminal() && t[1].is_terminal()) {
+      bdd::pointer_type tl = t[0];
+      bdd::pointer_type th = t[1];
+
+      
+
+      if (tl.is_terminal() && th.is_terminal()) {
         std::cout << " \t both terminal case\n";
         return { {t[0],t[0]}, {t[1],t[1]} };
       }
 
-      if (t[0].is_terminal()) {
-        std::cout << " \t just t[0] terminal case\n";
-        return { {t[0], v.low()}, {t[0], v.high()}};
+      if (th.is_terminal() || tl.label() < th.label()) {
+        std::cout << " \t th terminal  or tl less case\n";
+        return { {v.low(), th}, {v.high(), th}};
       }
 
-      if (t[1].is_terminal()) {
-        std::cout << " \t just t[1] terminal case\n";
-        return { {v.low(), t[1]}, {v.high(), t[1]}};
+      if (tl.is_terminal() || tl.label() > th.label()) {
+        std::cout << " \t tl terminal or th less case\n";
+        return { {tl, v.low()}, {tl, v.high()}};
       }
 
-      std::cout << " \t hopefully never here!\n";
-      return {t.first(), t.second()}; //DUMMY!
+      if (v.uid() == tl && v.uid() == th ) {
+        std::cout << " \t both are v case \n";
+        return { {v.low(), v.low()}, {v.high(), v.high()}};
+      }
+      else {
+          std::cout << " \t hopefully never here!\n";
+          throw invalid_argument("right case missing!");
+      }
+    
+      
+      //return {t.first(), t.second()}; //DUMMY!
   }
   
   template <typename Policy>
@@ -313,7 +327,7 @@ namespace adiar::internal
 
   template <typename Policy>
   inline typename Policy::__dd_type
-  replace__adj_swap_scan2(const typename Policy::dd_type& dd, 
+  replace__cor_scan(const typename Policy::dd_type& dd, 
                           const replace_func<Policy>& m) {
     //relabel all the nodes tm
     bdd out = relable_all<Policy>(dd,m);
@@ -336,18 +350,20 @@ namespace adiar::internal
     pq_1_type pq1(pq_1_memory,  aux_available_memory / 10);
     cor_req_t<0> init_req({root.low(), root.high()}, {}, {ptr_uint64::nil(), root.uid().label()});
     pq1.push(init_req);
-
+    
     //let v be smallest node after root
-    node v = (in_nodes.can_pull()) ? in_nodes.pull() : throw invalid_argument("what the hell man");
-
+    node v = (in_nodes.can_pull()) ? in_nodes.pull() : throw invalid_argument("tree is only root?");
+    typename Policy::id_type id = -1;
+    typename Policy::label_type label = -1; //may make ids weird?
     while (!pq1.empty()) {
       cor_req_t<0> r = pq1.top();
-      std::cout << "iter scan2 " << r << "\n";
+      std::cout << " \niter scan " << r << "\n";
       const node::uid_type t_uid(r.data.level, 0); //id here is questionable..
-      const typename adiar::internal::ptr_uint64 tseek = (!r.target.first().is_terminal()) ? r.target.first() : t_uid; //DUMMY!
+      const typename adiar::internal::ptr_uint64 tseek = (r.target.first() < t_uid) ? r.target.first() : t_uid; //DUMMY!
       while (v.uid() < tseek && in_nodes.can_pull()) { v = in_nodes.pull(); }
-      typename Policy::id_type id = 0; //DUMMY
-      typename Policy::label_type label = tseek.label() ;
+      id = (label == tseek.label()) ? id+1 : 0; 
+      label = tseek.label() ;
+      std::cout << " \t tseek: " << tseek << " , lable, id: " << label << "," << id << "\n";
      
 
       tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.data.level);
@@ -355,31 +371,11 @@ namespace adiar::internal
       tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
       
       const node::uid_type out_uid(label, id); //x_label,id
-      const node::uid_type out_uid2(m(label), id); //x_m(label),id
-      if (rlow[0].is_terminal() && rlow[1].is_terminal() && rlow[0] == rlow[1]) {
-        //push leaf arc from current
-        arc alow =  { out_uid2.as_ptr(false), rlow[0] };
-        std::cout<< "pushing term arc: " << alow << "\n";
-        aw.push_terminal(alow);
-      } else {
-        //push request from current
-        cor_req_t<0> lreq({rlow[0],rlow[1]},{},{out_uid2.as_ptr(false), r.data.level});
-        pq1.push(lreq);
-      }
+      pusher<Policy, pq_1_type>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+      pusher<Policy, pq_1_type>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
 
-      if (rhigh[0].is_terminal() && rhigh[1].is_terminal() && rhigh[0] == rhigh[1]) {
-        //push leaf arc from current
-        arc ahigh =  { out_uid2.as_ptr(true), rhigh[0] };
-        std::cout<< "pushing term arc: " << ahigh << "\n";
-        aw.push_terminal(ahigh);
-      } else {
-        //push request from current
-        cor_req_t<0> hreq({rhigh[0],rhigh[1]},{},{out_uid2.as_ptr(true), r.data.level});
-        pq1.push(hreq);
-      }
       
       // forward incoming
-
       while((!pq1.empty()) && pq1.top().target == r.target) {
         std::cout << "goes into while again?\n";
         //dummy (should also consider level?)
@@ -388,7 +384,7 @@ namespace adiar::internal
         std::cout << "has popped: " << r1 << "\n";
         if (r1.data.source != ptr_uint64::nil()) {
           //push to out!
-          arc in = {r1.data.source , out_uid2};
+          arc in = {r1.data.source , out_uid};
           std::cout << "has pushed internal: " << in << "\n";
           aw.push_internal(in);
           
@@ -442,7 +438,9 @@ namespace adiar::internal
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
     case replace_type::Jump_Down:
-      return replace__adj_swap_scan2<Policy>(dd,m);
+      return replace__cor_scan<Policy>(dd,m);
+    case replace_type::Swap_Adjacent:
+      return replace__cor_scan<Policy>(dd,m);
     case replace_type::Monotone:
 #ifdef ADIAR_STATS
       stats_replace.monotonic_scans += 1u;
