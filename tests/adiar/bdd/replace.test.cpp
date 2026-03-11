@@ -175,8 +175,8 @@ go_bandit([]() {
     */
 
     { // Garbage collect early and free write-lock
-      const node n5 = node(2, bdd::max_id, terminal_T, terminal_F);
-      const node n4 = node(2, bdd::max_id-1, terminal_F, terminal_T);
+      const node n5 = node(3, bdd::max_id, terminal_T, terminal_F);
+      const node n4 = node(3, bdd::max_id-1, terminal_F, terminal_T);
       const node n3 = node(1, bdd::max_id, terminal_F, n5.uid());
       const node n2 = node(1, bdd::max_id-1, terminal_F, n4.uid());
       const node n1 = node(0, bdd::max_id, n2.uid(), n3.uid());
@@ -286,7 +286,7 @@ go_bandit([]() {
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
                        Is().EqualTo(arc{bdd::uid_type(0,0), true, terminal_T}));
-            
+
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
                        Is().EqualTo(arc{bdd::uid_type(1,0), false, terminal_F}));
@@ -377,8 +377,8 @@ go_bandit([]() {
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
                        Is().EqualTo(arc{bdd::uid_type(1,0), true, bdd::pointer_type(2,1)}));
-            
-                       AssertThat(out_arcs.can_pull_internal(), Is().True());
+
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
                        Is().EqualTo(arc{bdd::uid_type(2,1), false, bdd::pointer_type(3,0)}));
 
@@ -420,16 +420,16 @@ go_bandit([]() {
             //
             //        __1__            ---- x1
             //       /     \
-            //      F    __3__         ---- x2
+            //      F    __3__         ---- x0...2?
             //          /     \
-            //         4       5       ---- x0...3?
+            //         4       5       ---- x3
             //        / \     / \
             //       F   T   T   F
             //
             */
-            const mapping_type m = [](const int x) { if (x == 0) return 3;
+            const mapping_type m = [](const int x) { if (x == 0) return 2;
                                                      else return x; };
-            __bdd res = bdd_replace(bdd_3, m);
+            __bdd res = bdd_replace(bdd_5, m);
 
             arc_test_ifstream out_arcs(res);
 
