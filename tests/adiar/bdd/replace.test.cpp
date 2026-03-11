@@ -142,10 +142,10 @@ go_bandit([]() {
     shared_levelized_file<bdd::node_type> bdd_4_nf;
     /*
     //
-    //        1-       ---- x0
+    //        1_       ---- x0
     //        | \
-    //        2  |     ---- x1
-    //       / \ /
+    //        2 |      ---- x1
+    //       / \|
     //      F   T
     */
 
@@ -233,6 +233,33 @@ go_bandit([]() {
           });
 
           it("swaps levels in BDD_4" , [&]() {
+            /*
+            //
+            //        1_       ---- x1
+            //        | \
+            //        2 |      ---- x0
+            //       / \|
+            //      F   T
+            */
+            const mapping_type m = [](const int x) { if (x == 0) return 1;
+                                                     if (x == 1) return 0;
+                                                     else return x; };
+            __bdd res = bdd_replace(bdd_4, m);
+            arc_test_ifstream out_arcs(res);
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(), Is().EqualTo(arc{bdd::uid_type(0,0), false, terminal_F}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(), Is().EqualTo(arc{bdd::uid_type(0,0), true, terminal_T}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(), Is().EqualTo(arc{bdd::uid_type(1,0), true, terminal_T}));
+
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(), Is().EqualTo(arc{bdd::uid_type(1,0),false, bdd::uid_type(0,0)}));
+          });
+
+          it("swap reduces a node away" , [&]() {
             const mapping_type m = [](const int x) { if (x == 0) return 1;
                                                      if (x == 1) return 0;
                                                      else return x; };
@@ -301,6 +328,69 @@ go_bandit([]() {
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
                        Is().EqualTo(arc{bdd::uid_type(5,0), true, terminal_T}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().False());
+          });
+          it("jumps that move through a double layer" , [&]() {
+            /*
+            //
+            //       _1_        ---- x1
+            //      /   \
+            //      2   3       ---- x2
+            //     / \ / \
+            //
+            //       / \/
+            //        4        ---- x0...3?
+            //        / \
+            //        F T
+            */
+            const mapping_type m = [](const int x) { if (x == 0) return 3;
+                                                     else return x; };
+            __bdd res = bdd_replace(bdd_3, m);
+            
+            arc_test_ifstream out_arcs(res);
+            
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(),
+                       Is().EqualTo(arc{bdd::uid_type(1,0), false, bdd::pointer_type(2,0)}));
+
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(),
+                       Is().EqualTo(arc{bdd::uid_type(1,0), true, bdd::pointer_type(2,1)}));
+
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(),
+                       Is().EqualTo(arc{bdd::uid_type(2,0), false, bdd::pointer_type(3,0)}));
+
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(),
+                       Is().EqualTo(arc{bdd::uid_type(2,1), false, bdd::pointer_type(3,1)}));
+
+            AssertThat(out_arcs.can_pull_internal(), Is().False());
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(),
+                       Is().EqualTo(arc{bdd::uid_type(2,0), true, terminal_F}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(),
+                       Is().EqualTo(arc{bdd::uid_type(2,1), true, terminal_F}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(),
+                       Is().EqualTo(arc{bdd::uid_type(3,0), false, terminal_T}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(),
+                       Is().EqualTo(arc{bdd::uid_type(3,0), false, terminal_F}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(),
+                       Is().EqualTo(arc{bdd::uid_type(3,1), false, terminal_F}));
+
+            AssertThat(out_arcs.can_pull_terminal(), Is().True());
+            AssertThat(out_arcs.pull_terminal(),
+                       Is().EqualTo(arc{bdd::uid_type(3,1), true, terminal_T}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().False());
           });
