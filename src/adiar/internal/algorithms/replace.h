@@ -278,6 +278,29 @@ namespace adiar::internal
       }
   }
 
+  template<typename Policy, typename pq_t, uint8_t nc>
+  inline void 
+  internal_pusher(pq_t& pq, 
+                  arc_ofstream& aw , 
+                  typename Policy::uid_type out_uid, 
+                  tuple<typename Policy::pointer_type> target,
+                  typename Policy::label_type level){
+     while((!pq.empty()) && pq.top().target == target 
+                             && pq.top().data.level == level) {
+          if (debug_enabled) std::cout << "goes into while again?\n";
+          const cor_req_t<nc> r1 = pq.top(); //when levelized change to pull
+          pq.pop();
+          if (debug_enabled) std::cout << "has popped: " << r1 << "\n";
+          if (r1.data.source != ptr_uint64::nil()) {
+            //push to out!
+            arc in = {r1.data.source , out_uid};
+            if (debug_enabled) std::cout << "has pushed internal: " << in << "\n";
+            aw.push_internal(in);
+          
+          } 
+        }
+  }
+
   template<typename Policy>
   tuple<tuple<typename Policy::pointer_type>>
   reqFor(tuple<typename Policy::pointer_type> t, 
@@ -440,20 +463,7 @@ namespace adiar::internal
                     {out_uid.as_ptr(true)}});
 
         // forward incoming
-        while((!pq1.empty()) && pq1.top().target == r.target 
-                             && pq1.top().data.level == r.data.level) {
-          if(debug_enabled) std::cout << "goes into pq1 while again?\n";
-          const cor_req_t<0> r1 = pq1.top(); //when levelized change to pull
-          pq1.pop();
-          if(debug_enabled) std::cout << "has popped: " << r1 << "\n";
-          if (r1.data.source != ptr_uint64::nil()) {
-            //push to out!
-            arc in = {r1.data.source , out_uid};
-            if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
-            aw.push_internal(in);
-          
-          } 
-        }
+        internal_pusher<Policy, pq_1_type, 0>(pq1, aw, out_uid, r.target,  r.data.level);
         continue;
       }
     
@@ -497,35 +507,8 @@ namespace adiar::internal
 
       
       // forward incoming
-      while((!pq1.empty()) && pq1.top().target == r.target 
-                           && pq1.top().data.level == r.data.level) {
-        if(debug_enabled) std::cout << "goes into pq1 while again?\n";
-        const cor_req_t<0> r1 = pq1.top(); //when levelized chaneg to pull
-        pq1.pop();
-        if(debug_enabled) std::cout << "has popped: " << r1 << "\n";
-        if (r1.data.source != ptr_uint64::nil()) {
-          //push to out!
-          arc in = {r1.data.source , out_uid};
-          if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
-          aw.push_internal(in);
-          
-        }
-      } 
-
-      while((!pq2.empty()) && pq2.top().target == r.target
-                           && pq2.top().data.level == r.data.level) {
-        if(debug_enabled) std::cout << "goes into pq2 while again?\n";
-        const cor_req_t<1> r1 = pq2.top(); //when levelized chaneg to pull
-        pq2.pop();
-        if(debug_enabled) std::cout << "has popped: " << r1 << "\n";
-        if (r1.data.source != ptr_uint64::nil()) {
-          //push to out!
-          arc in = {r1.data.source , out_uid};
-          if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
-          aw.push_internal(in);
-          
-        }
-      }
+      internal_pusher<Policy, pq_1_type, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+      internal_pusher<Policy, pq_2_type, 1>(pq2, aw, out_uid, r.target,  r.data.level);
     }
     if(debug_enabled) std::cout << "exited big loop!\n";
      aw.close();  // shouldn't need to do this..
