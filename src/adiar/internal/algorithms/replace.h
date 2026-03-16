@@ -241,10 +241,13 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: Nested Sweeping for non-monotonic reorderings.
+//
+  // for allowing testing prints
+  constexpr bool debug_enabled = false;
 
   //types
   template <uint8_t nodes_carried>
-  using cor_req_t = request_data<2,with_parent_and_level, nodes_carried>;
+  using cor_req_t = request_data<2, with_parent_and_level, nodes_carried>;
 
   template <memory_mode mem_mode>
   using cor_priority_queue_1_t = priority_queue<mem_mode, cor_req_t<0>,
@@ -253,7 +256,6 @@ namespace adiar::internal
   template <memory_mode mem_mode>
   using cor_priority_queue_2_t = priority_queue<mem_mode, cor_req_t<1>,
                                 request_data_second_lt<cor_req_t<1>>>;
-
 
   template<typename Policy, typename pq_t>
   inline void 
@@ -266,12 +268,12 @@ namespace adiar::internal
     if (target[0].is_terminal() && target[1].is_terminal() && target[0] == target[1]) {
         //push leaf arc from current
         arc alow =  {source, target[0]};
-        std::cout<< "pushing term arc: " << alow << "\n";
+        if (debug_enabled) std::cout << "pushing term arc: " << alow << "\n";
         out_stream.push_terminal(alow);
       } else {
         //push request from current
         cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
-        std::cout<< "pushing req to pq1: " << lreq << "\n";
+        if (debug_enabled) std::cout<< "pushing req to pq1: " << lreq << "\n";
         pq.push(lreq);
       }
   }
@@ -282,82 +284,75 @@ namespace adiar::internal
          node v , 
          typename Policy::pointer_type low,
          typename Policy::pointer_type high) {
-      std::cout << "running reqFor with " << t << "\n";
+      if (debug_enabled) std::cout << "running reqFor with " << t << "\n";
       bdd::pointer_type tl = t[0];
       bdd::pointer_type th = t[1];
 
-      auto dum_test = [](bdd::pointer_type tl, bdd::pointer_type th, bool flag){
-        if (flag) {
+      auto label_cmp = [](bdd::pointer_type tl, bdd::pointer_type th){
             //th not terminal
-            if (tl.is_terminal()) {return false;}
-            else {return tl.label() < th.label();}
-          }
-        else {
-            //tl not flag
-            if (th.is_terminal()) {return false;}
-            else {return tl.label() > th.label();}
-          }
+        if (tl.is_terminal()) {return false;}
+        else {return tl.label() < th.label();}
       };
 
       if (tl.is_terminal() && th.is_terminal()) {
-        std::cout << " \t both terminal case\n";
-        return { {t[0],t[0]}, {t[1],t[1]} };
+        if(debug_enabled) std::cout << " \t both terminal case\n";
+        return { {tl,tl}, {th,th} };
       }
 
-      if (th.is_terminal() || dum_test(tl, th, true)) {
-        std::cout << " \t th terminal  or tl less case\n";
+      if (th.is_terminal() || label_cmp(tl, th)) {
+        if(debug_enabled) std::cout << " \t th terminal  or tl less case\n";
         return { {v.low(), th}, {v.high(), th}};
       }
 
-      if (tl.is_terminal() || dum_test(tl, th, false)) {
-        std::cout << " \t tl terminal or th less case\n";
+      if (tl.is_terminal() || tl.label() > th.label()) {
+        if(debug_enabled) std::cout << " \t tl terminal or th less case\n";
         return { {tl, v.low()}, {tl, v.high()}};
       }
 
       if (v.uid() == tl && v.uid() == th ) {
-        std::cout << " \t both are v case \n";
+        if(debug_enabled) std::cout << " \t both are v case \n";
         return { {v.low(), v.low()}, {v.high(), v.high()}};
       }
       //low high must exist!
       if(v.uid() == tl) {
-        std::cout << " \t lt is v case \n";
+        if(debug_enabled) std::cout << " \t lt is v case \n";
         return { {v.low(), low}, {v.high(), high}};
       }
 
       if(v.uid() == th) {
-        std::cout << " \t lh is v case \n";
+        if(debug_enabled) std::cout << " \t lh is v case \n";
         return { {low, v.low()}, {high, v.high()}};
       }
 
       else {
-          std::cout << " \t hopefully never here!\n";
-          throw invalid_argument("right case missing!");
+          throw invalid_argument("Unexpected case missing!");
       }
 
   }
   
   template <typename Policy>
   inline typename Policy::dd_type
-  relable_all(const typename Policy::dd_type& dd, 
+  relabel_all(const typename Policy::dd_type& dd, 
                           const replace_func<Policy>& m) {
-    shared_levelized_file<bdd::node_type> out;
+    shared_levelized_file<typename Policy::node_type> out;
     {
         node_ofstream nw(out);
         node_ifstream<true> in_nodes(dd); 
         while(in_nodes.can_pull()){
          node n = in_nodes.pull();
          nw.unsafe_push(__replace(n, m));
-        }                      
+        }
     }
-    return out;
+    return typename Policy::dd_type(out);
   } 
 
   template <typename Policy>
   inline typename Policy::__dd_type
   replace__cor_scan(const typename Policy::dd_type& dd, 
                           const replace_func<Policy>& m) {
-    //relabel all the nodes tm
-    bdd out = relable_all<Policy>(dd,m);
+    //TODO: replace with nested sweeping by inputting priority queues or levels if that works?
+  
+    bdd out = relabel_all<Policy>(dd,m);
     
     // Set up output
     shared_levelized_file<arc> out_arcs;
@@ -393,45 +388,46 @@ namespace adiar::internal
       if (pq1.has_top() && 
           (pq2.empty() || pq1.top().target.first() < pq2.top().target.second()))
           {
-            std::cout << "takes req from pq1\n";
+            if(debug_enabled) std::cout << "takes req from pq1\n";
             r = {pq1.top().target, 
                  { { { node::pointer_type::nil(), node::pointer_type::nil() } } }, 
                  pq1.top().data};
       } else {
-            std::cout << "\ntakes req from pq2\n";
+            if (debug_enabled)std::cout << "\ntakes req from pq2\n";
             r = pq2.top();
       }
-      std::cout << "iter scan " << r << "\n";
+
+      if (debug_enabled) std::cout << "iter scan " << r << "\n";
       const node::uid_type t_uid(r.data.level, 0); //id here is questionable..
       typename adiar::internal::ptr_uint64 tseek;
       if (r.empty_carry()) { tseek = (r.target.first() < t_uid) ? r.target.first() : t_uid; } 
       else { tseek = r.target.second();}  //TODO fix dummy request fetchign from PQs see if this is still right..
-      std::cout << "tseek: " << tseek << "\n";
+      if(debug_enabled) std::cout << "tseek: " << tseek << "\n";
       while (v.uid() < tseek && in_nodes.can_pull()) { v = in_nodes.pull(); }
-      std::cout << "v: " << v << "\n";
+      if (debug_enabled) std::cout << "v: " << v << "\n";
 
       //correct layer check (can probably be more efficient)
       if (r.target[0].is_node() && r.target[1].is_node() &&
           r.data.level < r.target[0].label() && 
           r.data.level < r.target[1].label()) {
-        std::cout << "enters copy if \n";
+        if (debug_enabled) std::cout << "enters copy if \n";
         if (r.target[0] == r.target[1]) {
-          std::cout << "skip surpressible node! \n";
+          if (debug_enabled)std::cout << "skip surpressible node! \n";
           const cor_req_t<0> r1 = pq1.top(); pq1.pop();
           typename Policy::id_type id1 = (label == r.target[0].label()) ? id+1 : 0;
           typename Policy::label_type lab1 = r.target[0].label() ; 
           const node::uid_type t_uid(lab1, id1);
           if (r1.data.source != ptr_uint64::nil()) {
             arc in = {r1.data.source , t_uid};
-            std::cout << "has pushed internal: " << in << "\n";
+            if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
             aw.push_internal(in);
           }
           continue;
         }
 
-        id = (label == tseek.label()) ? id+1 : 0; 
+        if (label == tseek.label()) id++;
         label = tseek.label() ;
-        std::cout << "lable, id: " << label << "," << id << "\n";
+        if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
 
         //push copy reqs
         const node::uid_type out_uid(label, id); //x_label,id
@@ -442,17 +438,18 @@ namespace adiar::internal
         pq1.push({{r.target[1],r.target[1]},
                     {},
                     {out_uid.as_ptr(true)}});
+
         // forward incoming
         while((!pq1.empty()) && pq1.top().target == r.target 
                              && pq1.top().data.level == r.data.level) {
-          std::cout << "goes into pq1 while again?\n";
+          if(debug_enabled) std::cout << "goes into pq1 while again?\n";
           const cor_req_t<0> r1 = pq1.top(); //when levelized change to pull
           pq1.pop();
-          std::cout << "has popped: " << r1 << "\n";
+          if(debug_enabled) std::cout << "has popped: " << r1 << "\n";
           if (r1.data.source != ptr_uint64::nil()) {
             //push to out!
             arc in = {r1.data.source , out_uid};
-            std::cout << "has pushed internal: " << in << "\n";
+            if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
             aw.push_internal(in);
           
           } 
@@ -464,20 +461,20 @@ namespace adiar::internal
       if (r.empty_carry() && r.target[0].is_node() && r.target[1].is_node()
             && r.target[0].label() == r.target[1].label()
             && r.target[0].id() != r.target[1].id()) {
-          std::cout << "enters pq2 push if-statement!\n";
+          if(debug_enabled) std::cout << "enters pq2 push if-statement!\n";
           const typename Policy::children_type children = v.children();
           while (pq1.has_top() && pq1.top().target == r.target) {
-             std::cout << "enters pq2 while\n";
+             if(debug_enabled) std::cout << "enters pq2 while\n";
              pq2.push({ r.target, { children }, pq1.top().data });
              pq1.pop();
           }
           continue;
       }
 
-      //Case eitehr on wrong level or at least one of targets is leaf.. 
+      //Case either on wrong level or at least one of targets is leaf.. 
       id = (label == tseek.label()) ? id+1 : 0; 
       label = tseek.label() ;
-      std::cout << "lable, id: " << label << "," << id << "\n";
+      if(debug_enabled) std::cout << "lable, id: " << label << "," << id << "\n";
 
       //check if we should update level in requests
       typename Policy::label_type new_level = r.data.level;
@@ -488,7 +485,7 @@ namespace adiar::internal
           new_level = (r.data.level > r.target[0].label()) ? r.data.level : r.target[0].label();
         }
       }
-      std::cout << "new level is: " << new_level << "\n";
+      if(debug_enabled) std::cout << "new level is: " << new_level << "\n";
      
       tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
       tuple<typename Policy::pointer_type> rlow = reqs[0]; 
@@ -502,14 +499,14 @@ namespace adiar::internal
       // forward incoming
       while((!pq1.empty()) && pq1.top().target == r.target 
                            && pq1.top().data.level == r.data.level) {
-        std::cout << "goes into pq1 while again?\n";
+        if(debug_enabled) std::cout << "goes into pq1 while again?\n";
         const cor_req_t<0> r1 = pq1.top(); //when levelized chaneg to pull
         pq1.pop();
-        std::cout << "has popped: " << r1 << "\n";
+        if(debug_enabled) std::cout << "has popped: " << r1 << "\n";
         if (r1.data.source != ptr_uint64::nil()) {
           //push to out!
           arc in = {r1.data.source , out_uid};
-          std::cout << "has pushed internal: " << in << "\n";
+          if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
           aw.push_internal(in);
           
         }
@@ -517,20 +514,20 @@ namespace adiar::internal
 
       while((!pq2.empty()) && pq2.top().target == r.target
                            && pq2.top().data.level == r.data.level) {
-        std::cout << "goes into pq2 while again?\n";
+        if(debug_enabled) std::cout << "goes into pq2 while again?\n";
         const cor_req_t<1> r1 = pq2.top(); //when levelized chaneg to pull
         pq2.pop();
-        std::cout << "has popped: " << r1 << "\n";
+        if(debug_enabled) std::cout << "has popped: " << r1 << "\n";
         if (r1.data.source != ptr_uint64::nil()) {
           //push to out!
           arc in = {r1.data.source , out_uid};
-          std::cout << "has pushed internal: " << in << "\n";
+          if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
           aw.push_internal(in);
           
         }
       }
     }
-    std::cout << "exited big loop!\n";
+    if(debug_enabled) std::cout << "exited big loop!\n";
      aw.close();  // shouldn't need to do this..
      //in_nodes.close();
 
