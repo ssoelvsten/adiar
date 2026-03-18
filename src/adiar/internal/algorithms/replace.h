@@ -6,6 +6,7 @@
 #include "adiar/internal/data_types/request.h"
 #include "adiar/internal/data_types/uid.h"
 #include "adiar/internal/io/shared_file_ptr.h"
+#include "adiar/internal/memory.h"
 #include <type_traits>
 
 #include <adiar/exception.h>
@@ -242,6 +243,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: Nested Sweeping for non-monotonic reorderings.
 //
+
   // for allowing testing prints
   constexpr bool debug_enabled = false;
 
@@ -256,6 +258,7 @@ namespace adiar::internal
   template <memory_mode mem_mode>
   using cor_priority_queue_2_t = priority_queue<mem_mode, cor_req_t<1>,
                                 request_data_second_lt<cor_req_t<1>>>;
+
 
   template<typename Policy, typename pq_t>
   inline void 
@@ -448,7 +451,7 @@ namespace adiar::internal
           continue;
         }
 
-        if (label == tseek.label()) id++;
+        id = (label == tseek.label()) ? id+1 : 0; 
         label = tseek.label() ;
         if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
 
@@ -609,6 +612,8 @@ namespace adiar::internal
       // LCOV_EXCL_STOP
 
     case replace_type::Non_Monotone:
+    case replace_type::Swap_Adjacent:
+    case replace_type::Jump_Down:
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
 #endif
