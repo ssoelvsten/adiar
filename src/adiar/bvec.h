@@ -82,9 +82,12 @@ namespace adiar {
         return bvec(bitlen,bdd_true());
     }
 
-    bvec bvec_const(size_t bitlen, size_t i) {
+    bvec bvec_const(size_t bitlen, size_t value) {
         std::vector<bdd> res(bitlen);
-        //TODO: Implement actual integer value initialization
+        for (size_t i = 0; i< bitlen; i++) {
+            res.at(i) = value & 1 ? bdd_true() : bdd_false();
+            value >>= 1;
+        }
         return res;
     }
 

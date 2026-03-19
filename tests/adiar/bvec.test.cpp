@@ -34,7 +34,7 @@ go_bandit([]() {
 
       describe("int encoding", []() {
         it("is the binary encoding of 42", [&]() {
-          // 42_10 == 101010_2 (010101 litte-endian)
+          // 42_10 == 101010_2
           const bvec x = bvec_const(42);
           AssertThat(x.at(0), Is().EqualTo(bdd_false()));
           AssertThat(x.at(1), Is().EqualTo(bdd_true()));
