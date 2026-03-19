@@ -71,8 +71,9 @@ namespace adiar {
             return _bits.cend(); 
         }
 
-        
     };
+
+    // Constructors
 
     bvec bvec_false(size_t bitlen) {
         return bvec(bitlen,bdd_false());
@@ -94,6 +95,55 @@ namespace adiar {
     template<typename Integer> 
     bvec bvec_const(Integer i) {
         return bvec_const(8 * sizeof(Integer), i);
+    }
+
+
+    //Helper function for bitwise operations
+    //TODO: Figure out how to do higher order function templating with constrains on function signature
+    template<typename BDD_OP = function<bdd (const bdd&, const bdd&)>>
+    bvec _bvec_bitwise_op(bvec x, bvec y, BDD_OP op) {
+        std::vector<bdd> res(x.bitlen());
+        
+        for(size_t i = 0; i < x.bitlen(); i++) {
+            res.at(i) = op(x.at(i),y.at(i));
+        }
+
+        return bvec(res);
+    }
+
+
+    // Boolean operations
+    bvec bvec_and(bvec x, bvec y) {
+        //TODO: Do we require same bitlength? If yes, do we do it at compile-time or run-time?
+        std::vector<bdd> res(x.bitlen());
+        
+        for(size_t i = 0; i < x.bitlen(); i++) {
+            res.at(i) = bdd_and(x.at(i),y.at(i));
+        }
+        
+        return bvec(res);
+    }
+
+    bvec bvec_or(bvec x, bvec y) {
+        //TODO: Do we require same bitlength? If yes, do we do it at compile-time or run-time?
+        std::vector<bdd> res(x.bitlen());
+        
+        for(size_t i = 0; i < x.bitlen(); i++) {
+            res.at(i) = bdd_or(x.at(i),y.at(i));
+        }
+
+        return bvec(res);
+    }
+    
+    bvec bvec_xor(bvec x, bvec y) {
+        //TODO: Do we require same bitlength? If yes, do we do it at compile-time or run-time?
+        std::vector<bdd> res(x.bitlen());
+        
+        for(size_t i = 0; i < x.bitlen(); i++) {
+            res.at(i) = bdd_xor(x.at(i),y.at(i));
+        }
+
+        return bvec(res);
     }
 }
 
