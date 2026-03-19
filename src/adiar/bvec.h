@@ -145,6 +145,17 @@ namespace adiar {
 
         return bvec(res);
     }
+
+    bvec bvec_not(bvec x) {
+        //TODO: Do we require same bitlength? If yes, do we do it at compile-time or run-time?
+        std::vector<bdd> res(x.bitlen());
+        
+        for(size_t i = 0; i < x.bitlen(); i++) {
+            res.at(i) = bdd_not(x.at(i));
+        }
+
+        return bvec(res);
+    }
 }
 
 

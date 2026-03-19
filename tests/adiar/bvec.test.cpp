@@ -106,6 +106,7 @@ go_bandit([]() {
         });
       });
     });
+
     describe("bvec_or", []() {
       describe("constants", []() {
         it("computes 5 | 3 == 7 (101 | 011 == 111)", [&]() {
@@ -132,6 +133,7 @@ go_bandit([]() {
         });
       });
     });
+
     describe("bvec_xor", []() {
       describe("constants", []() {
         it("computes 5 ^ 3 == 6 (101 ^ 011 == 110)", [&]() {
@@ -162,6 +164,31 @@ go_bandit([]() {
           const bvec expected = bvec_const((char)252); //Is this expected, or should we check bdd structure?
 
           const bvec res = bvec_xor(x,y);
+          
+          for(size_t i = 0; i < x.bitlen(); i++) {
+            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
+          }
+        });
+      });
+    });
+
+    describe("bvec_not", []() {
+      describe("constants", []() {
+        it("computes ~3 == 252 for bitlength 8 (~00000011 == 11111100)", [&]() {
+          const bvec x = bvec_const((char)3);
+          const bvec expected = bvec_const((char)252); //Is this expected, or should we check bdd structure?
+
+          const bvec res = bvec_not(x);
+          
+          for(size_t i = 0; i < x.bitlen(); i++) {
+            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
+          }
+        });
+        it("computes ~3 == (65535 - 3) for bitlength 16 (~0000000000000011 == 1111111111111100)", [&]() {
+          const bvec x = bvec_const((short)3);
+          const bvec expected = bvec_const((short)(USHRT_MAX-3)); //Is this expected, or should we check bdd structure?
+
+          const bvec res = bvec_not(x);
           
           for(size_t i = 0; i < x.bitlen(); i++) {
             AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
