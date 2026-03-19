@@ -10,6 +10,7 @@ set(HEADERS
   adiar.h
   bool_op.h
   builder.h
+  bvec.h
   deprecated.h
   domain.h
   exception.h
