@@ -390,15 +390,15 @@ go_bandit([]() {
             __bdd res = bdd_replace(bdd_1, m);
 
             arc_test_ifstream out_arcs(res);
+            
+            AssertThat(out_arcs.can_pull_internal(), Is().True());
+            AssertThat(out_arcs.pull_internal(),
+                       Is().EqualTo(arc{bdd::uid_type(2,0), true, bdd::uid_type(3,0)}));
 
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
                        Is().EqualTo(arc{bdd::uid_type(2,0), false, bdd::uid_type(4,0)}));
 
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,0), true, bdd::uid_type(3,0)}));
-            
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
                        Is().EqualTo(arc{bdd::uid_type(3,0), false, bdd::uid_type(4,0)}));
@@ -440,12 +440,12 @@ go_bandit([]() {
 
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,0), false, bdd::uid_type(4,0)}));
+                       Is().EqualTo(arc{bdd::uid_type(2,0), true, bdd::uid_type(3,0)}));
 
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,0), true, bdd::uid_type(3,0)}));
-            
+                       Is().EqualTo(arc{bdd::uid_type(2,0), false, bdd::uid_type(4,0)}));
+
             AssertThat(out_arcs.can_pull_internal(), Is().True());
             AssertThat(out_arcs.pull_internal(),
                        Is().EqualTo(arc{bdd::uid_type(3,0), false, bdd::uid_type(4,0)}));
