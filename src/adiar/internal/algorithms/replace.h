@@ -2,11 +2,13 @@
 #define ADIAR_INTERNAL_ALGORITHMS_REPLACE_H
 
 #include "adiar/bdd.h"
+#include "adiar/exec_policy.h"
 #include "adiar/internal/data_types/ptr.h"
 #include "adiar/internal/data_types/request.h"
 #include "adiar/internal/data_types/uid.h"
 #include "adiar/internal/io/shared_file_ptr.h"
 #include "adiar/internal/memory.h"
+#include <functional>
 #include <type_traits>
 
 #include <adiar/exception.h>
@@ -245,7 +247,7 @@ namespace adiar::internal
 //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = false;
+  constexpr bool debug_enabled = true;
 
   //types
   template <uint8_t nodes_carried>
@@ -259,6 +261,15 @@ namespace adiar::internal
   using cor_priority_queue_2_t = priority_queue<mem_mode, cor_req_t<1>,
                                 request_data_second_lt<cor_req_t<1>>>;
 
+  template <size_t LookAhead, memory_mode MemMode, size_t x = 1>
+  using cor_lvl_priority_queue_t =
+    levelized_priority_queue<cor_req_t<0>,
+                                  request_data_first_lt<cor_req_t<0>>,
+                                  LookAhead,
+                                  MemMode,
+                                  x,
+                                  std::less<node::label_type>,
+                                  0u>;
 
   template<typename Policy, typename pq_t>
   inline void 
@@ -267,6 +278,19 @@ namespace adiar::internal
          ptr_uint64 source, 
          tuple<typename Policy::pointer_type>& target, 
          typename Policy::label_type& level) {
+    if (target[0].is_nil() && target[1].is_terminal()){
+        arc a =  {source, target[1]};
+        if (debug_enabled) std::cout << "pushing term arc: " << a << "\n";
+        out_stream.push_terminal(a);
+        return;
+    }
+
+    if (target[1].is_nil() && target[0].is_terminal()){
+        arc a =  {source, target[0]};
+        if (debug_enabled) std::cout << "pushing term arc: " << a << "\n";
+        out_stream.push_terminal(a);
+        return;
+    }
 
     if (target[0].is_terminal() && target[1].is_terminal() && target[0] == target[1]) {
         //push leaf arc from current
@@ -314,23 +338,17 @@ namespace adiar::internal
       bdd::pointer_type tl = t[0];
       bdd::pointer_type th = t[1];
 
-      auto label_cmp = [](bdd::pointer_type tl, bdd::pointer_type th){
-            //th not terminal
-        if (tl.is_terminal()) {return false;}
-        else {return tl.label() < th.label();}
-      };
-
       if (tl.is_terminal() && th.is_terminal()) {
         if(debug_enabled) std::cout << " \t both terminal case\n";
         return { {tl,tl}, {th,th} };
       }
 
-      if (th.is_terminal() || label_cmp(tl, th)) {
+      if (th.is_terminal() || tl.level() < th.level()) {
         if(debug_enabled) std::cout << " \t th terminal  or tl less case\n";
         return { {v.low(), th}, {v.high(), th}};
       }
 
-      if (tl.is_terminal() || tl.label() > th.label()) {
+      if (tl.is_terminal() || tl.level() > th.level()) {
         if(debug_enabled) std::cout << " \t tl terminal or th less case\n";
         return { {tl, v.low()}, {tl, v.high()}};
       }
@@ -405,68 +423,65 @@ namespace adiar::internal
     //let v be smallest node after root
     node v = (in_nodes.can_pull()) ? in_nodes.pull() : throw invalid_argument("tree is only root?");
     typename Policy::id_type id = -1;
-    typename Policy::label_type label = -1; //may make ids weird?
+    typename Policy::label_type label = -1;
+
     while ((!pq1.empty()) || (!pq2.empty())) {
+      if(debug_enabled) std::cout << "\n\n start next iter\n";
       //figure out which queue to pull from!
       //should be pq1 if it's min is less than pq2's second
       cor_req_t<1> r;
-      //DUMMY! should also take level into acoount!
-      if (pq1.has_top() && 
-          (pq2.empty() || pq1.top().target.first() < pq2.top().target.second()))
-          {
-            if(debug_enabled) std::cout << "takes req from pq1\n";
-            r = {pq1.top().target, 
+      if (pq1.has_top()) {
+        ptr_uint64 l_uid(pq1.top().data.level, 0);  //for treating level like uid..
+        ptr_uint64 min_pq1 = std::min(pq1.top().target.first() , l_uid);
+        if(debug_enabled) std::cout << "takes req from pq1\n";
+        if(pq2.empty() || min_pq1 < pq2.top().target.second()) {
+          r = {pq1.top().target, 
                  { { { node::pointer_type::nil(), node::pointer_type::nil() } } }, 
                  pq1.top().data};
+        } 
       } else {
-            if (debug_enabled)std::cout << "\ntakes req from pq2\n";
-            r = pq2.top();
+        if (debug_enabled)std::cout << "\ntakes req from pq2\n";
+        r = pq2.top();
+        
       }
 
       if (debug_enabled) std::cout << "iter scan " << r << "\n";
-      const node::uid_type t_uid(r.data.level, 0); //id here is questionable..
-      typename adiar::internal::ptr_uint64 tseek;
-      if (r.empty_carry()) { tseek = (r.target.first() < t_uid) ? r.target.first() : t_uid; } 
-      else { tseek = r.target.second();}  //TODO fix dummy request fetchign from PQs see if this is still right..
-      if(debug_enabled) std::cout << "tseek: " << tseek << "\n";
+      const ptr_uint64 t_uid(r.data.level, 0); //id here is questionable..
+      ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
       while (v.uid() < tseek && in_nodes.can_pull()) { v = in_nodes.pull(); }
-      if (debug_enabled) std::cout << "v: " << v << "\n";
+      if(debug_enabled) std::cout << "tseek: " << tseek << "\n";
+      if(debug_enabled) std::cout << "v: " << v << "\n";
 
-      //correct layer check (can probably be more efficient)
-      if (r.target[0].is_node() && r.target[1].is_node() &&
-          r.data.level < r.target[0].label() && 
-          r.data.level < r.target[1].label()) {
-        if (debug_enabled) std::cout << "enters copy if \n";
+      //CASE found correct layer!
+      if (r.target.first().level() > r.data.level) {
+        if (debug_enabled) std::cout << "enters copy case \n";
+        
+        //suppresible node case - push one req
         if (r.target[0] == r.target[1]) {
           if (debug_enabled)std::cout << "skip surpressible node! \n";
-          const cor_req_t<0> r1 = pq1.top(); pq1.pop();
-          typename Policy::id_type id1 = (label == r.target[0].label()) ? id+1 : 0;
-          typename Policy::label_type lab1 = r.target[0].label() ; 
-          const node::uid_type t_uid(lab1, id1);
-          if (r1.data.source != ptr_uint64::nil()) {
-            arc in = {r1.data.source , t_uid};
-            if(debug_enabled) std::cout << "has pushed internal: " << in << "\n";
-            aw.push_internal(in);
-          }
-          continue;
+          pq1.pop(); //remove req without pushing internal
+          //(source -> (target[0], nil))
+          cor_req_t<0> r1 = {{r.target[0],node::pointer_type::nil()}, {}, {r.data.source}};
+          if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+          pq1.push(r1);
+          
+        } else {
+          id = (label == tseek.label()) ? id+1 : 0; 
+          label = tseek.label() ;
+          if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+
+          //push copy reqs
+          const node::uid_type out_uid(label, id); //x_label,id
+          typename Policy::label_type nil_lbl = node::pointer_type::nil().level();
+          tuple<typename Policy::pointer_type> tl = {r.target[0],node::pointer_type::nil()};
+          tuple<typename Policy::pointer_type> th = {r.target[1],node::pointer_type::nil()};
+          pusher<Policy>(pq1,aw,out_uid.as_ptr(false),tl,nil_lbl);
+          pusher<Policy>(pq1,aw,out_uid.as_ptr(true), th,nil_lbl);
+
+          // forward incoming
+          internal_pusher<Policy, pq_1_type, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+          
         }
-
-        id = (label == tseek.label()) ? id+1 : 0; 
-        label = tseek.label() ;
-        if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
-
-        //push copy reqs
-        const node::uid_type out_uid(label, id); //x_label,id
-        pq1.push({{r.target[0],r.target[0]},
-                    {},
-                    {out_uid.as_ptr(false)}});
-
-        pq1.push({{r.target[1],r.target[1]},
-                    {},
-                    {out_uid.as_ptr(true)}});
-
-        // forward incoming
-        internal_pusher<Policy, pq_1_type, 0>(pq1, aw, out_uid, r.target,  r.data.level);
         continue;
       }
     
@@ -489,40 +504,26 @@ namespace adiar::internal
       label = tseek.label() ;
       if(debug_enabled) std::cout << "lable, id: " << label << "," << id << "\n";
 
-      //check if we should update level in requests
-      typename Policy::label_type new_level = r.data.level;
-      if (r.target[0].is_terminal() && r.target[1].is_node()) {
-        new_level = (r.data.level > r.target[1].label()) ? r.data.level : r.target[1].label();
-      } else {
-        if (r.target[1].is_terminal() && r.target[0].is_node()){
-          new_level = (r.data.level > r.target[0].label()) ? r.data.level : r.target[0].label();
-        }
-      }
-      if(debug_enabled) std::cout << "new level is: " << new_level << "\n";
-     
       tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
       tuple<typename Policy::pointer_type> rlow = reqs[0]; 
       tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
       
+      //forward outgoing
       const node::uid_type out_uid(label, id); //x_label,id
-      pusher<Policy, pq_1_type>(pq1, aw, out_uid.as_ptr(false), rlow, new_level);
-      pusher<Policy, pq_1_type>(pq1, aw, out_uid.as_ptr(true), rhigh, new_level);
+      pusher<Policy, pq_1_type>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+      pusher<Policy, pq_1_type>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
 
-      
       // forward incoming
       internal_pusher<Policy, pq_1_type, 0>(pq1, aw, out_uid, r.target,  r.data.level);
       internal_pusher<Policy, pq_2_type, 1>(pq2, aw, out_uid, r.target,  r.data.level);
     }
     if(debug_enabled) std::cout << "exited big loop!\n";
      aw.close();  // shouldn't need to do this..
-     //in_nodes.close();
-
-     //return typename Policy::__dd_type(out_arcs, exec_policy::access::Auto);
      return typename Policy::__dd_type(out_arcs,exec_policy::access::Auto);
   }
 
 
- 
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // "Public" interface
 
