@@ -228,13 +228,22 @@ namespace adiar::internal
         void
         push(const value_type& v)
         {
+          
           adiar_assert(v.target.first().is_node(),
                        "Requests should have at least one internal node");
 
           _max_source = _max_source.is_nil() ? v.data.source : std::max(_max_source, v.data.source);
 
           // TODO: support requests with more than just the source
-          _sorter_ptr->push({ v.target, {}, { flag(v.data.source) } });
+          // update v such that source is flagged
+          // should work for any request with a source
+          //value_type v1 = {v.target , {} , {flag(v.data.source)}};
+          value_type v2 = v;
+          v2.data.source = flag(v.data.source);
+          const value_type v3 = v2;
+          _sorter_ptr->push(v3);
+
+          
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,6 +260,7 @@ namespace adiar::internal
           // TODO: Is there a better way to explicitly set the remainders of
           //       target to nil?
 
+          std::cout << "is this run?\n";
           if constexpr (value_type::cardinality == 1u) {
             push(value_type({ a.target() }, {}, { a.source() }));
           } else if constexpr (value_type::cardinality == 2u) {
@@ -507,6 +517,7 @@ namespace adiar::internal
         void
         push(const reduce_arc& a)
         {
+          std::cout << "push in up_pq_decorator! \n";
           if (a.source().is_nil() || (a.source().label() < _next_inner && a.target().is_node())) {
 #ifdef ADIAR_STATS
             nested_sweeping::stats.inner_down.requests.preserving += 1u;
