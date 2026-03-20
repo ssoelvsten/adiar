@@ -278,6 +278,7 @@ namespace adiar::internal
          ptr_uint64 source, 
          tuple<typename Policy::pointer_type>& target, 
          typename Policy::label_type& level) {
+    std::cout << "enter pusher here??\n";
     if (target[0].is_nil() && target[1].is_terminal()){
         arc a =  {source, target[1]};
         if (debug_enabled) std::cout << "pushing term arc: " << a << "\n";
@@ -300,8 +301,9 @@ namespace adiar::internal
       } else {
         //push request from current
         cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
-        if (debug_enabled) std::cout<< "pushing req to pq1: " << lreq << "\n";
+        if (debug_enabled) std::cout<< "(from pusher) pushing req to pq1: " << lreq << "\n";
         pq.push(lreq);
+        std::cout << "we reach here??? \n";
       }
   }
 
@@ -312,18 +314,15 @@ namespace adiar::internal
                   typename Policy::uid_type out_uid, 
                   tuple<typename Policy::pointer_type> target,
                   typename Policy::label_type level){
-     while((!pq.empty()) && pq.top().target == target 
-                             && pq.top().data.level == level) {
+     while(pq.has_top() && pq.top().target == target && pq.top().data.level == level) {
           if (debug_enabled) std::cout << "goes into while again?\n";
-          const cor_req_t<nc> r1 = pq.top(); //when levelized change to pull
-          pq.pop();
+          const cor_req_t<nc> r1 = pq.top(); pq.pop(); //non-levelized has no pull
           if (debug_enabled) std::cout << "has popped: " << r1 << "\n";
           if (r1.data.source != ptr_uint64::nil()) {
             //push to out!
             arc in = {r1.data.source , out_uid};
             if (debug_enabled) std::cout << "has pushed internal: " << in << "\n";
             aw.push_internal(in);
-          
           } 
         }
   }
@@ -394,8 +393,7 @@ namespace adiar::internal
   inline typename Policy::__dd_type
   replace__cor_scan(const typename Policy::dd_type& dd, 
                           const replace_func<Policy>& m) {
-    //TODO: replace with nested sweeping by inputting priority queues or levels if that works?
-  
+    
     bdd out = relabel_all<Policy>(dd,m);
     
     // Set up output
@@ -522,8 +520,158 @@ namespace adiar::internal
      return typename Policy::__dd_type(out_arcs,exec_policy::access::Auto);
   }
 
+  template <typename Policy, typename PQ1, typename PQ2, typename In>
+  inline typename Policy::__dd_type
+  replace_cor_scan_level(const In& in, 
+                         PQ1& pq1,
+                         PQ2& pq2)
+    //we assume that pq has been preloaded when given here.. 
+    //do this in playground for now..                     
+  {
+     // Set up output
+    shared_levelized_file<arc> out_arcs;
+    arc_ofstream aw(out_arcs);
 
+    // Set up input
+    node_ifstream<> in_nodes(in);
+    node v = in_nodes.pull();
 
+    while(!pq1.empty()){
+      pq1.setup_next_level();
+
+      typename Policy::id_type id = -1;
+      typename Policy::label_type label = pq1.current_level();
+
+      while(!pq1.empty_level() || !pq2.empty()){
+        if(debug_enabled) std::cout << "next init in level\n";
+        cor_req_t<1> r;
+        if (pq1.can_pull()) {
+          ptr_uint64 l_uid(pq1.top().data.level, 0);  //for treating level like uid..
+          ptr_uint64 min_pq1 = std::min(pq1.top().target.first() , l_uid);
+          if(debug_enabled) std::cout << "takes req from pq1\n";
+          if(pq2.empty() || min_pq1 < pq2.top().target.second()) {
+            r = {pq1.top().target, 
+                  { { { node::pointer_type::nil(), node::pointer_type::nil() } } }, 
+                  pq1.top().data};
+          } 
+        } else {
+          if (debug_enabled)std::cout << "\ntakes req from pq2\n";
+          r = pq2.top();
+          
+        }
+
+        if (debug_enabled) std::cout << "iter scan " << r << "\n";
+        const ptr_uint64 t_uid(r.data.level, 0); //id here is questionable..
+        ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
+        while (v.uid() < tseek && in_nodes.can_pull()) { v = in_nodes.pull(); }
+        if(debug_enabled) std::cout << "tseek: " << tseek << "\n";
+        if(debug_enabled) std::cout << "v: " << v << "\n";
+
+        //CASE found correct layer!
+        if (r.target.first().level() > r.data.level) {
+          if (debug_enabled) std::cout << "enters copy case \n";
+          
+          //SUBCASE suppresible node case - push one req
+          if (r.target[0] == r.target[1]) {
+            if (debug_enabled)std::cout << "skip surpressible node! \n";
+            pq1.pop(); //remove req without pushing internal
+            //(source -> (target[0], nil))
+            cor_req_t<0> r1 = {{r.target[0],node::pointer_type::nil()}, {}, {r.data.source}};
+            if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+            pq1.push(r1);
+            
+          } else {
+            //SUBCASE not surpressible
+            id = (label == tseek.label()) ? id+1 : 0; 
+            label = tseek.label() ;
+            if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+
+            //push copy reqs
+            const node::uid_type out_uid(label, id); //x_label,id
+            typename Policy::label_type nil_lbl = node::pointer_type::nil().level();
+            tuple<typename Policy::pointer_type> tl = {r.target[0],node::pointer_type::nil()};
+            tuple<typename Policy::pointer_type> th = {r.target[1],node::pointer_type::nil()};
+            pusher<Policy>(pq1,aw,out_uid.as_ptr(false),tl,nil_lbl);
+            pusher<Policy>(pq1,aw,out_uid.as_ptr(true), th,nil_lbl);
+
+            // forward incoming
+            internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+            
+          }
+          continue;
+        }
+      
+        //CASE should push to PQ2
+        //big copy-paste from prod + small changes 
+        if (r.empty_carry() && r.target[0].is_node() && r.target[1].is_node()
+              && r.target[0].label() == r.target[1].label()
+              && r.target[0].id() != r.target[1].id()) {
+            if(debug_enabled) std::cout << "enters pq2 push if-statement!\n";
+            const typename Policy::children_type children = v.children();
+            while (pq1.has_top() && pq1.top().target == r.target) {
+              if(debug_enabled) std::cout << "enters pq2 while\n";
+              pq2.push({ r.target, { children }, pq1.top().data });
+              pq1.pop();
+            }
+            continue;
+        }
+
+        //CASE wrong layer
+        if (debug_enabled) std::cout << "wrong layer case \n";
+        id = (label == tseek.label()) ? id+1 : 0; 
+        label = tseek.label() ;
+        if(debug_enabled) std::cout << "lable, id: " << label << "," << id << "\n";
+
+        tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
+        tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+        tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
+        
+        //forward outgoing
+        const node::uid_type out_uid(label, id); //x_label,id
+        pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+        pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+
+        // forward incoming
+        internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+        internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
+      }
+      //update level info??
+      if (id > 0) { aw.push(level_info(label, id)); }
+  }
+     if(debug_enabled) std::cout << "exited big loop!\n";
+     aw.close();  // shouldn't need to do this..
+     return typename Policy::__dd_type(out_arcs,exec_policy::access::Auto);
+}
+
+  template <typename Policy>
+  inline typename Policy::__dd_type
+  replace__cor_scan_fancy(const typename Policy::dd_type& dd, 
+                          const replace_func<Policy>& m) {
+
+    // Set up input
+    node root;
+    {node_ifstream<> in_nodes(dd);
+     root = in_nodes.pull();
+    }
+    //setup PQs
+    const size_t aux_available_memory = memory_available();
+    const size_t pq1_memory = aux_available_memory / 2;
+    const size_t max_pq_1_size = aux_available_memory / 10;
+    statistics::levelized_priority_queue_t test;
+    using PQ1 = cor_lvl_priority_queue_t<1, memory_mode::External,2>;
+    PQ1 pq1({dd,make_generator(m(root.label()))}, pq1_memory , max_pq_1_size, test);
+
+    using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
+    PQ2 pq2(memory_available()/2, memory_available() / 10);
+
+    //init req
+    cor_req_t<0> r = {{root.low(), root.high()},{},{ptr_uint64::nil(), m(root.label())}};
+    pq1.push(r);
+
+    //run sweep
+    typename Policy::__dd_type res = replace_cor_scan_level<Policy,PQ1,PQ2,typename Policy::dd_type>(dd, pq1, pq2);
+    return res;
+  }
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // "Public" interface
 
@@ -561,9 +709,9 @@ namespace adiar::internal
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
     case replace_type::Jump_Down:
-      return replace__cor_scan<Policy>(dd,m);
+      return replace__cor_scan_fancy<Policy>(dd,m);
     case replace_type::Swap_Adjacent:
-      return replace__cor_scan<Policy>(dd,m);
+      return replace__cor_scan_fancy<Policy>(dd,m);
     case replace_type::Monotone:
 #ifdef ADIAR_STATS
       stats_replace.monotonic_scans += 1u;
