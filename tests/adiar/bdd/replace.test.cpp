@@ -122,8 +122,8 @@ go_bandit([]() {
     //   F   T   F 
     */
     { // Garbage collect early and free write-lock
-      const node n5 = node(5, bdd::max_id, terminal_F, terminal_T);
-      const node n4 = node(5, bdd::max_id-1, terminal_T, terminal_F);
+      const node n5 = node(5, bdd::max_id, terminal_T, terminal_F);
+      const node n4 = node(5, bdd::max_id-1, terminal_F, terminal_T);
       const node n3 = node(4, bdd::max_id, n4, n5);
       const node n2 = node(2, bdd::max_id, n3.uid(), n5);
       const node n1 = node(0, bdd::max_id, n3.uid(), n2.uid());
@@ -467,19 +467,19 @@ go_bandit([]() {
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(5,0), false, terminal_T}));
+                       Is().EqualTo(arc{bdd::uid_type(5,0), false, terminal_F}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(5,0), true, terminal_F}));
+                       Is().EqualTo(arc{bdd::uid_type(5,0), true, terminal_T}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(5,1), false, terminal_F}));
+                       Is().EqualTo(arc{bdd::uid_type(5,1), false, terminal_T}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(5,1), true, terminal_T}));
+                       Is().EqualTo(arc{bdd::uid_type(5,1), true, terminal_F}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().False());
           });
@@ -531,11 +531,11 @@ go_bandit([]() {
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(5,0), false, terminal_T}));
+                       Is().EqualTo(arc{bdd::uid_type(5,1), false, terminal_T}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(5,0), true, terminal_F}));
+                       Is().EqualTo(arc{bdd::uid_type(5,1), true, terminal_F}));
 
             AssertThat(out_arcs.can_pull_terminal(), Is().True());
             AssertThat(out_arcs.pull_terminal(),
