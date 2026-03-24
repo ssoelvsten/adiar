@@ -7,8 +7,9 @@ record of errors and changes we have made.
 
 [TOC]
 
-Error: Apply PseudoCode
-========================
+# Errors
+
+## `Apply` PseudoCode
 
 Figure 5 of the [TACAS
 22](https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16) paper has
@@ -24,8 +25,7 @@ This has been fixed in the [extended arXiv
 paper](https://arxiv.org/abs/2104.12101).
 
 
-Error: Reduce PseudoCode
-========================
+## `Reduce` PseudoCode
 
 Figure 6 of the [TACAS
 22](https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16) paper has
@@ -48,8 +48,7 @@ the following errors
 All of this has been fixed in the [extended arXiv
 paper](https://arxiv.org/abs/2104.12101).
 
-Error: Nested Sweeping Cases
-========================
+## Nested Sweeping Cases
 
 As Springer were preparing the [VMCAI
 26](https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17) publication,
@@ -58,8 +57,9 @@ references to nowhere. We did not notice all botched references. So, some still
 linger which impedes understanding; see the [extended arXiv
 paper](https://arxiv.org/abs/2408.14216) for the correct case references.
 
-Change: 64-bit Encoding of Pointers
-========================
+# Changes
+
+## 64-bit Encoding of Pointers
 
 In the [extended arXiv paper](https://arxiv.org/abs/2104.12101) for [[TACAS
 22](https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16)], we show in
@@ -67,8 +67,7 @@ Section 3.5 how to encode the *unique identifier* into a single 64-bit integer.
 This is (1) to decrease the BDD size and especially (2) to make the pointer
 sorting operations as fast as possible.
 
-v1.2
-------------------------
+### v1.2
 
 It was always the intention that the *flag* bit on children should be used for
 the addition of *complement edges* in BDDs. Yet, up to this point it was left
@@ -76,8 +75,7 @@ unused. Hence, we reassigned the meaning of this bit to instead propagate an
 edge being *tainted* by the decision diagram's reduction rule [[ATVA
 23](https://link.springer.com/chapter/10.1007/978-3-031-45332-8_4)].
 
-v2.0
-------------------------
+### v2.0
 
 For *Nested Sweeping*, we need to *taint* an arc's *source* to be originating
 from the *outer sweep*. Yet, the *flag* was up to this point used to store the
