@@ -57,6 +57,13 @@ references to nowhere. We did not notice all botched references. So, some still
 linger which impedes understanding; see the [extended arXiv
 paper](https://arxiv.org/abs/2408.14216) for the correct case references.
 
+## Nested Sweeping Example
+
+The example of executing the `Exists` sweep in [VMCAI
+26](https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17) has a minor error. In Figure
+5(d-f) and Figure 9(f-h) since the bottom-left node has its children swapped. See the [extended
+arXiv paper](https://arxiv.org/abs/2408.14216) for the correct example.
+
 # Changes
 
 ## 64-bit Encoding of Pointers
