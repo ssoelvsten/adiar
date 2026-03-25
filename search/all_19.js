@@ -11,5 +11,7 @@ var searchData=
   ['trivial_5ffile_8',['trivial_file',['../structadiar_1_1statistics_1_1prod2b__t.html#a1a62057405b5a407d2a67a7a1a2f6bdb',1,'adiar::statistics::prod2b_t']]],
   ['trivial_5fterminal_9',['trivial_terminal',['../structadiar_1_1statistics_1_1prod2b__t.html#a5028a584def1e486b19a7c8bb9d3098d',1,'adiar::statistics::prod2b_t']]],
   ['true_10',['True',['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642af827cf462f62848df37c5e1e94a4da74',1,'adiar']]],
-  ['tutorial_11',['Tutorial',['../page__tutorial.html',1,'']]]
+  ['tt_20apply_20tt_20pseudocode_11',['&lt;tt&gt;Apply&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md39',1,'']]],
+  ['tt_20reduce_20tt_20pseudocode_12',['&lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md40',1,'']]],
+  ['tutorial_13',['Tutorial',['../page__tutorial.html',1,'']]]
 ];

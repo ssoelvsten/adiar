@@ -102,29 +102,59 @@ $(document).ready(function(){initNavTree('page__amend.html',''); initResizable()
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#autotoc_md38">Error: Reduce PseudoCode</a></li>
-<li class="level1"><a href="#autotoc_md39">Error: Nested Sweeping Cases</a></li>
-<li class="level1"><a href="#autotoc_md40">Change: 64-bit Encoding of Pointers</a><ul><li class="level2"><a href="#autotoc_md41">v1.2</a></li>
-<li class="level2"><a href="#autotoc_md42">v2.0</a></li>
+<ul><li class="level1"><a href="#autotoc_md38">Errors</a><ul><li class="level2"><a href="#autotoc_md39">&lt;tt&gt;Apply&lt;/tt&gt; PseudoCode</a></li>
+<li class="level2"><a href="#autotoc_md40">&lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode</a></li>
+<li class="level2"><a href="#autotoc_md41">Nested Sweeping Cases</a></li>
+<li class="level2"><a href="#autotoc_md42">Nested Sweeping Example</a></li>
+</ul>
+</li>
+<li class="level1"><a href="#autotoc_md43">Changes</a><ul><li class="level2"><a href="#autotoc_md44">64-bit Encoding of Pointers</a><ul><li class="level3"><a href="#autotoc_md45">v1.2</a></li>
+<li class="level3"><a href="#autotoc_md46">v2.0</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="textblock"><p>Despite the best efforts of us and the reviewers, some of the published papers include errors. Furthermore, throughout the development of Adiar, we have revisited, revised, and iterated upon our previous ideas. What follows is a record of errors and changes we have made.</p>
 <h1><a class="anchor" id="autotoc_md38"></a>
-Error: Reduce PseudoCode</h1>
-<p>Figure 6 of the <a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a> paper has an error on line 3. It should be <code>Q_red != Ø or F_leaf.has_next()</code>; this has been fixed in the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a>.</p>
-<h1><a class="anchor" id="autotoc_md39"></a>
-Error: Nested Sweeping Cases</h1>
-<p>As Springer were preparing the <a href="https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17">VMCAI 26</a> publication, the references for the particular cases in Section 3 got turned into "*Case 3*" references to nowhere. We did not notice all botched references. So, some still linger which impedes understanding; see the <a href="https://arxiv.org/abs/2408.14216">extended arXiv paper</a> for the correct case references.</p>
-<h1><a class="anchor" id="autotoc_md40"></a>
-Change: 64-bit Encoding of Pointers</h1>
-<p>In the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a> for [<a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a>], we show in Section 3.5 how to encode the <em>unique identifier</em> into a single 64-bit integer. This is (1) to decrease the BDD size and especially (2) to make the pointer sorting operations as fast as possible.</p>
+Errors</h1>
+<h2><a class="anchor" id="autotoc_md39"></a>
+&lt;tt&gt;Apply&lt;/tt&gt; PseudoCode</h2>
+<p>Figure 5 of the <a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a> paper has the following error in its pseudocode:</p>
+<ul>
+<li>The conditional on line 38 have been as follows: <div class="fragment"><div class="line">Q_{app:2} != Ø &amp;&amp; Q_{app:2} matches (_ -&gt; (t_f, t_g), _, __)</div>
+</div><!-- fragment --> That is, it should only refer to the <code>Q_{app:2}</code>.</li>
+</ul>
+<p>This has been fixed in the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a>.</p>
+<h2><a class="anchor" id="autotoc_md40"></a>
+&lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode</h2>
+<p>Figure 6 of the <a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a> paper has the following errors</p>
+<ul>
+<li>The conditional on line 3 should have been as follows: <div class="fragment"><div class="line">Q_red != Ø or F_leaf.has_next()</div>
+</div><!-- fragment --></li>
+<li>The conditional on line 7 should have been <div class="fragment"><div class="line">PeekMax(Q_red, F_leaf).source.label = j</div>
+</div><!-- fragment --> where <code>PeekMax</code> is similar to <code>PopMax</code> but has no side effects on the contents of <code>Q_red</code> and <code>F_leaf</code>.</li>
+<li>The conditional on line 19 should have been <code>t_seek = t_f</code>. Otherwise, the children of <code>v_f</code> are used incorrectly used when <code>v_f</code> and <code>v_g</code> have the same uid but <code>t_f != v_f.uid</code>.</li>
+<li>The output on line 22 should have been &lsquo;v&rsquo;<code>not</code>v`.</li>
+</ul>
+<p>All of this has been fixed in the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a>.</p>
 <h2><a class="anchor" id="autotoc_md41"></a>
-v1.2</h2>
-<p>It was always the intention that the <em>flag</em> bit on children should be used for the addition of <em>complement edges</em> in BDDs. Yet, up to this point it was left unused. Hence, we reassigned the meaning of this bit to instead propagate an edge being <em>tainted</em> by the decision diagram's reduction rule [<a href="https://link.springer.com/chapter/10.1007/978-3-031-45332-8_4">ATVA 23</a>].</p>
+Nested Sweeping Cases</h2>
+<p>As Springer were preparing the <a href="https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17">VMCAI 26</a> publication, the references for the particular cases in Section 3 got turned into "*Case 3*" references to nowhere. We did not notice all botched references. So, some still linger which impedes understanding; see the <a href="https://arxiv.org/abs/2408.14216">extended arXiv paper</a> for the correct case references.</p>
 <h2><a class="anchor" id="autotoc_md42"></a>
-v2.0</h2>
+Nested Sweeping Example</h2>
+<p>The example of executing the <code>Exists</code> sweep in <a href="https://link.springer.com/chapter/10.1007/978-3-032-15700-3_17">VMCAI 26</a> has a minor error. In Figure 5(d-f) and Figure 9(f-h) since the bottom-left node has its children swapped. See the <a href="https://arxiv.org/abs/2408.14216">extended arXiv paper</a> for the correct example.</p>
+<h1><a class="anchor" id="autotoc_md43"></a>
+Changes</h1>
+<h2><a class="anchor" id="autotoc_md44"></a>
+64-bit Encoding of Pointers</h2>
+<p>In the <a href="https://arxiv.org/abs/2104.12101">extended arXiv paper</a> for [<a href="https://link.springer.com/chapter/10.1007/978-3-030-99527-0_16">TACAS 22</a>], we show in Section 3.5 how to encode the <em>unique identifier</em> into a single 64-bit integer. This is (1) to decrease the BDD size and especially (2) to make the pointer sorting operations as fast as possible.</p>
+<h3><a class="anchor" id="autotoc_md45"></a>
+v1.2</h3>
+<p>It was always the intention that the <em>flag</em> bit on children should be used for the addition of <em>complement edges</em> in BDDs. Yet, up to this point it was left unused. Hence, we reassigned the meaning of this bit to instead propagate an edge being <em>tainted</em> by the decision diagram's reduction rule [<a href="https://link.springer.com/chapter/10.1007/978-3-031-45332-8_4">ATVA 23</a>].</p>
+<h3><a class="anchor" id="autotoc_md46"></a>
+v2.0</h3>
 <p>For <em>Nested Sweeping</em>, we need to <em>taint</em> an arc's <em>source</em> to be originating from the <em>outer sweep</em>. Yet, the <em>flag</em> was up to this point used to store the <em>out-index</em> of the source. Hence, for <em>internal nodes</em> we introduce the out-index (<em>p</em>) on the second least-significant bit - essentially adding a second (possibly non-Boolean) <em>flag</em>.</p>
 <p><b>Figure 10 (b):</b></p>
 <table class="markdownTable">

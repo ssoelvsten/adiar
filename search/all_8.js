@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['cases_0',['Error: Nested Sweeping Cases',['../page__amend.html#autotoc_md39',1,'']]],
-  ['change_3a_2064_20bit_20encoding_20of_20pointers_1',['Change: 64-bit Encoding of Pointers',['../page__amend.html#autotoc_md40',1,'']]],
+  ['cases_0',['Nested Sweeping Cases',['../page__amend.html#autotoc_md41',1,'']]],
+  ['changes_1',['Changes',['../page__amend.html#autotoc_md43',1,'']]],
   ['citing_20this_20project_2',['Citing this Project',['../page__cite.html',1,'page__papers']]],
   ['clear_3',['clear',['../classadiar_1_1builder.html#a76d693e760cee4e147cbdf1d68c211a9',1,'adiar::builder']]],
   ['cmake_4',['Building with CMake',['../page__getting_started.html#autotoc_md4',1,'']]],

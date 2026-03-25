@@ -81,23 +81,29 @@ var NAVTREE =
     ] ],
     [ "Papers", "page__papers.html", [
       [ "Citing this Project", "page__cite.html", [
-        [ "Lars Arge", "page__cite.html#autotoc_md43", null ],
-        [ "Adiar", "page__cite.html#autotoc_md44", [
-          [ "v1.0", "page__cite.html#autotoc_md45", null ],
-          [ "v1.1", "page__cite.html#autotoc_md46", null ],
-          [ "v1.2", "page__cite.html#autotoc_md47", null ],
-          [ "v2.0", "page__cite.html#autotoc_md48", null ],
-          [ "v2.1", "page__cite.html#autotoc_md49", null ],
-          [ "Future Work", "page__cite.html#autotoc_md50", null ],
-          [ "Student Projects", "page__cite.html#autotoc_md51", null ]
+        [ "Lars Arge", "page__cite.html#autotoc_md47", null ],
+        [ "Adiar", "page__cite.html#autotoc_md48", [
+          [ "v1.0", "page__cite.html#autotoc_md49", null ],
+          [ "v1.1", "page__cite.html#autotoc_md50", null ],
+          [ "v1.2", "page__cite.html#autotoc_md51", null ],
+          [ "v2.0", "page__cite.html#autotoc_md52", null ],
+          [ "v2.1", "page__cite.html#autotoc_md53", null ],
+          [ "Future Work", "page__cite.html#autotoc_md54", null ],
+          [ "Student Projects", "page__cite.html#autotoc_md55", null ]
         ] ]
       ] ],
       [ "Amendments", "page__amend.html", [
-        [ "Error: Reduce PseudoCode", "page__amend.html#autotoc_md38", null ],
-        [ "Error: Nested Sweeping Cases", "page__amend.html#autotoc_md39", null ],
-        [ "Change: 64-bit Encoding of Pointers", "page__amend.html#autotoc_md40", [
-          [ "v1.2", "page__amend.html#autotoc_md41", null ],
-          [ "v2.0", "page__amend.html#autotoc_md42", null ]
+        [ "Errors", "page__amend.html#autotoc_md38", [
+          [ "<tt>Apply</tt> PseudoCode", "page__amend.html#autotoc_md39", null ],
+          [ "<tt>Reduce</tt> PseudoCode", "page__amend.html#autotoc_md40", null ],
+          [ "Nested Sweeping Cases", "page__amend.html#autotoc_md41", null ],
+          [ "Nested Sweeping Example", "page__amend.html#autotoc_md42", null ]
+        ] ],
+        [ "Changes", "page__amend.html#autotoc_md43", [
+          [ "64-bit Encoding of Pointers", "page__amend.html#autotoc_md44", [
+            [ "v1.2", "page__amend.html#autotoc_md45", null ],
+            [ "v2.0", "page__amend.html#autotoc_md46", null ]
+          ] ]
         ] ]
       ] ]
     ] ],
@@ -137,7 +143,7 @@ var NAVTREEINDEX =
 "adiar_8h_source.html",
 "functions_enum.html",
 "group__module____zdd.html#ga31248d6c54224d1174f5c75e047c9c51",
-"structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a5528e809829233a8f28065318e4c06ae"
+"structadiar_1_1statistics_1_1____alg__base.html#ab769667ff5ecea10ecd9e2589b7e72bf"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
