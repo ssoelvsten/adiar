@@ -23,7 +23,7 @@ var searchData=
   ['project_20',['project',['../index.html#autotoc_md1',1,'About the Project'],['../page__cite.html',1,'Citing this Project']]],
   ['projects_21',['Student Projects',['../page__cite.html#autotoc_md55',1,'']]],
   ['pruning_22',['pruning',['../structadiar_1_1statistics_1_1quantify__t_1_1nested__transposition__t.html#aec40e4304842799ed5c8c48d70e5bd4d',1,'adiar::statistics::quantify_t::nested_transposition_t']]],
-  ['pseudocode_23',['pseudocode',['../page__amend.html#autotoc_md39',1,'&lt;tt&gt;Apply&lt;/tt&gt; PseudoCode'],['../page__amend.html#autotoc_md40',1,'&lt;tt&gt;Reduce&lt;/tt&gt; PseudoCode']]],
+  ['pseudocode_23',['pseudocode',['../page__amend.html#autotoc_md39',1,'Apply PseudoCode'],['../page__amend.html#autotoc_md40',1,'Reduce PseudoCode']]],
   ['push_5fbucket_24',['push_bucket',['../structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a704d98578648ed0b0daf834b92b21fe7',1,'adiar::statistics::levelized_priority_queue_t']]],
   ['push_5fin_5forder_25',['push_in_order',['../structadiar_1_1statistics_1_1arc__file__t.html#a873e75b1ded2fa2476c962742dc15d07',1,'adiar::statistics::arc_file_t']]],
   ['push_5finternal_26',['push_internal',['../structadiar_1_1statistics_1_1arc__file__t.html#abc227884106daee37eaf50fa5beb0d82',1,'adiar::statistics::arc_file_t']]],

@@ -16,7 +16,7 @@ var searchData=
   ['amendments_13',['Amendments',['../page__amend.html',1,'page__papers']]],
   ['and_20consumers_14',['Generators and Consumers',['../page__functional.html#autotoc_md27',1,'']]],
   ['and_5fop_15',['and_op',['../namespaceadiar.html#a99237a2e9480a26a91f28e2755a142ed',1,'adiar']]],
-  ['apply_20tt_20pseudocode_16',['&lt;tt&gt;Apply&lt;/tt&gt; PseudoCode',['../page__amend.html#autotoc_md39',1,'']]],
+  ['apply_20pseudocode_16',['Apply PseudoCode',['../page__amend.html#autotoc_md39',1,'']]],
   ['arc_5ffile_17',['arc_file',['../structadiar_1_1statistics.html#a71af2d8c10882a8db51be5d6de3c129e',1,'adiar::statistics']]],
   ['arc_5ffile_5ft_18',['arc_file_t',['../structadiar_1_1statistics_1_1arc__file__t.html',1,'adiar::statistics']]],
   ['arc_5ftype_19',['arc_type',['../classadiar_1_1internal_1_1____dd.html#a527247761bb12a0b07a17a65062c356a',1,'adiar::internal::__dd']]],
