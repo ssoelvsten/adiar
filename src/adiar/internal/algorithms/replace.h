@@ -12,6 +12,7 @@
 #include "adiar/internal/io/shared_file_ptr.h"
 #include "adiar/internal/memory.h"
 #include <functional>
+#include <iostream>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -90,15 +91,15 @@ namespace adiar::internal
 
     static_assert(is_total_map || is_partial_map);
 
-    bool identity = true;
-    bool shift    = true;
-    bool monotone = true;
+    bool identity  = true;
+    bool shift     = true;
+    bool monotone  = true;
     bool jump_down = true;
+    bool adj_swap  = true;
 
-    bool only_down = true;   //if things ever move up this false
-    bool movers_preserve_order = true; //if jumps corss layers false
     typename Policy::label_type last_jump = 0;
-    
+    typename Policy::label_type adj_node  = 0;
+
     label_type prev_before = Policy::max_label + 1;
     label_type prev_after  = Policy::max_label + 1;
 
@@ -108,11 +109,6 @@ namespace adiar::internal
       const label_type next_before     = ls.pull().level();
       const result_type next_after_opt = m(next_before);
 
-      //seems unnecessary??
-      /*if constexpr (is_partial_map) {
-        if (!next_after_opt.has_value()) { continue; }
-      }*/
-
       label_type next_after;
       if constexpr (is_partial_map) {
         if (!next_after_opt.has_value()) { continue; }
@@ -121,10 +117,10 @@ namespace adiar::internal
         next_after = next_after_opt;
       }
 
-      if (shift) {
-        const signed_label_type next_diff =
-          static_cast<signed_label_type>(next_before) - static_cast<signed_label_type>(next_after);
+      const signed_label_type next_diff =
+        static_cast<signed_label_type>(next_before) - static_cast<signed_label_type>(next_after);
 
+      if (shift) {
         shift &= Policy::max_label < prev_before || prev_diff == next_diff;
         prev_diff = next_diff;
       }
@@ -132,21 +128,39 @@ namespace adiar::internal
       identity &= next_before == next_after;
       monotone &= Policy::max_label < prev_before || prev_after < next_after;
 
-      //JUMP_DOWN checks
-      if(next_after != next_before ){ //level is moved check
-        only_down &= (next_after > next_before); //level moved down / static?
-        movers_preserve_order &= (last_jump < next_after); //seems wrong
+      if(next_before != next_after){ //level is moved check
+        //JUMP_DOWN checks
+        jump_down &= (next_before < next_after ); //levels are only moved down
+        jump_down &= (last_jump <= next_before); // Maybe should allow overlaps?
+        //Jump_Up check
+        //jump_up &= (next_before > next_after ); //levels are only moved up
+        //jump_up &= (last_jump >= next_after);
         last_jump = next_after;
+
+        //Adjacent swap checks - currently only detects when both adjacent variables
+        //are to be swapped -- might however work when adjacent level is empty...
+        const int32_t next_diff32 =
+          static_cast<int32_t>(next_after) - static_cast<int32_t>(next_before);
+        if(next_diff32 == 1) {
+          adj_node = next_before;
+        } else if (next_diff32 == -1){
+            adj_swap &= adj_node == next_after;
+        } else {
+          adj_swap = false;
+        }
+        // Todo: swap 
       }
 
       prev_before = next_before;
       prev_after  = next_after;
     }
-    jump_down = only_down && movers_preserve_order;
+    std::cout << "WJAT IS JD: " << jump_down << '\n';
 
-    if (!monotone) { 
-      if (jump_down) {std::cout << "\n detected jump_down\n" ;
+    if (!monotone) {
+      if (jump_down) {//std::cout << "\n detected jump_down\n" ;
          return replace_type::Jump_Down;}
+      if (adj_swap) {//std::cout << "\n detected adjacent swap\n" ;
+         return replace_type::Swap_Adjacent;}
       return replace_type::Non_Monotone; } //DUMMY! - missing handling of adj_swap, swap and jump_up
     if (!shift) { return replace_type::Monotone; }
     if (!identity) { return replace_type::Shift; }
@@ -270,7 +284,7 @@ namespace adiar::internal
 //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = true;
+  constexpr bool debug_enabled = false;
 
   //types
   template <uint8_t nodes_carried>
