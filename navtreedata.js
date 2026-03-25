@@ -94,8 +94,8 @@ var NAVTREE =
       ] ],
       [ "Amendments", "page__amend.html", [
         [ "Errors", "page__amend.html#autotoc_md38", [
-          [ "Apply PseudoCode", "page__amend.html#autotoc_md39", null ],
-          [ "Reduce PseudoCode", "page__amend.html#autotoc_md40", null ],
+          [ "Apply Pseudocode", "page__amend.html#autotoc_md39", null ],
+          [ "Reduce Pseudocode", "page__amend.html#autotoc_md40", null ],
           [ "Nested Sweeping Cases", "page__amend.html#autotoc_md41", null ],
           [ "Nested Sweeping Example", "page__amend.html#autotoc_md42", null ]
         ] ],
