@@ -2,6 +2,7 @@
 #define ADIAR_INTERNAL_ALGORITHMS_REPLACE_H
 
 #include "adiar/bdd.h"
+#include "adiar/bdd/bdd.h"
 #include "adiar/exec_policy.h"
 #include "adiar/internal/algorithms/nested_sweeping.h"
 #include "adiar/internal/data_types/level_info.h"
@@ -13,6 +14,7 @@
 #include "adiar/internal/memory.h"
 #include <functional>
 #include <iostream>
+#include <initializer_list>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -291,10 +293,6 @@ namespace adiar::internal
   using cor_req_t = request_data<2, with_parent_and_level, nodes_carried>;
 
   template <memory_mode mem_mode>
-  using cor_priority_queue_1_t = priority_queue<mem_mode, cor_req_t<0>,
-                                request_data_first_lt<cor_req_t<0>>>;
-
-  template <memory_mode mem_mode>
   using cor_priority_queue_2_t = priority_queue<mem_mode, cor_req_t<1>,
                                 request_data_second_lt<cor_req_t<1>>>;
 
@@ -316,7 +314,6 @@ namespace adiar::internal
          ptr_uint64 source, 
          tuple<typename Policy::pointer_type>& target, 
          typename Policy::label_type& level) {
-    std::cout << "enter pusher here??\n";
     if (target[0].is_nil() && target[1].is_terminal()){
         arc a =  {source, target[1]};
         if (debug_enabled) std::cout << "pushing term arc: " << a << "\n";
@@ -339,9 +336,8 @@ namespace adiar::internal
       } else {
         //push request from current
         cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
-        if (debug_enabled) std::cout<< "(from pusher) pushing req to pq1: " << lreq << "\n";
+        if (debug_enabled) std::cout<< "pushing req to pq1: " << lreq << "\n";
         pq.push(lreq);
-        std::cout << "we reach here??? \n";
       }
   }
 
@@ -356,7 +352,6 @@ namespace adiar::internal
           if (debug_enabled) std::cout << "goes into while again?\n";
           const cor_req_t<nc> r1 = pq.top(); pq.pop(); //non-levelized has no pull
           if (debug_enabled) std::cout << "has popped: " << r1 << "\n";
-          //r1.data.source.level() != ptr_uint64::nil().level()
           if (r1.data.source.level() != ptr_uint64::nil().level()) {
             //push to out!
             arc in = {r1.data.source , out_uid};
@@ -460,7 +455,7 @@ namespace adiar::internal
     
     //vars
     typename Policy::label_type label = pq1.current_level();
-    typename Policy::label_type id = -1;
+    typename Policy::label_type id = -1; 
 
      while(!pq1.empty_level() || pq2.has_top()) {
         cor_req_t<1> r = getNext(pq1, pq2);
@@ -570,87 +565,13 @@ namespace adiar::internal
      return typename Policy::__dd_type(out_arcs,exec_policy::access::Auto);
 }
 
-  template <typename Policy>
-  inline typename Policy::__dd_type
-  replace__cor_scan_fancy(const typename Policy::dd_type& dd, 
-                          const replace_func<Policy>& m) {
-    // Set up input
-    node root;
-    {node_ifstream<> in_nodes(dd);
-     root = in_nodes.pull();
-    }
-    //setup PQs
-    const size_t aux_available_memory = memory_available();
-    const size_t pq1_memory = aux_available_memory / 2;
-    const size_t max_pq_1_size = aux_available_memory / 10;
-    statistics::levelized_priority_queue_t test;
-    using PQ1 = cor_lvl_priority_queue_t<1, memory_mode::External,2>;
-    PQ1 pq1({dd,make_generator(m(root.label()))}, pq1_memory , max_pq_1_size, test);
-
-    using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
-    PQ2 pq2(memory_available()/2, memory_available() / 10);
-
-    //init req
-    cor_req_t<0> r = {{root.low(), root.high()},{},{ptr_uint64::nil(), m(root.label())}};
-    pq1.push(r);
-
-    //run sweep
-    typename Policy::__dd_type res = replace_cor_scan_level<Policy,PQ1,PQ2,typename Policy::dd_type>(dd, pq1, pq2);
-    return res;
-  }
-
   ///JUMP_DOWN special case
-
-  //func for creating generators from dd_info and m
-  //cost an extra sweep of the info file - these could have been made when detecting jump-down...
-  template <typename Policy>
-  std::tuple<generator<typename Policy::label_type>,generator<typename Policy::label_type>>
-  genenrator_generator(const typename Policy::dd_type& dd, 
-                       replace_func<Policy> m){
-    if (debug_enabled) std::cout << "generating generators for jump down\n";
-    //open info file
-    level_info_ifstream<> info_in(dd);
-    //vecs to fill
-    std::vector<typename Policy::label_type> jump_starts;
-    std::vector<typename Policy::label_type> jump_targets;
-    while (info_in.can_pull()){
-      level_info l = info_in.pull();
-      if (debug_enabled) std::cout << "found level " << l << "\n";
-      if (m(l.label()) > l.label()) {
-        jump_starts.push_back(l.label());
-        jump_targets.push_back(m(l.label()));
-      }
-    }
-    
-    if (debug_enabled) {
-      std::cout << "found levels: [";
-      for(typename Policy::label_type e : jump_starts){
-        std::cout << e << ", ";
-      }
-      std::cout << "]\n";
-      std::cout << "found targets: [";
-      for(typename Policy::label_type e : jump_targets){
-        std::cout << e << ", ";
-      }
-      std::cout << "]\n";
-    }
-    
-    //build generators
-    typename std::vector<typename Policy::label_type>::iterator s_begin = jump_starts.begin();
-    typename std::vector<typename Policy::label_type>::iterator s_end = jump_starts.end();
-    typename std::vector<typename Policy::label_type>::iterator t_begin = jump_targets.begin();
-    typename std::vector<typename Policy::label_type>::iterator t_end = jump_targets.end();
-    generator<typename Policy::label_type> test_level = make_generator(s_begin, s_end);
-    generator<typename Policy::label_type> test_target = make_generator(t_begin, t_end);
-
-    std::tuple<generator<typename Policy::label_type>,generator<typename Policy::label_type>> test(test_level, test_target);
-    return test ;
-  }
 
   template <typename Policy>
   inline typename Policy::__dd_type
   replace_jump_down_sweep(const typename Policy::dd_type& dd, 
-                          replace_func<Policy> m) {
+                          replace_func<Policy> m,
+                          exec_policy ep) {
     if (debug_enabled) std::cout << "start jump_down special case! \n";
     //setup input
     node_ifstream<> in(dd);
@@ -677,24 +598,9 @@ namespace adiar::internal
       }
     }
     
-    if (debug_enabled) {
-      std::cout << "found levels: [";
-      for(typename Policy::label_type e : jump_starts){
-        std::cout << e << ", ";
-      }
-      std::cout << "]\n";
-      std::cout << "found targets: [";
-      for(typename Policy::label_type e : jump_targets){
-        std::cout << e << ", ";
-      }
-      std::cout << "]\n";
-    }
-    
     //build generators
-    typename std::vector<typename Policy::label_type>::iterator s_begin = jump_starts.begin();
-    typename std::vector<typename Policy::label_type>::iterator s_end = jump_starts.end();
-    typename std::vector<typename Policy::label_type>::iterator t_begin = jump_targets.begin();
-    typename std::vector<typename Policy::label_type>::iterator t_end = jump_targets.end();
+    typename std::vector<typename Policy::label_type>::iterator s_begin = jump_starts.begin(), s_end = jump_starts.end();
+    typename std::vector<typename Policy::label_type>::iterator t_begin = jump_targets.begin(), t_end = jump_targets.end() ;
     generator<typename Policy::label_type> level_gen = make_generator(s_begin, s_end);
     generator<typename Policy::label_type> target_gen = make_generator(t_begin, t_end);
     optional<typename Policy::label_type> next_jump_down = level_gen();
@@ -749,7 +655,7 @@ namespace adiar::internal
         correctify_single_level<Policy>(in, aw, pq1, pq2,  v);
       }
     }
-    return typename Policy::__dd_type(out_arcs,exec_policy::access::Auto); 
+    return typename Policy::__dd_type(out_arcs,ep); 
   }
   ///JUMP_UP special case
   //TBA
@@ -759,8 +665,15 @@ namespace adiar::internal
   ///NON_MONOTONE
 
   //Policy for use in nested sweeping 
-  //TODO: actually implement memory stuff instead of dummy
-  template <typename Policy>
+template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
+  size_t
+  __cor_ilevel_upper_bound(const In& in)
+  {
+    const safe_size_t max_cut_all = Cut::get(in,cut::type::All);
+    return to_size(max_cut_all * max_cut_all + 2);
+  }
+
+template <typename Policy>
 class nested_sweeping_replace : public Policy
 {
 private:
@@ -773,8 +686,8 @@ public:
     using request_t = cor_req_t<0>;
     using request_pred_t = request_data_first_lt<request_t>;
 
-    template <size_t LookAhead, memory_mode MemoryMode>
-    using pq_t = cor_lvl_priority_queue_t<LookAhead, MemoryMode>;
+    template <size_t LookAhead, memory_mode MemoryMode, size_t LevelInput>
+    using pq_t = cor_lvl_priority_queue_t<LookAhead, MemoryMode,LevelInput>; //inner pq expects inputs from 2 files
 
 public:
     nested_sweeping_replace(const internal::replace_func<Policy> m, 
@@ -785,22 +698,36 @@ public:
       _next_level = _nesting_levels();
     };
 
-    //mem things (dummy currently - like the test ones)
     static size_t
     stream_memory() {return node_ifstream<>::memory_usage() + arc_ofstream::memory_usage();}
 
     static size_t
-    pq_memory(const size_t inner_memory) {return inner_memory;}
+    pq_memory(const size_t inner_memory) {
+      constexpr size_t data_structures_in_pq_1 =
+        pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,2>::data_structures;
 
+      constexpr size_t data_structures_in_pq_2 =
+        cor_priority_queue_2_t<memory_mode::Internal>::data_structures;
+
+      return (inner_memory / (data_structures_in_pq_1 + data_structures_in_pq_2))
+        * data_structures_in_pq_1;
+    }
+
+    static size_t pq_pull() {return 2u;}
+
+    //DUMMY
     static size_t
     ra_memory(const shared_levelized_file<node>& /*outer_file*/) {return std::numeric_limits<size_t>::max();}
 
     static size_t
-    pq_bound(const shared_levelized_file<node>& /*outer_file*/, const size_t /*outer_roots*/) { return 8;}
+    pq_bound(const shared_levelized_file<node>& outer_file, const size_t /*outer_roots*/) {
+      const typename Policy::dd_type outer_wrapper(outer_file);
+      return __cor_ilevel_upper_bound<Policy, get_2level_cut, 2u>(outer_wrapper);
+    }
 
     //labels mapped according to given map
     constexpr inline bdd::label_type
-    map_level(bdd::label_type x) const { std::cout << "maps " << x << " to " << _m(x) << "\n"; return _m(x);}
+    map_level(bdd::label_type x) const {return _m(x);}
 
     template <typename inner_pq_t>
     __bdd sweep_pq([[maybe_unused]]const exec_policy& ep,
@@ -831,13 +758,16 @@ public:
     has_sweep(const typename Policy::label_type l)
     {   
         //this may be wrong..
-        return l == next_level(l);
+        bool res = l == next_level(l);
+        std::cout << "testing if " << l << " has sweep -> " << res << "\n";
+        return res;
     }
 
     typename Policy::label_type
     next_level(const typename Policy::label_type l)
     {
-      while (_next_level.has_value() && l < _next_level.value()) { _next_level = _nesting_levels(); }
+      while (_next_level.has_value() && l < _next_level.value()) { _next_level = _nesting_levels(); 
+                                                                   std::cout << "updated next_level to " << _next_level.value() << "\n";}
       return _next_level.value_or(Policy::max_label + 1);
     }
 
@@ -863,8 +793,16 @@ public:
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
     }
 
+    //when initializing pq should add level node is being moved to
+    typename Policy::label_type
+    pq_init(){
+      typename Policy::label_type out = _m(_next_level.value());
+      std::cout << "initilize pq with " << out << "\n";
+      return out;
+    }
+    
   static constexpr bool final_canonical = true;
-  static constexpr bool fast_reduce     = false;
+  static constexpr bool fast_reduce     = true;
 
 };
 
@@ -900,7 +838,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   typename Policy::__dd_type
-  replace(const exec_policy& /*ep*/,
+  replace(const exec_policy& ep,
           const typename Policy::dd_type& dd,
           const replace_func<Policy>& m,
           replace_type m_type)
@@ -930,9 +868,9 @@ public:
       return replace_nested_sweep<Policy>(dd,m);
       //throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
     case replace_type::Jump_Down:
-      return replace_jump_down_sweep<Policy>(dd,m);
+      return replace_jump_down_sweep<Policy>(dd,m,ep);
     case replace_type::Swap_Adjacent:
-      return replace__cor_scan_fancy<Policy>(dd,m);
+      return replace_nested_sweep<Policy>(dd,m);
     case replace_type::Monotone:
 #ifdef ADIAR_STATS
       stats_replace.monotonic_scans += 1u;
