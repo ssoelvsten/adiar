@@ -159,6 +159,22 @@ namespace adiar {
         return bvec(res);
     }
 
+    //Comparators
+
+    bool
+    bvec_equal(const bvec& x, const bvec& y) {
+        if(x.size() != y.size()) { return false; }
+        
+        for (size_t i = 0; i < x.size(); i++) {
+            if(!bdd_equal(x.at(i),y.at(i))) { return false; }
+        }
+        return true;
+    }
+
+    bool
+    operator==(const bvec& x, const bvec& y) {
+        return bvec_equal(x,y);
+    }
 
     // Boolean operations
     bvec bvec_and(bvec x, bvec y) {

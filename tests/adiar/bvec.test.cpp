@@ -82,9 +82,8 @@ go_bandit([]() {
 
           const bvec res = bvec_and(x,y);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          AssertThat(res, Is().EqualTo(expected));
+          
         });
         it("computes 0 & 3 == 0 (000 & 011 == 000)", [&]() {
           const bvec x = bvec_const((char)0);
