@@ -1,5 +1,9 @@
 var NAVTREEINDEX3 =
 {
+"structadiar_1_1statistics.html#ae1e06490168bb9011b68733782feb83a":[4,6,0,27],
+"structadiar_1_1statistics.html#aef4c38a2f1741aeaa3ac55f8ef912be7":[4,6,0,19],
+"structadiar_1_1statistics.html#af2328cd1b5b65daaaf750579c6952e7d":[4,6,0,29],
+"structadiar_1_1statistics_1_1____alg__base.html":[4,6,0,0],
 "structadiar_1_1statistics_1_1____alg__base.html#ab769667ff5ecea10ecd9e2589b7e72bf":[4,6,0,0,1],
 "structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html":[4,6,0,0,0],
 "structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a18db66cef68fc1e68532347a86bd3d2b":[4,6,0,0,0,6],

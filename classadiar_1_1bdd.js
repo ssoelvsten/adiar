@@ -19,6 +19,7 @@ var classadiar_1_1bdd =
     [ "is_negated", "classadiar_1_1bdd.html#a355887367038d19632c86fb9c2717630", null ],
     [ "number_of_terminals", "classadiar_1_1bdd.html#aef2f8cbd3631a1e42e6554eac2d7e132", null ],
     [ "number_of_terminals", "classadiar_1_1bdd.html#aa97722d01a0549b7ee27d9e9a1798e55", null ],
+    [ "operator bool", "classadiar_1_1bdd.html#a5567bb253eddca72f2e0314051f2548e", null ],
     [ "operator&=", "classadiar_1_1bdd.html#af1f51bb5a06dfb789f58aa5e2f738ee8", null ],
     [ "operator*=", "classadiar_1_1bdd.html#a4e3000fd5c18b74e0a6791ff10d13d3c", null ],
     [ "operator+=", "classadiar_1_1bdd.html#ac95ef751d9b9017efdcd039333cf0488", null ],

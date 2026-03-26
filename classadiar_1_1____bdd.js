@@ -19,6 +19,7 @@ var classadiar_1_1____bdd =
     [ "max_2level_cut", "classadiar_1_1____bdd.html#a8a1d14325ab214d7303c3ba2631503ad", null ],
     [ "number_of_terminals", "classadiar_1_1____bdd.html#a9269b183c9faf9a654aae8d0aef7e651", null ],
     [ "number_of_terminals", "classadiar_1_1____bdd.html#afbef57f343dbd466d9300bd282640058", null ],
+    [ "operator bool", "classadiar_1_1____bdd.html#aaf8bd73990a140e8efcaf9a19fceaeb8", null ],
     [ "size", "classadiar_1_1____bdd.html#ab249b578d368d029ea66e732d9fd1849", null ],
     [ "_negate", "classadiar_1_1____bdd.html#a9ce1ecfcae05eb3b446a95437ea76722", null ],
     [ "_policy", "classadiar_1_1____bdd.html#a014842c4dde92f899b34a1e4be85fcbc", null ],
