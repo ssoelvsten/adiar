@@ -1699,6 +1699,12 @@ namespace adiar
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Whether a BDD is the constant `false`.
+  ///
+  /// \details If this is used as a branch conditional, then one can also resort to merely test on
+  ///          `f` itself. That is, one can write:
+  ///          ```
+  ///          if (f) then { /* !bdd_isfalse(f) */ } else { /* bdd_isfalse(f) */ }
+  ///          ```
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bool
   bdd_isfalse(const bdd& f);

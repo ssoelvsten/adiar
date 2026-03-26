@@ -206,6 +206,53 @@ go_bandit([]() {
     });
 
     describe("operator overloading", [&]() {
+      describe("bool()", [&]() {
+        it("goes to 'else' branch for F", [&]() {
+          bool taken_branch = terminal_F ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+
+        it("goes to 'then' branch for T", [&]() {
+          bool taken_branch = terminal_F ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+
+        it("goes to 'then' branch for ~F", [&]() {
+          bool taken_branch = ~terminal_F ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for x0", [&]() {
+          bool taken_branch = x0 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for x1", [&]() {
+          bool taken_branch = x1 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for (x0 & x1)", [&]() {
+          bool taken_branch = x0_and_x1 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for x0 & x1", [&]() {
+          bool taken_branch = (x0 & x1) ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for x0 | F", [&]() {
+          bool taken_branch = (x0 | terminal_F) ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'else' branch for x0 & ~x0", [&]() {
+          bool taken_branch = (x0 & ~x0) ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+      });
+
       describe("==, !=", [&]() {
         it("checks F != T", [&]() { AssertThat(terminal_F, Is().Not().EqualTo(terminal_T)); });
 

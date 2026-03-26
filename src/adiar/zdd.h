@@ -1239,12 +1239,24 @@ namespace adiar
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Whether this ZDD is the false terminal.
+  ///
+  /// \details If this is used as a branch conditional, then one can also resort to merely test on
+  ///          `A` itself. That is, one can write:
+  ///          ```
+  ///          if (A) then { /* !zdd_isfalse(A) */ } else { /* zdd_isfalse(A) */ }
+  ///          ```
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bool
   zdd_isfalse(const zdd& A);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Whether it is the empty family, i.e. Ø .
+  ///
+  /// \details If this is used as a branch conditional, then one can also resort to merely test on
+  ///          `A` itself. That is, one can write:
+  ///          ```
+  ///          if (A) then { /* !zdd_isempty(A) */ } else { /* zdd_isempty(A) */ }
+  ///          ```
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bool
   zdd_isempty(const zdd& A);

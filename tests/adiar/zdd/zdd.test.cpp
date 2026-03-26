@@ -167,6 +167,53 @@ go_bandit([]() {
     });
 
     describe("operators", [&]() {
+      describe("bool()", [&]() {
+        it("goes to 'else' branch for Ø", [&]() {
+          bool taken_branch = terminal_F ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+
+        it("goes to 'then' branch for {Ø}", [&]() {
+          bool taken_branch = terminal_F ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+
+        it("goes to 'then' branch for {{0}}", [&]() {
+          bool taken_branch = x0 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for {{1}}", [&]() {
+          bool taken_branch = x1 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for {{0}, {1}}", [&]() {
+          bool taken_branch = x0_or_x1 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for {{0,1}}", [&]() {
+          bool taken_branch = x0_or_x1 ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'then' branch for {{0}} | {{1}}", [&]() {
+          bool taken_branch = (x0 | x1) ? true : false;
+          AssertThat(taken_branch, Is().True());
+        });
+
+        it("goes to 'else' branch for {{0}} & {{1}}", [&]() {
+          bool taken_branch = (x0 & x1) ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+
+        it("goes to 'else' branch for {{0}} - {{0}}", [&]() {
+          bool taken_branch = (x0 - x0) ? true : false;
+          AssertThat(taken_branch, Is().False());
+        });
+      });
+
       describe("==, !=", [&]() {
         it("rejects Ø == {Ø}", [&]() { AssertThat(terminal_F, Is().Not().EqualTo(terminal_T)); });
 

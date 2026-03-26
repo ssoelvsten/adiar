@@ -90,6 +90,20 @@ namespace adiar
     return (*this = internal::reduce<bdd_policy>(std::move(other)));
   }
 
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Operators (Truthy)
+
+  bdd::operator bool() const
+  {
+    return !bdd_isfalse(*this);
+  }
+
+  __bdd::operator bool() &&
+  {
+    return (bdd(std::move(*this))).operator bool();
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   // Operators (Relational)
 

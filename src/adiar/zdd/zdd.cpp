@@ -83,6 +83,19 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  // Operators (Truthy)
+
+  zdd::operator bool() const
+  {
+    return !zdd_isempty(*this);
+  }
+
+  __zdd::operator bool() &&
+  {
+    return (zdd(std::move(*this))).operator bool();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
   // Operators (Assignment)
 
   zdd&
