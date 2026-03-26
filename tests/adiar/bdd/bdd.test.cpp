@@ -355,7 +355,7 @@ go_bandit([]() {
         });
       });
 
-      describe("==, !=", [&]() {
+      describe("==, != (from &, |, ^, and ~)", [&]() {
         it("check two derivations of same __bdd&& [==]",
            [&]() { AssertThat((x0 ^ x1) == ((x0 & ~x1) | (~x0 & x1)), Is().True()); });
 
@@ -369,7 +369,7 @@ go_bandit([]() {
            [&]() { AssertThat((x0 | x1) != ((x0 & x1) | (~x0 & x1)), Is().True()); });
       });
 
-      describe("-", [&]() {
+      describe("+, -", [&]() {
         it("does nothing with '+(bdd&)' [x0]", [&]() { AssertThat(+x0 == x0, Is().True()); });
 
         it("does nothing with '+(__bdd&) [x0 & x1]",
