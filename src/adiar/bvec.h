@@ -3,61 +3,67 @@
 
 #include <vector>
 #include <adiar/bdd.h>
+#include <cmath>
+#include <algorithm>
 #include <sstream>
 
 namespace adiar {
     class bvec
     {
     private:
-        const std::vector<bdd> _bits;
+        std::vector<bdd> _bits;
+        size_t _max_length;
+        const bdd default_value = bdd();
 
     public:
         /////////////////////////////////////////////////////////////////////////
         /// \brief Zero-length bvec constructor, effectively a "safe nullpointer"
         /////////////////////////////////////////////////////////////////////////
-        bvec()
-            : _bits(0)
+        bvec(size_t max_length = SIZE_T_MAX)
+            : _bits(0), _max_length(max_length)
         {}
         /////////////////////////////////////////////////////////////////////////
         /// \brief Copy constructor
         /////////////////////////////////////////////////////////////////////////
         bvec(const bvec& fs) 
-            : _bits(fs._bits)
+            : _bits(fs._bits), _max_length(fs._max_length)
         {}
         /////////////////////////////////////////////////////////////////////////
         /// \brief Move constructor for right-hand values
         /////////////////////////////////////////////////////////////////////////
         bvec(bvec&& fs) 
-        : _bits(std::move(fs._bits))
+        : _bits(std::move(fs._bits)), _max_length(fs._max_length)
         {}
 
         /////////////////////////////////////////////////////////////////////////
         /// \brief Conversion constructor from a raw bit-vector
         /////////////////////////////////////////////////////////////////////////
-        bvec(const std::vector<bdd>& bits) 
-        : _bits(bits)
+        bvec(const std::vector<bdd>& bits, size_t max_length = SIZE_T_MAX) 
+        : _bits(bits), _max_length(max_length)
         {}
         /////////////////////////////////////////////////////////////////////////
         /// \brief Conversion constructor from a raw bit-vector for right-hand values
         /////////////////////////////////////////////////////////////////////////
-        bvec(std::vector<bdd>&& bits) 
-        : _bits(std::move(bits))
+        bvec(std::vector<bdd>&& bits, size_t max_length = SIZE_T_MAX)
+        : _bits(std::move(bits)), _max_length(max_length)
         {}
 
         /////////////////////////////////////////////////////////////////////////
-        /// \brief Parameterized constructor with length `bitlen` and given initial value `f` (default value is `bdd()`)
+        /// \brief Parameterized constructor with length `bitlen` and given initial value `f`
         /////////////////////////////////////////////////////////////////////////
-        bvec(const size_t bitlen, const bdd& f = bdd()) 
-            : _bits(bitlen,f)
+        bvec(const size_t bitlen, const bdd& f) 
+            : _bits(bitlen,f), _max_length(bitlen)
         {}
         
         public:
-        size_t bitlen() const { return _bits.size(); }
+        size_t bitlen() const { return _max_length; }
+        size_t size() const { return _bits.size(); }
 
         const bdd&              // return type
         at(size_t index) const  //name(...) context
         { 
-            return _bits.at(index); 
+            if (_bits.size() <= index) { return default_value; } //TODO: This warns that we are returning a local temp. Can we move it?
+            return _bits.at(index);
         }
 
         std::vector<bdd>::const_iterator
@@ -112,26 +118,31 @@ namespace adiar {
 
     // Constructors
 
-    bvec bvec_false(size_t bitlen) {
-        return bvec(bitlen,bdd_false());
+    bvec bvec_false(size_t bitlen = SIZE_T_MAX) {
+        return bvec(std::vector<bdd>(0,bdd_false()),bitlen);
     }
 
-    bvec bvec_true(size_t bitlen) {
-        return bvec(bitlen,bdd_true());
+    bvec bvec_true(size_t bitlen = SIZE_T_MAX) {
+        return bvec(std::vector<bdd>(bitlen,bdd_true()),bitlen);
     }
 
-    bvec bvec_const(size_t bitlen, size_t value) {
-        std::vector<bdd> res(bitlen);
-        for (size_t i = 0; i< bitlen; i++) {
-            res.at(i) = value & 1 ? bdd_true() : bdd_false();
+    bvec bvec_const(size_t value, size_t bitlen) {
+        size_t msb = value != 0 ? std::max(std::ceil(std::log2(value)),1.0) : 0;
+        std::vector<bdd> res;
+        res.reserve(msb);
+        // Should be able to compute the most significant bit position and stop after that
+        for (size_t i = 0; i < msb; i++) {
+            res.push_back(value & 1 ? bdd_true() : bdd_false());
+
             value >>= 1;
         }
-        return res;
+
+        return bvec(res,bitlen);
     }
 
     template<typename Integer> 
     bvec bvec_const(Integer i) {
-        return bvec_const(8 * sizeof(Integer), i);
+        return bvec_const(i,8 * sizeof(Integer));
     }
 
 
@@ -151,14 +162,20 @@ namespace adiar {
 
     // Boolean operations
     bvec bvec_and(bvec x, bvec y) {
-        //TODO: Do we require same bitlength? If yes, do we do it at compile-time or run-time?
-        std::vector<bdd> res(x.bitlen());
+        const size_t size = std::max(x.size(),y.size());
+        std::vector<bdd> res;
         
-        for(size_t i = 0; i < x.bitlen(); i++) {
-            res.at(i) = bdd_and(x.at(i),y.at(i));
+        for(size_t i = 0; i < size; i++) {
+            const bdd bit = bdd_and(x.at(i),y.at(i));
+            if (!bdd_isfalse(bit)) {
+                while(res.size()+1 < i) {
+                    res.push_back(bdd_false());
+                }
+                res.push_back(bit);
+            }
         }
         
-        return bvec(res);
+        return bvec(res, std::max(x.bitlen(),y.bitlen()));
     }
 
     bvec bvec_or(bvec x, bvec y) {
