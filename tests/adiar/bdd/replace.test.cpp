@@ -266,6 +266,32 @@ go_bandit([]() {
     }
     const bdd bdd_6(bdd_6_nf);
 
+    // Big tree from the apply tests
+    shared_levelized_file<bdd::node_type> bdd_7_nf;
+    /*
+    //          1         ---- x0
+    //        _/ \
+    //       2    |       ---- x1
+    //      / \   |
+    //     F  |   3       ---- x2
+    //         \ / \_
+    //          4    5    ---- x3
+    //         / \  / \
+    //        F  T T   F
+    */
+
+    { // Garbage collect early and free write-lock
+      const node n5 = node(3, bdd::max_id, terminal_T, terminal_F);
+      const node n4 = node(3, bdd::max_id - 1, terminal_F, terminal_T);
+      const node n3 = node(2, bdd::max_id, n4.uid(), n5.uid());
+      const node n2 = node(1, bdd::max_id, terminal_F, n4.uid());
+      const node n1 = node(0, bdd::max_id, n2.uid(), n3.uid());
+
+      node_ofstream nw(bdd_7_nf);
+      nw <<  n5 << n4 << n3 << n2 << n1;
+    }
+    const bdd bdd_7(bdd_7_nf);
+
     describe("bdd_replace(const bdd&, <...>)", [&]() {
       describe("<non-monotonic>", [&]() {
         it("returns the original file for 'F'", [&]() {
@@ -778,8 +804,28 @@ go_bandit([]() {
             //AssertThrows(invalid_argument, bdd_replace(bdd_3, m));
           });
 
-          //TODO: more tests?!
         });
+        describe( "Adjacent swap cases", [&]() {
+          it("tests multiple inner sweeps" , [&]() {
+           /*
+           //            1            ---- x0...3?
+           //         __/ \
+           //        |     2          ---- x1
+           //        |   _/ \_
+           //        3  4     5       ---- x2
+           //       / \/ \   / \
+           //      F  6   F T   7     ---- x3...0?
+           //        / \       / \
+           //       F  T      T   F
+           */
+            const mapping_type m = [](const int x) { if (x == 1) return 3;
+                                                     if (x == 3) return 0;
+                                                     else return x; };
+            bdd res =  bdd_replace(bdd_7, m);
+            bdd_printdot(res, "testtesttest.dot");
+          });
+        });
+        //TODO: more tests?!
       });
 
       describe("<monotonic>", [&]() {
