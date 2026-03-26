@@ -1,6 +1,8 @@
 #ifndef ADIAR_INTERNAL_ALGORITHMS_PROD2U_H
 #define ADIAR_INTERNAL_ALGORITHMS_PROD2U_H
 
+#include <cstddef>
+#include <optional>
 #include <adiar/functional.h>
 
 #include <adiar/internal/algorithms/nested_sweeping.h>
@@ -46,13 +48,13 @@ namespace adiar::internal
   using prod2u_request = request_data<2, with_parent, NodesCarried, true>;
 
   /// \brief Type of the primary priority queue for node-based inputs.
-  template <size_t LookAhead, memory_mode MemoryMode>
+  template <size_t LookAhead, memory_mode MemoryMode, size_t x = 1>
   using prod2u_priority_queue_1_node_t =
     levelized_node_priority_queue<prod2u_request<0>,
                                   request_data_first_lt<prod2u_request<0>>,
                                   LookAhead,
                                   MemoryMode,
-                                  1,
+                                  x,
                                   0>;
 
   /// \brief Type of the secondary priority queue to further forward requests across a level.
@@ -792,8 +794,8 @@ namespace adiar::internal
     using request_t      = prod2u_request<0>;
     using request_pred_t = request_data_first_lt<request_t>;
 
-    template <size_t LookAhead, memory_mode MemoryMode>
-    using pq_t = prod2u_priority_queue_1_node_t<LookAhead, MemoryMode>;
+    template <size_t LookAhead, memory_mode MemoryMode, size_t LevelInput>
+    using pq_t = prod2u_priority_queue_1_node_t<LookAhead, MemoryMode, LevelInput>;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -808,7 +810,7 @@ namespace adiar::internal
     pq_memory(const size_t inner_memory)
     {
       constexpr size_t data_structures_in_pq_1 =
-        prod2u_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
+        prod2u_priority_queue_1_node_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1>::data_structures;
 
       constexpr size_t data_structures_in_pq_2 =
         prod2u_priority_queue_2_t<memory_mode::Internal>::data_structures;
@@ -832,6 +834,12 @@ namespace adiar::internal
       return std::min(__prod2u_ilevel_upper_bound<Policy, get_2level_cut, 2u>(outer_wrapper),
                       __prod2u_ilevel_upper_bound(outer_wrapper));
     }
+
+    static size_t 
+    pq_pull() {return 1u;}
+
+    //DUMMY - realistically should never be used 
+    static typename Policy::label_type pq_init() {return 0;}
 
   public:
     prod2u_nested_policy()
@@ -924,6 +932,7 @@ namespace adiar::internal
       return nested_sweeping::inner::down__sweep_switch(
         ep, *this, outer_file, outer_roots, inner_memory, stats_prod2u.lpq);
     }
+
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
