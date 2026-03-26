@@ -1,3 +1,4 @@
+#include "adiar/internal/algorithms/replace.h"
 #include "../../test.h"
 #include "adiar/bdd.h"
 #include "adiar/bdd/bdd_policy.h"
@@ -8,6 +9,7 @@
 #include "adiar/internal/io/arc_ofstream.h"
 #include "adiar/internal/io/shared_file_ptr.h"
 #include "adiar/internal/util.h"
+#include "adiar/types.h"
 #include "bandit/assertion_frameworks/snowhouse/assert.h"
 #include <string>
 
@@ -264,7 +266,6 @@ go_bandit([]() {
     }
     const bdd bdd_6(bdd_6_nf);
 
-
     describe("bdd_replace(const bdd&, <...>)", [&]() {
       describe("<non-monotonic>", [&]() {
         it("returns the original file for 'F'", [&]() {
@@ -319,6 +320,7 @@ go_bandit([]() {
 
         it("swaps levels 0 and 4 [bdd_1]", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
+          AssertThat(replace__infer_type<bdd_policy>(bdd_1,m), Is().EqualTo(replace_type::Non_Monotone));
           const bdd out = bdd_replace(bdd_1, m);
           //AssertThrows(invalid_argument, bdd_replace(bdd_1, m));
           node_test_ifstream out_nodes(out);
@@ -719,30 +721,15 @@ go_bandit([]() {
             const mapping_type m = [](const int x) { if (x == 0) return 1;
                                                      if (x == 1) return 0;
                                                      return x; };
-            __bdd res = bdd_replace(bdd_4, m);
-
-            arc_test_ifstream out_arcs(res);
-
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(0,0),false, bdd::uid_type(1,0)}));
-
-            AssertThat(out_arcs.can_pull_internal(), Is().False());
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(0,0), true, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(1,0), false, terminal_F}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(1,0), true, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().False());
+            bdd res = bdd_replace(bdd_4, m);
+            node_test_ifstream out_nodes(res);
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, bdd::pointer_type(1,bdd::max_id), terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().False());
           });
+          
           it("swap top many children" , [&]() {
             /*
             //            1         ---- x0...1?
@@ -762,73 +749,26 @@ go_bandit([]() {
                                                      if (x == 1) return 0;
                                                      else return x; };
             bdd res = bdd_replace(bdd_6, m);
-            shared_levelized_file<arc> tranposed_res = transpose(res);
+            node_test_ifstream out_nodes(res);
+            bdd_printdot(res, "big_sweep_example.dot");
+            
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,bdd::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,bdd::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,bdd::max_id-1, node::pointer_type(3,bdd::max_id), terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,bdd::max_id-2, terminal_T, terminal_F)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,bdd::max_id-3, terminal_T, node::pointer_type(3,bdd::max_id))));
+            AssertThat(out_nodes.can_pull(), Is().True());
 
-            arc_test_ifstream out_arcs(tranposed_res);
-
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(0,0), false, bdd::pointer_type(1,0)}));
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(0,0), true, bdd::pointer_type(1,1)}));
-
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(1,0), true, bdd::pointer_type(2,0)}));
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(1,0), false, bdd::pointer_type(2,1)}));
-
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(1,1), true, bdd::pointer_type(2,2)}));
-
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(1,1), false, bdd::pointer_type(2,3)}));
-          
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,1), true, bdd::pointer_type(3,0)}));
-
-            AssertThat(out_arcs.can_pull_internal(), Is().True());
-            AssertThat(out_arcs.pull_internal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,2), false, bdd::pointer_type(3,0)}));
-           
-            AssertThat(out_arcs.can_pull_internal(), Is().False());
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,0), false, terminal_F}));
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,0), true, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,1), false, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,2), true, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,3), false, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(2,3), true, terminal_F}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(3,0), false, terminal_F}));
-            AssertThat(out_arcs.can_pull_terminal(), Is().True());
-            AssertThat(out_arcs.pull_terminal(),
-                       Is().EqualTo(arc{bdd::uid_type(3,0), true, terminal_T}));
-
-            AssertThat(out_arcs.can_pull_terminal(), Is().False());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id, node::pointer_type(2,bdd::max_id-3), node::pointer_type(2,bdd::max_id))));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id-1, node::pointer_type(2,bdd::max_id-2), node::pointer_type(2,bdd::max_id-1))));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, node::pointer_type(1,bdd::max_id), node::pointer_type(1,bdd::max_id-1))));
           });
           it( "throws exception if neighbouring levels need to be swapped" , [&]() {
             //map swapping levels 1 and 2
@@ -1388,7 +1328,7 @@ go_bandit([]() {
         // NOTE: This mapping proves it can swap levels
         const mapping_type m = [](const int x) { return 4 - x; }; //swaps top and bottom levels
         const bdd out = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
-        bdd_printdot(out,"crazy_labels.dot");
+
         //AssertThrows(invalid_argument, bdd_replace(bdd_1, m, replace_type::Non_Monotone));
         node_test_ifstream out_nodes(out);
         AssertThat(out_nodes.can_pull(), Is().True());
@@ -1961,12 +1901,6 @@ go_bandit([]() {
                           bdd_replace(__bdd(__bdd_x0_unreduced, exec_policy()), m));
            });
         
-        //looks like duplicate of the one below nay?
-        /*it("throws exception if swaps top and bottom levels [bdd_1]", [&]() {
-          const mapping_type m = [](const int x) { return 4 - x; };
-          AssertThrows(invalid_argument, bdd_replace(__bdd(__bdd_1, exec_policy()), m));
-        });*/
-
         it("swaps top and bottom levels [__bdd_1]", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
           const bdd out = bdd_replace(__bdd(__bdd_1, exec_policy()), m);
@@ -1980,12 +1914,6 @@ go_bandit([]() {
           AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, bdd::pointer_type(2,bdd::max_id), terminal_T)));
           AssertThat(out_nodes.can_pull(), Is().False());
         });
-
-        //also looks like duplicate - should the call look different??
-        /*it("throws exception if levels have to be swapped [bdd_2]", [&]() {
-          const mapping_type m = [](const int x) { return 4 - x; };
-          AssertThrows(invalid_argument, bdd_replace(__bdd(__bdd_2, exec_policy()), m));
-        });*/
 
         it("swaps levels [__bdd_2]", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
