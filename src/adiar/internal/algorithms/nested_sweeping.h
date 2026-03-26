@@ -517,7 +517,6 @@ namespace adiar::internal
         void
         push(const reduce_arc& a)
         {
-          std::cout << "push in up_pq_decorator! \n";
           if (a.source().is_nil() || (a.source().label() < _next_inner && a.target().is_node())) {
 #ifdef ADIAR_STATS
             nested_sweeping::stats.inner_down.requests.preserving += 1u;
@@ -1012,7 +1011,7 @@ namespace adiar::internal
         const size_t inner_pq_bound = policy_impl.pq_bound(outer_file, outer_roots.size());
 
         const size_t inner_pq_fits =
-          Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(
+          Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1>::memory_fits(
             inner_pq_memory);
 
         const bool external_only =
@@ -1024,6 +1023,79 @@ namespace adiar::internal
           internal_only ? std::min(inner_pq_fits, inner_pq_bound) : inner_pq_bound;
 
         // TODO (bdd_compose): ask 'Policy' implementation for the initalizer list
+        // WIP very hardcoded currently 
+        // ideally:
+        // (1) arity somehow used directly in templating InnerPriorityQueue to avoid duplicating all the code
+        //      - issue: complains about constexpr stuff if we try it -> dont think it's allowed
+        // (2) policy_impl.pq_init() return the whole list of things to initilize PQ with 
+        //      - issue: donno what type that is??
+        //      - both policy_impls should have method that returns this but types will be diff
+        //        - templating??
+        size_t arity = policy_impl.pq_pull(); //how many files pq pulls from
+
+        if (arity == 2u){
+          //need to read from additoinal source to init PQ - otherwise the same
+          std::cout << "nested sweeping 2 init pq file case\n";
+          typename Policy::label_type l = policy_impl.pq_init(); //additional stuff
+          
+          if (!external_only
+            && inner_pq_max_size <= no_lookahead_bound(OuterRoots::value_type::cardinality)){
+
+            adiar_assert(inner_pq_max_size <= inner_pq_fits,
+                        "'no_lookahead' implies it should (in practice) satisfy the '<='");
+
+            using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal, 2u>;
+            InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file), make_generator(l) },
+                                        inner_pq_memory,
+                                        inner_pq_max_size,
+                                        lpq_stats);
+
+            using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
+            decorator_t decorated_pq(inner_pq, outer_roots);
+
+            return use_random_access
+              ? policy_impl.sweep_ra(ep, outer_file, decorated_pq, inner_remaining_memory)
+              : policy_impl.sweep_pq(ep, outer_file, decorated_pq, inner_remaining_memory);
+
+          } else if (!external_only && inner_pq_max_size <= inner_pq_fits) {
+#ifdef ADIAR_STATS
+            lpq_stats.internal += 1u;
+#endif
+            using InnerPriorityQueue =
+            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, 2u>;
+            InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file), make_generator(l)},
+                                        inner_pq_memory,
+                                        inner_pq_max_size,
+                                        lpq_stats);
+
+            using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
+            decorator_t decorated_pq(inner_pq, outer_roots);
+
+            return use_random_access
+              ? policy_impl.sweep_ra(ep, outer_file, decorated_pq, inner_remaining_memory)
+              : policy_impl.sweep_pq(ep, outer_file, decorated_pq, inner_remaining_memory);
+
+          } else {
+#ifdef ADIAR_STATS
+            lpq_stats.external += 1u;
+#endif
+            using InnerPriorityQueue =
+            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External, 2u>;
+            InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file), make_generator(l) },
+                                        inner_pq_memory,
+                                        inner_pq_max_size,
+                                        lpq_stats);
+
+            using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
+            decorator_t decorated_pq(inner_pq, outer_roots);
+
+            return use_random_access
+              ? policy_impl.sweep_ra(ep, outer_file, decorated_pq, inner_remaining_memory)
+              : policy_impl.sweep_pq(ep, outer_file, decorated_pq, inner_remaining_memory);
+          }
+
+        } else {
+        
         if (!external_only
             && inner_pq_max_size <= no_lookahead_bound(OuterRoots::value_type::cardinality)) {
 #ifdef ADIAR_STATS
@@ -1032,7 +1104,7 @@ namespace adiar::internal
           adiar_assert(inner_pq_max_size <= inner_pq_fits,
                        "'no_lookahead' implies it should (in practice) satisfy the '<='");
 
-          using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal>;
+          using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal, 1u>;
           InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
                                       inner_pq_memory,
                                       inner_pq_max_size,
@@ -1049,7 +1121,7 @@ namespace adiar::internal
           lpq_stats.internal += 1u;
 #endif
           using InnerPriorityQueue =
-            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
+            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, 1u>;
           InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
                                       inner_pq_memory,
                                       inner_pq_max_size,
@@ -1066,7 +1138,7 @@ namespace adiar::internal
           lpq_stats.external += 1u;
 #endif
           using InnerPriorityQueue =
-            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
+            typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External, 1u>;
           InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
                                       inner_pq_memory,
                                       inner_pq_max_size,
@@ -1078,6 +1150,7 @@ namespace adiar::internal
           return use_random_access
             ? policy_impl.sweep_ra(ep, outer_file, decorated_pq, inner_remaining_memory)
             : policy_impl.sweep_pq(ep, outer_file, decorated_pq, inner_remaining_memory);
+        }
         }
       }
 
