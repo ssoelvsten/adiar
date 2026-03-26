@@ -127,7 +127,8 @@ namespace adiar {
     }
 
     bvec bvec_const(size_t value, size_t bitlen) {
-        size_t msb = value != 0 ? std::max(std::ceil(std::log2(value)),1.0) : 0;
+        size_t max = std::max(std::ceil(std::log2(value)),1.0);
+        size_t msb = std::min( value != 0 ? max : 0,bitlen);
         std::vector<bdd> res;
         res.reserve(msb);
         // Should be able to compute the most significant bit position and stop after that
@@ -149,12 +150,11 @@ namespace adiar {
     //Helper function for bitwise operations
     //TODO: Figure out how to do higher order function templating with constrains on function signature
     template<typename BDD_OP>
-    bvec _bvec_bitwise_op(bvec x, bvec y, BDD_OP op) {
-        const size_t size = std::max(x.size(),y.size());
+    bvec _bvec_bitwise_op(size_t size, size_t bitlen, const BDD_OP& op) {
         std::vector<bdd> res;
         
         for(size_t i = 0; i < size; i++) {
-            const bdd bit = op(x.at(i),y.at(i));
+            const bdd bit = op(i);
             if (!bdd_isfalse(bit)) {
                 while(res.size() < i) {
                     res.push_back(bdd_false());
@@ -163,7 +163,15 @@ namespace adiar {
             }
         }
         
-        return bvec(res, std::max(x.bitlen(),y.bitlen()));
+        return bvec(res, bitlen);
+    }
+    
+    template<typename BDD_OP>
+    bvec _bvec_bitwise_op(bvec x, bvec y, const BDD_OP& op) {
+        const size_t size = std::max(x.size(),y.size());
+        const size_t bitlen = std::max(x.bitlen(),y.bitlen());
+
+        return _bvec_bitwise_op(size,bitlen,op);
     }
 
     //Comparators
@@ -185,26 +193,19 @@ namespace adiar {
 
     // Boolean operations
     bvec bvec_and(bvec x, bvec y) {
-        return _bvec_bitwise_op(x,y,[](const bdd& f, const bdd& g){ return bdd_and(f,g); });
+        return _bvec_bitwise_op(x,y,[&](size_t i){ return bdd_and(x.at(i),y.at(i)); });
     }
 
     bvec bvec_or(bvec x, bvec y) {
-        return _bvec_bitwise_op(x,y,[](const bdd& f, const bdd& g){ return bdd_or(f,g); });
+        return _bvec_bitwise_op(x,y,[&](size_t i){ return bdd_or(x.at(i),y.at(i)); });
     }
     
     bvec bvec_xor(bvec x, bvec y) {
-        return _bvec_bitwise_op(x,y,[](const bdd& f, const bdd& g){ return bdd_xor(f,g); });
+        return _bvec_bitwise_op(x,y,[&](size_t i){ return bdd_xor(x.at(i),y.at(i)); });
     }
 
     bvec bvec_not(bvec x) {
-        //TODO: Do we require same bitlength? If yes, do we do it at compile-time or run-time?
-        std::vector<bdd> res(x.bitlen());
-        
-        for(size_t i = 0; i < x.bitlen(); i++) {
-            res.at(i) = bdd_not(x.at(i));
-        }
-
-        return bvec(res);
+        return _bvec_bitwise_op(x.bitlen(),x.bitlen(),[&](size_t i){ return bdd_not(x.at(i)); });
     }
 }
 

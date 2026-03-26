@@ -19,12 +19,22 @@ go_bandit([]() {
           AssertThat(x.size(), Is().EqualTo(0u));
           AssertThat(x.bitlen(), Is().EqualTo(32u));
         });
-        it("has 8 bitlen when constructed with max char", [&]() {
+        it("has 8 bitlen when constructed with max unsigned char", [&]() {
           const bvec x = bvec_const((unsigned char)255);
           AssertThat(x.size(), Is().EqualTo(8u));
           AssertThat(x.bitlen(), Is().EqualTo(8u));
         });
-        it("has 8 bitlen when constructed with max char", [&]() {
+        it("has 8 bitlen when constructed with overflowing char", [&]() {
+          const bvec x = bvec_const((char)253);
+          AssertThat(x.size(), Is().EqualTo(8u));
+          AssertThat(x.bitlen(), Is().EqualTo(8u));
+        });
+        it("has 8 bitlen when constructed with negative char", [&]() {
+          const bvec x = bvec_const((char)-52);
+          AssertThat(x.size(), Is().EqualTo(8u));
+          AssertThat(x.bitlen(), Is().EqualTo(8u));
+        });
+        it("has 8 bitlen when constructed with max signed char", [&]() {
           const bvec x = bvec_const((char)127);
           AssertThat(x.size(), Is().EqualTo(7u));
           AssertThat(x.bitlen(), Is().EqualTo(8u));
@@ -167,13 +177,11 @@ go_bandit([]() {
       describe("constants", []() {
         it("computes ~3 == 252 for bitlength 8 (~00000011 == 11111100)", [&]() {
           const bvec x = bvec_const((char)3);
-          const bvec expected = bvec_const((char)252); //Is this expected, or should we check bdd structure?
+          const bvec expected = bvec_const((u_char)252); //Is this expected, or should we check bdd structure?
 
           const bvec res = bvec_not(x);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+            AssertThat(res, Is().EqualTo(expected));
         });
         it("computes ~3 == (65535 - 3) for bitlength 16 (~0000000000000011 == 1111111111111100)", [&]() {
           const bvec x = bvec_const((short)3);
