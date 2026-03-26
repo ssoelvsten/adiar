@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <adiar/bdd.h>
+#include <sstream>
 
 namespace adiar {
     class bvec
@@ -71,7 +72,43 @@ namespace adiar {
             return _bits.cend(); 
         }
 
+        std::vector<bdd>::const_reverse_iterator
+        rbegin() const  
+        { 
+            return _bits.crbegin(); 
+        }
+
+        std::vector<bdd>::const_reverse_iterator
+        rend() const  
+        { 
+            return _bits.crend(); 
+        }
+
+        std::string
+        to_string() const {
+            std::stringstream out;
+
+            out << "0x";
+            for (auto i = this->rbegin(); i != this->rend(); i++)
+            {
+                if (bdd_isfalse(*i)) {
+                    out << "0";
+                } else if(bdd_istrue(*i)) {
+                    out << "1";
+                } else {
+                    out << "_";
+                }
+            }
+
+            return out.str();
+        }
     };
+
+    inline std::ostream&
+    operator<<(std::ostream& os, const bvec& a)
+    {
+        return os << a.to_string();
+    }
 
     // Constructors
 
