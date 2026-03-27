@@ -505,7 +505,8 @@ namespace adiar::internal
       adiar_assert(can_push(), "Should only push when there is a yet unvisited level.");
 
       const ptr_uint64::label_type level = e.level();
-
+      std::cout << "next_bucket_level() =" << next_bucket_level() << "\n";
+      std::cout << "level =" << level << "\n";
       adiar_assert(level_cmp_le<LevelComp>(next_bucket_level(), level, _level_comparator),
                    "Can only push element to next bucket or later.");
 
