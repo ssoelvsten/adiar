@@ -924,8 +924,9 @@ public:
     template<typename PQT>
     std::array<typename PQT::level_input_type, PQT::lvl_input>
     priority_queue_initializer_list(const typename Policy::shared_node_file_type outer_file) const{
-      typename Policy::label_type dummy = 0;
-      std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename Policy::dd_type(outer_file), make_generator(dummy)};
+      optional<typename Policy::label_type> dummy = _targets();
+      typename Policy::label_type target = (dummy.has_value()) ? dummy.value() : throw invalid_argument("target should exist for sweep");
+      std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename Policy::dd_type(outer_file), make_generator(target)};
       return res;
     }
     
