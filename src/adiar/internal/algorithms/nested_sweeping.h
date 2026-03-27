@@ -1032,7 +1032,7 @@ namespace adiar::internal
                         "'no_lookahead' implies it should (in practice) satisfy the '<='");
 
             using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal>;
-            InnerPriorityQueue inner_pq(policy_impl.template pq_init_2<InnerPriorityQueue>(outer_file),
+            InnerPriorityQueue inner_pq(policy_impl.template priority_queue_initializer_list<InnerPriorityQueue>(outer_file),
                                         inner_pq_memory,
                                         inner_pq_max_size,
                                         lpq_stats);
@@ -1049,7 +1049,7 @@ namespace adiar::internal
             lpq_stats.internal += 1u;
 #endif
             using InnerPriorityQueue = typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
-            InnerPriorityQueue inner_pq(policy_impl.template pq_init_2<InnerPriorityQueue>(outer_file),
+            InnerPriorityQueue inner_pq(policy_impl.template priority_queue_initializer_list<InnerPriorityQueue>(outer_file),
                                         inner_pq_memory,
                                         inner_pq_max_size,
                                         lpq_stats);
@@ -1067,7 +1067,7 @@ namespace adiar::internal
 #endif
             using InnerPriorityQueue =
             typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
-            InnerPriorityQueue inner_pq(policy_impl.template pq_init_2<InnerPriorityQueue>(outer_file),
+            InnerPriorityQueue inner_pq(policy_impl.template priority_queue_initializer_list<InnerPriorityQueue>(outer_file),
                                         inner_pq_memory,
                                         inner_pq_max_size,
                                         lpq_stats);

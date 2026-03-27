@@ -838,7 +838,7 @@ namespace adiar::internal
     //method for supplying the level_inputs for initializing inner PQ
     template<typename PQT>
     std::array<typename PQT::level_input_type, PQT::lvl_input>
-    pq_init_2(const typename Policy::shared_node_file_type outer_file) const{
+    priority_queue_initializer_list(const typename Policy::shared_node_file_type outer_file) const{
       std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename Policy::dd_type(outer_file)};
       return res;
     }

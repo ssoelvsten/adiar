@@ -199,6 +199,13 @@ public:
     return request_t({ n.high(), OnlyGC ? node::pointer_type::nil() : n.high() }, {}, { parent });
   }
 
+  template<typename PQT>
+    std::array<typename PQT::level_input_type, PQT::lvl_input>
+    priority_queue_initializer_list(const typename bdd_policy::shared_node_file_type outer_file) const{
+      std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename bdd_policy::dd_type(outer_file)};
+      return res;
+    }
+
   ////////////////////////////////////////////////////////////////////////////////////////////////
   static constexpr bool final_canonical = FinalCanonical;
   static constexpr bool fast_reduce     = FastReduce;
@@ -365,6 +372,13 @@ public:
     // Always pick low child
     return request_t({ n.low() }, {}, { parent });
   }
+
+  template<typename PQT>
+  std::array<typename PQT::level_input_type, PQT::lvl_input>
+    priority_queue_initializer_list(const typename bdd_policy::shared_node_file_type outer_file) const{
+      std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename bdd_policy::dd_type(outer_file)};
+      return res;
+    }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   static constexpr bool final_canonical = true;
