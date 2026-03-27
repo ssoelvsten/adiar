@@ -123,7 +123,6 @@ namespace adiar {
 
 }
 
-//TODO: Rebase from main, then use (if(f) instead of if(!bdd_isfalse(f)))
 //TODO: Test overview both existing and missing, test bvec_equal, use bvec_equal instead of bitwise assertions
 //TODO: bvec_truncate(new_bitlen); use _bvec_bitwise_op(...new_bitlen...) to truncate
 //TODO: Implement arithmetic operations

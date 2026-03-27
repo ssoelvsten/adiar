@@ -154,7 +154,7 @@ namespace adiar {
         
         for(size_t i = 0; i < size; i++) {
             const bdd bit = op(i);
-            if (!bdd_isfalse(bit)) {
+            if (bit) {
                 while(res.size() < i) {
                     res.push_back(bdd_false());
                 }
@@ -192,10 +192,3 @@ namespace adiar {
     //Arithmetic operations
 
 }
-//TODO: Move implementation to bvec.cpp
-//TODO: Use "const bvec&" instead of "bvec" (call-by-reference instead of call-by-value)
-//TODO: Rebase from main, then use (if(f) instead of if(!bdd_isfalse(f)))
-//TODO: Test overview both existing and missing, test bvec_equal, use bvec_equal instead of bitwise assertions
-//TODO: bvec_truncate(new_bitlen); use _bvec_bitwise_op(...new_bitlen...) to truncate
-//TODO: Implement arithmetic operations
-//TODO: Add variables, bvec_var(ITER begin, ITER end, bitlen)
