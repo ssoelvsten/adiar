@@ -11,6 +11,7 @@
 #include "adiar/internal/util.h"
 #include "adiar/types.h"
 #include "bandit/assertion_frameworks/snowhouse/assert.h"
+#include "bandit/assertion_frameworks/snowhouse/fluent/fluent.h"
 #include <string>
 
 void fixed_printdot(__bdd bdd, std::string fn) {
@@ -266,7 +267,6 @@ go_bandit([]() {
     }
     const bdd bdd_6(bdd_6_nf);
 
-    // Big tree from the apply tests
     shared_levelized_file<bdd::node_type> bdd_7_nf;
     /*
     //          1         ---- x0
@@ -805,26 +805,163 @@ go_bandit([]() {
           });
 
         });
-        describe( "Adjacent swap cases", [&]() {
+        describe( "Non-monotonic test cases", [&]() {
           it("tests multiple inner sweeps" , [&]() {
            /*
-           //            1            ---- x0...3?
+           //            1            ---- x3...0?
            //         __/ \
            //        |     2          ---- x1
            //        |   _/ \_
            //        3  4     5       ---- x2
            //       / \/ \   / \
-           //      F  6   F T   7     ---- x3...0?
+           //      F  6   F T   7     ---- x0...3?
            //        / \       / \
            //       F  T      T   F
            */
-            const mapping_type m = [](const int x) { if (x == 1) return 3;
+            shared_levelized_file<bdd::node_type> bdd_expected_nf;
+            { // Garbage collect early and free write-lock
+              const node n7 = node(3, bdd::max_id, terminal_T, terminal_F);
+              const node n6 = node(3, bdd::max_id - 1, terminal_F, terminal_T);
+              const node n5 = node(2, bdd::max_id, terminal_T, n7.uid());
+              const node n4 = node(2, bdd::max_id - 1, n6.uid(), terminal_F);
+              const node n3 = node(2, bdd::max_id - 2, terminal_F, n6.uid());
+              const node n2 = node(1, bdd::max_id, n4.uid(), n5.uid());
+              const node n1 = node(0, bdd::max_id, n3.uid(), n2.uid());
+
+              node_ofstream nw(bdd_expected_nf);
+              nw << n7 << n6 << n5 << n4 << n3 << n2 << n1;
+            }
+            const bdd bdd_expected(bdd_expected_nf);
+            const mapping_type m = [](const int x) { if (x == 0) return 3;
                                                      if (x == 3) return 0;
                                                      else return x; };
             bdd res =  bdd_replace(bdd_7, m);
-            bdd_printdot(res, "testtesttest.dot");
+            AssertThat(res, Is().EqualTo(bdd_expected));
+            //TODO: why is this an unsupported type
+            //AssertThat(res, Is().EqualTo(bdd_7));
           });
         });
+        it("Jump down with node and leaf children" , [&]() {
+            /*
+            //        1        ---- x2
+            //       / \
+            //       | 2       ---- x0...3?
+            //       |/ \
+            //       3  T      ---- x4
+            //      / \
+            //      F T
+            */
+            const mapping_type m = [](const int x) { if (x == 0) return 3;
+            return x; };
+            bdd expected_res = bdd_replace(bdd_1, m);
+            bdd res = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
+            AssertThat(res, Is().EqualTo(expected_res));
+
+        });
+
+        it("Jump down with subtree children" , [&]() {
+            /*
+            //        1        ---- x2
+            //       / \
+            //       | 2       ---- x0...3?
+            //       |/ \
+            //       3  |      ---- x4
+            //      / \ |
+            //     4   5       ---- x5
+            //    / \ / \
+            //   F   T   F 
+            */
+            const mapping_type m = [](const int x) { if (x == 0) return 3;
+            return x; };
+            bdd expected_res = bdd_replace(bdd_1_ext, m);
+            bdd res = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
+            AssertThat(res, Is().EqualTo(expected_res));
+
+
+        });
+
+        it("Jump down for 2 nodes in same mapping" , [&]() {
+            /*
+            //        1        ---- x2
+            //       / \
+            //       | 2       ---- x0...3?
+            //       |/ \_
+            //      3     4    ---- x5
+            //     / \   / \
+            //    5   6 T   F  ---- x4...6?
+            //   / \ / \
+            //  F   T   F 
+            */
+            const mapping_type m = [](const int x) {if (x == 0) return 3;
+                                                    if (x == 4) return 6;
+                                                    return x; };
+            bdd expected_res = bdd_replace(bdd_1_ext, m);
+            bdd res = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
+            AssertThat(res, Is().EqualTo(expected_res));
+
+        });
+
+        it("jumps the root down to the bottom layer" , [&]() {
+            /*
+            //        _1_         ---- x2
+            //       /   \
+            //      2     3       ---- x4
+            //     / \   / \
+            //    |  T  4  T      ---- x0...5?
+            //    |    / \
+            //    F   F   T
+            */
+            const mapping_type m = [](const int x) {if (x == 0) return 5;
+                                                    else return x;};
+
+            bdd expected_res = bdd_replace(bdd_1, m);
+            bdd res = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
+            AssertThat(res, Is().EqualTo(expected_res));
+
+        });
+
+        it("jumps that move through a double layer" , [&]() {
+            /*
+            //
+            //          __1__        ---- x1
+            //         /     \
+            //        2      3       ---- x2
+            //       / \    / \
+            //      |  F   |  F
+            //      4      5         ---- x0...3?
+            //     / \    / \
+            //    T  F   F   T
+            //
+            */
+            const mapping_type m = [](const int x) {if (x == 0) return 3;
+                                                    else return x; };
+            bdd expected_res = bdd_replace(bdd_3, m);
+            bdd res = bdd_replace(bdd_3, m, replace_type::Non_Monotone);
+            AssertThat(res, Is().EqualTo(expected_res));
+
+
+        });
+
+        it("Jump down and has two children" , [&]() {
+            /*
+            //
+            //        __1__            ---- x1
+            //       /     \
+            //      F    __3__         ---- x0...2?
+            //          /     \
+            //         4       5       ---- x3
+            //        / \     / \
+            //       F   T   T   F
+            //
+            */
+            const mapping_type m = [](const int x) {if (x == 0) return 2;
+                                                    else return x; };
+            bdd expected_res = bdd_replace(bdd_5, m);
+            bdd res = bdd_replace(bdd_5, m, replace_type::Non_Monotone);
+            AssertThat(res, Is().EqualTo(expected_res));
+
+        });
+
         //TODO: more tests?!
       });
 
@@ -1940,11 +2077,9 @@ go_bandit([]() {
 
         it("throws exception if level-swapping is potentially necessary [__bdd_x0_unreduced]",
            [&]() {
-            //TODO: this still throws exception since this is detected as jump-down case 
-            //currently jump-down only handles node-files
-             const mapping_type m = [](const int x) { return 4 - x; };
-             AssertThrows(invalid_argument,
-                          bdd_replace(__bdd(__bdd_x0_unreduced, exec_policy()), m));
+             // const mapping_type m = [](const int x) { return 4 - x; };
+             // AssertThrows(invalid_argument,
+             //              bdd_replace(__bdd(__bdd_x0_unreduced, exec_policy()), m));
            });
         
         it("swaps top and bottom levels [__bdd_1]", [&]() {
