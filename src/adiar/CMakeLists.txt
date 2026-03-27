@@ -107,6 +107,7 @@ set(HEADERS
 set(SOURCES
   # adiar/
   adiar.cpp
+  bvec.cpp
   domain.cpp
   statistics.cpp
 
