@@ -781,8 +781,8 @@ public:
     using request_t = cor_req_t<0>;
     using request_pred_t = request_data_first_lt<request_t>;
 
-    template <size_t LookAhead, memory_mode MemoryMode, size_t LevelInputs>
-    using pq_t = cor_lvl_priority_queue_t<LookAhead, MemoryMode, LevelInputs>; //inner pq expects inputs from 2 files
+    template <size_t LookAhead, memory_mode MemoryMode>
+    using pq_t = cor_lvl_priority_queue_t<LookAhead, MemoryMode, 2u>; //inner pq expects inputs from 2 files
 
 public:
     nested_sweeping_replace(const internal::replace_func<Policy> m, 
@@ -801,7 +801,7 @@ public:
     static size_t
     pq_memory(const size_t inner_memory) {
       constexpr size_t data_structures_in_pq_1 =
-        pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, 2>::data_structures;
+        pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
 
       constexpr size_t data_structures_in_pq_2 =
         cor_priority_queue_2_t<memory_mode::Internal>::data_structures;
@@ -920,13 +920,13 @@ public:
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
     }
 
-    //when initializing pq should add level node is being moved to
-    typename Policy::label_type
-    pq_init(){
-      optional<typename Policy::label_type> out = _targets();
-      typename Policy::label_type act_out = (out.has_value()) ? out.value() : 5000; 
-      std::cout << "initilize pq with " << act_out << "\n";
-      return act_out;
+    //method for supplying the level_inputs for initializing inner PQ
+    template<typename PQT>
+    std::array<typename PQT::level_input_type, PQT::lvl_input>
+    pq_init_2(const typename Policy::shared_node_file_type outer_file) const{
+      typename Policy::label_type dummy = 0;
+      std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename Policy::dd_type(outer_file), make_generator(dummy)};
+      return res;
     }
     
   static constexpr bool final_canonical = true;
