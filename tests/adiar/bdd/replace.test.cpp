@@ -359,26 +359,10 @@ go_bandit([]() {
           AssertThat(out_nodes.can_pull(), Is().False());
         });
 
-        it("swaps and relables levels [bdd_2]", [&]() {
-          const mapping_type m = [](const int x) { return 4 - x; };
-          const bdd out = bdd_replace(bdd_2, m);
-          //AssertThrows(invalid_argument, bdd_replace(bdd_2, m));
-          node_test_ifstream out_nodes(out);
-          AssertThat(out_nodes.can_pull(), Is().True());
-          AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
-          AssertThat(out_nodes.can_pull(), Is().True());
-          AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id-1, terminal_T,terminal_F)));
-          AssertThat(out_nodes.can_pull(), Is().True());
-          AssertThat(out_nodes.pull(), Is().EqualTo(node(3,bdd::max_id,
-             node::pointer_type(4, bdd::max_id),node::pointer_type(4, bdd::max_id-1))));
-          AssertThat(out_nodes.can_pull(), Is().False());
-        });
-
         // TODO: Add more complex inputs that test for all relevant behaviours of applying the
         //       Nested Sweeping framework to move levels.
         describe("Jump Down cases", [&]() {
           //TODO: check that level info file is created correctly
-          //TODO check order file is created correctly when it's been implemented
 
           it("Jump down with node and leaf children" , [&]() {
             /*
@@ -747,6 +731,8 @@ go_bandit([]() {
             const mapping_type m = [](const int x) { if (x == 0) return 1;
                                                      if (x == 1) return 0;
                                                      return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_4, m), Is().EqualTo(replace_type::Swap_Adjacent));
+
             bdd res = bdd_replace(bdd_4, m);
             node_test_ifstream out_nodes(res);
             AssertThat(out_nodes.can_pull(), Is().True());
@@ -774,6 +760,8 @@ go_bandit([]() {
             const mapping_type m = [](const int x) { if (x == 0) return 1;
                                                      if (x == 1) return 0;
                                                      else return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_6, m), Is().EqualTo(replace_type::Swap_Adjacent));
+
             bdd res = bdd_replace(bdd_6, m);
             node_test_ifstream out_nodes(res);
             bdd_printdot(res, "big_sweep_example.dot");
@@ -796,16 +784,138 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().True());
             AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, node::pointer_type(1,bdd::max_id), node::pointer_type(1,bdd::max_id-1))));
           });
-          it( "throws exception if neighbouring levels need to be swapped" , [&]() {
+          it( "swaps bottom layers in bdd_2" , [&]() {
             //map swapping levels 1 and 2
+            /*
+            //       _1_        ---- x0       //        _1_
+            //      /   \                     //       /   \
+            //      2   3       ---- x1...2?  //      2     3
+            //     / \ / \                    //     / \   / \
+            //     | F F |                    //    4  |   5  \
+            //      \   /                     //   / \ |  / \  |
+            //       \ /                      //  1   0  0  1  0
+            //        4         ---- x2...1?
+            //       / \
+            //       T F
+            */
             const mapping_type m = [](const int x) { if (x == 1) return 2;
-                                                     if (x == 2) return 1;
-                                                     else return x; };
-            //AssertThrows(invalid_argument, bdd_replace(bdd_3, m));
+                                                           if (x == 2) return 1;
+                                                           else return x; };
+
+            AssertThat(replace__infer_type<bdd_policy>(bdd_3, m), Is().EqualTo(replace_type::Swap_Adjacent));
+            bdd out = bdd_replace(bdd_3, m);
+
+            bdd_printdot(out, "what_this.dot");
+
+            node_test_ifstream out_nodes(out);
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,bdd::max_id, terminal_F,terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,bdd::max_id-1, terminal_T,terminal_F)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id, node::pointer_type(2,bdd::max_id), terminal_F)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id-1, node::pointer_type(2,bdd::max_id-1), terminal_F)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, node::pointer_type(1,bdd::max_id-1), node::pointer_type(1,bdd::max_id))));
+            AssertThat(out_nodes.can_pull(), Is().False());
           });
 
+          it("swaps and relables levels [bdd_2]", [&]() {
+            //technically an adjecent swap?
+            const mapping_type m = [](const int x) { return 4 - x; };
+            const bdd out = bdd_replace(bdd_2, m);
+
+            node_test_ifstream out_nodes(out);
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id-1, terminal_T,terminal_F)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,bdd::max_id,
+              node::pointer_type(4, bdd::max_id),node::pointer_type(4, bdd::max_id-1))));
+            AssertThat(out_nodes.can_pull(), Is().False());
+        });
+
+        });
+
+        describe("Jump-up cases", [&](){
+
+          it("jumps bottom layer up [bdd_1_ext]", [&](){
+            /*
+            //        1        ---- x0   //           1         --- x0
+            //       / \                 //          / \
+            //       | 2       ---- x2   //         2   3       --- x1
+            //       |/ \                //        / \ / \
+            //       3  |      ---- x4   //       /   X   \
+            //      / \ |                //      |   4 \   5    --- x2
+            //     4   5       ---- x5   //       \ / \ \ / \
+            //    / \ / \                //        6   T 7   F  --- x4
+            //   F   T   F               //       / \   / \
+            //                                   F   T T   F
+            */
+            const mapping_type m = [](const int x) { if (x == 5) return 1;
+                                                           else return x; };
+            bdd out = bdd_replace(bdd_1_ext, m);
+            
+            //expected res tree
+            shared_levelized_file<bdd::node_type> er_file;
+            {  
+              const node n7 = node(4, bdd::max_id, terminal_T, terminal_F);
+              const node n6 = node(4, bdd::max_id - 1, terminal_F, terminal_T);
+              const node n5 = node(2, bdd::max_id, n7.uid(), terminal_F);
+              const node n4 = node(2, bdd::max_id -1, n6.uid(), terminal_T);
+              const node n3 = node(1, bdd::max_id, n4.uid(), n5.uid());
+              const node n2 = node(1, bdd::max_id -1, n6.uid(), n7.uid());
+              const node n1 = node(0, bdd::max_id, n2.uid(), n3.uid());
+
+              node_ofstream nw(er_file);
+              nw << n7 << n6 << n5 << n4 << n3 << n2 << n1;
+            }
+            const bdd expected_res(er_file);
+            AssertThat(out, Is().EqualTo(expected_res));
+          });
         });
         describe( "Non-monotonic test cases", [&]() {
+          //true non-monotone case
+          it("reverses the order [bdd 7]", [&]() {
+            /* org tree bdd_7               // res tree
+            //          1         ---- x0   //          1        --- x3..0
+            //        _/ \                  //         / \
+            //       2    |       ---- x1   //        2   3_      --- x2..1
+            //      / \   |                 //      / |  /  \
+            //     F  |   3       ---- x2   //      | | 4    5    --- x1..2
+            //         \ / \_               //      | \ | \  | \
+            //          4    5    ---- x3   //      |   6  | F  7 --- x0..3
+            //         / \  / \             //       \ / \ |   / \
+            //        F  T T   F            //        F   T   T   F
+            */
+
+            const mapping_type m = [](const int x) { if (x == 0) return 3;
+                                                           if (x == 1) return 2;
+                                                           if (x == 2) return 1;
+                                                           if (x == 3) return 0;
+                                                           else return x; };
+            bdd res = bdd_replace(bdd_7, m);
+            AssertThat(replace__infer_type<bdd_policy>(bdd_7,m), Is().EqualTo(replace_type::Non_Monotone));
+            shared_levelized_file<bdd::node_type> bdd_expected_nf;
+            { // Garbage collect early and free write-lock
+              const node n7 = node(3, bdd::max_id, terminal_T, terminal_F);
+              const node n6 = node(3, bdd::max_id-1, terminal_F, terminal_T);
+              const node n5 = node(2, bdd::max_id, terminal_F, n7.uid());
+              const node n4 = node(2, bdd::max_id-1, n6.uid(), terminal_T);
+              const node n3 = node(1, bdd::max_id, n4.uid(), n5.uid());
+              const node n2 = node(1, bdd::max_id-1, terminal_F, n6.uid());
+              const node n1 = node(0, bdd::max_id, n2.uid(), n3.uid());
+
+              node_ofstream nw(bdd_expected_nf);
+              nw << n7<< n6 << n5 << n4 << n3 << n2 << n1;
+            }
+            const bdd bdd_expected(bdd_expected_nf);
+            AssertThat(res, Is().EqualTo(bdd_expected));
+          });
+          
+          
           it("tests multiple inner sweeps" , [&]() {
            /*
            //            1            ---- x3...0?
@@ -841,7 +951,8 @@ go_bandit([]() {
             //AssertThat(res, Is().EqualTo(bdd_7));
           });
         });
-        it("Jump down with node and leaf children" , [&]() {
+
+        it("Non-monotonic - Jump down with node and leaf children" , [&]() {
             /*
             //        1        ---- x2
             //       / \
@@ -859,7 +970,7 @@ go_bandit([]() {
 
         });
 
-        it("Jump down with subtree children" , [&]() {
+        it("Non-monotonic - Jump down with subtree children" , [&]() {
             /*
             //        1        ---- x2
             //       / \
@@ -880,7 +991,7 @@ go_bandit([]() {
 
         });
 
-        it("Jump down for 2 nodes in same mapping" , [&]() {
+        it("Non-monotonic - Jump down for 2 nodes in same mapping" , [&]() {
             /*
             //        1        ---- x2
             //       / \
@@ -901,7 +1012,7 @@ go_bandit([]() {
 
         });
 
-        it("jumps the root down to the bottom layer" , [&]() {
+        it("Non-monotonic - jumps the root down to the bottom layer" , [&]() {
             /*
             //        _1_         ---- x2
             //       /   \
@@ -920,7 +1031,7 @@ go_bandit([]() {
 
         });
 
-        it("jumps that move through a double layer" , [&]() {
+        it("Non-monotonic - jumps that move through a double layer" , [&]() {
             /*
             //
             //          __1__        ---- x1
@@ -942,7 +1053,7 @@ go_bandit([]() {
 
         });
 
-        it("Jump down and has two children" , [&]() {
+        it("Non-monotonic -Jump down and has two children" , [&]() {
             /*
             //
             //        __1__            ---- x1
