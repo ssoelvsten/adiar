@@ -104,26 +104,25 @@ namespace adiar {
     
     template<typename BDD_OP>
     bvec 
-    _bvec_bitwise_op(bvec x, bvec y, const BDD_OP& op);
+    _bvec_bitwise_op(const bvec& x, const bvec& y, const BDD_OP& op);
     
     bvec 
-    bvec_and(bvec x, bvec y);
+    bvec_and(const bvec& x, const bvec& y);
     
     bvec 
-    bvec_or(bvec x, bvec y);
+    bvec_or(const bvec& x, const bvec& y);
     
     bvec
-    bvec_xor(bvec x, bvec y);
+    bvec_xor(const bvec& x, const bvec& y);
 
     bvec
-    bvec_not(bvec x);
+    bvec_not(const bvec& x);
 
     //Arithmetic operations
 
 
 }
 
-//TODO: Use "const bvec&" instead of "bvec" (call-by-reference instead of call-by-value)
 //TODO: Rebase from main, then use (if(f) instead of if(!bdd_isfalse(f)))
 //TODO: Test overview both existing and missing, test bvec_equal, use bvec_equal instead of bitwise assertions
 //TODO: bvec_truncate(new_bitlen); use _bvec_bitwise_op(...new_bitlen...) to truncate

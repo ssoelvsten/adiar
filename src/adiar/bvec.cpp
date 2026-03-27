@@ -166,26 +166,26 @@ namespace adiar {
     }
     
     template<typename BDD_OP>
-    bvec _bvec_bitwise_op(bvec x, bvec y, const BDD_OP& op) {
+    bvec _bvec_bitwise_op(const bvec& x, const bvec& y, const BDD_OP& op) {
         const size_t size = std::max(x.size(),y.size());
         const size_t bitlen = std::max(x.bitlen(),y.bitlen());
 
         return _bvec_bitwise_op(size,bitlen,op);
     }
 
-    bvec bvec_and(bvec x, bvec y) {
+    bvec bvec_and(const bvec& x, const bvec& y) {
         return _bvec_bitwise_op(x,y,[&](size_t i){ return bdd_and(x.at(i),y.at(i)); });
     }
 
-    bvec bvec_or(bvec x, bvec y) {
+    bvec bvec_or(const bvec& x, const bvec& y) {
         return _bvec_bitwise_op(x,y,[&](size_t i){ return bdd_or(x.at(i),y.at(i)); });
     }
     
-    bvec bvec_xor(bvec x, bvec y) {
+    bvec bvec_xor(const bvec& x, const bvec& y) {
         return _bvec_bitwise_op(x,y,[&](size_t i){ return bdd_xor(x.at(i),y.at(i)); });
     }
 
-    bvec bvec_not(bvec x) {
+    bvec bvec_not(const bvec& x) {
         return _bvec_bitwise_op(x.bitlen(),x.bitlen(),[&](size_t i){ return bdd_not(x.at(i)); });
     }
 
