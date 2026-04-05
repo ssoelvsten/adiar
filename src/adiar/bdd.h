@@ -49,7 +49,7 @@ namespace adiar
   bdd_const(bool value);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief       The BDD representing the given constant value.
+  /// \brief The BDD representing the given constant value.
   ///
   /// \param value
   ///    The constant boolean (terminal) value
@@ -132,8 +132,8 @@ namespace adiar
   bdd_nithvar(bdd::label_type var);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The BDD representing the logical 'and' of all the given variables, i.e. a *term* of
-  ///          variables.
+  /// \brief The BDD representing the logical 'and' of all the given variables, i.e. a *term* of
+  ///        variables.
   ///
   /// \details Any negative labels provided by the generator are interpreted as the negation of
   ///          said variable.
@@ -165,8 +165,8 @@ namespace adiar
   bdd_and(const generator<pair<bdd::label_type, bool>>& vars);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The BDD representing the logical 'and' of all the given variables, i.e. a *term* of
-  ///          variables.
+  /// \brief The BDD representing the logical 'and' of all the given variables, i.e. a *term* of
+  ///        variables.
   ///
   /// \details Any negative labels provided by the generator are interpreted as the negation of said
   ///          variable.
@@ -190,8 +190,8 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The BDD representing the logical 'or' of all the given variables, i.e. a *clause* of
-  ///          variables.
+  /// \brief The BDD representing the logical 'or' of all the given variables, i.e. a *clause* of
+  ///        variables.
   ///
   /// \details Any negative labels provided by the generator are interpreted as the negation of said
   ///          variable.
@@ -208,8 +208,8 @@ namespace adiar
   bdd_or(const generator<int>& vars);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief      The BDD representing the logical 'or' of all the given variables, i.e. a *clause*
-  ///             of variables.
+  /// \brief The BDD representing the logical 'or' of all the given variables, i.e. a *clause* of
+  ///        variables.
   ///
   /// \param vars
   ///    Generator of pairs (label, negated) in \em descending order. These values can at most be
@@ -223,8 +223,8 @@ namespace adiar
   bdd_or(const generator<pair<bdd::label_type, bool>>& vars);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The BDD representing the logical 'or' of all the given variables, i.e. a *clause* of
-  ///          variables.
+  /// \brief The BDD representing the logical 'or' of all the given variables, i.e. a *clause* of
+  ///        variables.
   ///
   /// \details Any negative labels provided by the generator are interpreted as the negation of said
   ///          variable.
@@ -248,10 +248,10 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief      The BDD representing the cube of all the given variables.
+  /// \brief The BDD representing the cube of all the given variables.
   ///
-  /// \details    Any negative labels provided by the generator are interpreted as the negation of
-  ///             said variable.
+  /// \details Any negative labels provided by the generator are interpreted as the negation of said
+  ///          variable.
   ///
   /// \param vars
   ///    Generator of labels of variables in \em descending order. These values can at most be
@@ -283,7 +283,7 @@ namespace adiar
   bdd_cube(const generator<pair<bdd::label_type, bool>>& vars);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The BDD representing the cube of all the given variables.
+  /// \brief The BDD representing the cube of all the given variables.
   ///
   /// \details Any negative labels provided by the generator are interpreted as the negation of said
   ///          variable.
@@ -317,7 +317,7 @@ namespace adiar
   /// \{
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Negation of a BDD.
+  /// \brief Negation of a BDD.
   ///
   /// \details Flips the negation flag such that reading nodes with a `node_stream` within Adiar's
   ///          algorithms will on-the-fly change the `false` terminals into the `true` terminals and
@@ -513,7 +513,7 @@ namespace adiar
 
   /// \cond
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Logical 'nor' operator.
+  /// \brief Logical 'nor' operator.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   __bdd
   bdd_nor(const exec_policy& ep, const bdd& f, const bdd& g);
@@ -690,7 +690,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   If-Then-Else operator.
+  /// \brief If-Then-Else operator.
   ///
   /// \details Computes the BDD expressing \f$ f ? g : h \f$ more efficient than computing \f$ (f
   ///          \land g) \lor (\neg f \land h) \f$ with `bdd_apply`.
@@ -724,7 +724,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Restrict a single variable to a constant value.
+  /// \brief Restrict a single variable to a constant value.
   ///
   /// \details The variable `i` is restricted to the value `v`.
   ///
@@ -751,7 +751,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Restrict a subset of variables to constant values.
+  /// \brief Restrict a subset of variables to constant values.
   ///
   /// \details For each tuple (i,v) in the assignment `xs`, the variable with label i is set to the
   ///          constant value v. This binds the scope of the variables in `xs`, i.e. any later
@@ -779,7 +779,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Restrict a subset of variables to constant values.
+  /// \brief Restrict a subset of variables to constant values.
   ///
   /// \details For each tuple (i,v) provided by the iterator, the variable with label i is set to
   ///          the constant value v.
@@ -816,7 +816,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Restrict the root to `false`, i.e. follow its low edge.
+  /// \brief Restrict the root to `false`, i.e. follow its low edge.
   ///
   /// \remark In other BDD packages, this function is good for traversing a BDD. But, here this is
   ///         not a constant-time operation but constructs an entire new BDD of up-to linear size
@@ -838,7 +838,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief  Restrict the root to `true`, i.e. follow its high edge.
+  /// \brief Restrict the root to `true`, i.e. follow its high edge.
   ///
   /// \remark In other BDD packages, this function is good for traversing a BDD. But, here this is
   ///         not a constant-time operation but constructs an entire new BDD of up-to linear size
@@ -860,7 +860,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Existential quantification of a single variable.
+  /// \brief Existential quantification of a single variable.
   ///
   /// \details Computes the BDD for \f$ \exists x_{i} : f \f$ faster than computing
   ///          \f$ f|_{x_i = \bot} \lor f|_{x_i = \top} \f$ using `bdd_apply` and `bdd_restrict`.
@@ -969,7 +969,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Existential quantification of multiple variables.
+  /// \brief Existential quantification of multiple variables.
   ///
   /// \param f
   ///     BDD to be quantified.
@@ -986,7 +986,7 @@ namespace adiar
   /// \cond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Existential quantification of multiple variables.
+  /// \brief Existential quantification of multiple variables.
   ///
   /// \remark Unlike `bdd_exists(const bdd& f, const generator<...>& vars)`, this function moves the
   ///         ownership of `f` into the quantification algorithm. This allows it to garbage collect
@@ -996,7 +996,7 @@ namespace adiar
   bdd_exists(bdd&& f, const generator<bdd::label_type>& vars);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Existential quantification of multiple variables.
+  /// \brief Existential quantification of multiple variables.
   ///
   /// \remark Unlike `bdd_exists(const bdd& f, const generator<...>& vars)`, this function skips the
   ///         initial transposition of `f` if possible.
@@ -1070,7 +1070,7 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Existential quantification of multiple variables.
+  /// \brief Existential quantification of multiple variables.
   ///
   /// \remark Unlike `bdd_exists(const bdd& f, ForwardIt, ForwardIt)`, this function skips the
   ///         initial transposition of `f` if possible.
@@ -1107,7 +1107,7 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Existential quantification of multiple variables.
+  /// \brief Existential quantification of multiple variables.
   ///
   /// \remark Unlike `bdd_exists(const bdd& f, ForwardIt, ForwardIt)`, this function skips the
   ///         initial transposition of `f` if possible.
@@ -1122,7 +1122,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Forall quantification of a single variable.
+  /// \brief Forall quantification of a single variable.
   ///
   /// \details Computes the BDD for \f$ \forall x_{i} : f \f$ faster than computing
   ///          \f$ f|_{x_i = \bot} \land f|_{x_i = \top} \f$ using `bdd_apply` and `bdd_restrict`.
@@ -1231,7 +1231,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Forall quantification of multiple variables.
+  /// \brief Forall quantification of multiple variables.
   ///
   /// \param f
   ///    BDD to be quantified.
@@ -1294,7 +1294,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief       Forall quantification of multiple variables.
+  /// \brief Forall quantification of multiple variables.
   ///
   /// \param f
   ///    BDD to be quantified.
@@ -1306,7 +1306,7 @@ namespace adiar
   /// \param end
   ///    Marks the end for `begin`.
   ///
-  /// \returns     \f$ \forall x_i \in \texttt{begin} ... \texttt{end} : f \f$
+  /// \returns \f$ \forall x_i \in \texttt{begin} ... \texttt{end} : f \f$
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename ForwardIt>
   __bdd
@@ -1882,7 +1882,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief          Count the number of assignments x that make f(x) true.
+  /// \brief Count the number of assignments x that make f(x) true.
   ///
   /// \param f
   ///    BDD to count within.
@@ -1891,7 +1891,7 @@ namespace adiar
   ///    The number of variables in the domain of the function. This number should be larger than or
   ///    equal to the number of levels in the BDD (\see bdd_varcount())
   ///
-  /// \returns        The number of unique assignments.
+  /// \returns The number of unique assignments.
   ///
   /// \throws invalid_argument If varcount is not larger than the number of levels in the BDD.
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1900,14 +1900,14 @@ namespace adiar
 
   /// \cond
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Count the number of assignments x that make f(x) true.
+  /// \brief Count the number of assignments x that make f(x) true.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   uint64_t
   bdd_satcount(const exec_policy& ep, const bdd& f, bdd::label_type varcount);
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Count the number of assignments x that make f(x) true.
+  /// \brief Count the number of assignments x that make f(x) true.
   ///
   /// \details Same as `bdd_satcount(f, varcount)`, with varcount set to be the size of the global
   ///          domain or the number of variables within the given BDD.
@@ -1992,7 +1992,7 @@ namespace adiar
   bdd_maxvar(const bdd& f);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The lexicographically smallest cube x such that f(x) is true.
+  /// \brief The lexicographically smallest cube x such that f(x) is true.
   ///
   /// \details Outputs the trace of the low-most path to the true terminal. The resulting assignment
   ///          is lexicographically smallest, where every variable is treated as a digit and
@@ -2091,7 +2091,7 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The lexicographically largest cube x such that f(x) is true.
+  /// \brief The lexicographically largest cube x such that f(x) is true.
   ///
   /// \details Outputs the trace of the high-most path to the true terminal. The resulting
   ///          assignment is lexicographically largest, where every variable is treated as a digit
@@ -2158,7 +2158,7 @@ namespace adiar
   bdd_satmax(const bdd& f, const bdd& d);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The lexicographically largest x such that f(x) is true.
+  /// \brief The lexicographically largest x such that f(x) is true.
   ///
   /// \param c
   ///    Consumer that is called in ascending order of the bdd's levels with the (var, value) pairs
@@ -2177,7 +2177,7 @@ namespace adiar
   ///    Single-pass output iterator for where to place the output.
   ///
   /// \returns The output iterator at its final state.
-  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename OutputIt,
             typename = enable_if<!is_convertible<OutputIt, consumer<pair<bdd::label_type, bool>>>
                                  && !is_convertible<OutputIt, bdd>>>
@@ -2188,7 +2188,7 @@ namespace adiar
     return iter;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Obtain the satisfying assignment that is minimal for the given linear cost function
   ///        over the global domain.
   ///
@@ -2200,22 +2200,22 @@ namespace adiar
   ///
   /// \returns A pair of a BDD cube with the best satisfying assignment and its cost. If no solution
   ///          was found, returns the false constant and NaN
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   pair<bdd, double>
   bdd_optmin(const bdd& f, const cost<bdd::label_type>& c);
 
   /// \cond
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Obtain the satisfying assignment that is minimal for the given linear cost function
   ///        over the global domain.
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   pair<bdd, double>
   bdd_optmin(const exec_policy& ep, const bdd& f, const cost<bdd::label_type>& c);
   /// \endcond
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief    Obtain the satisfying assignment that is minimal for the given linear cost function
-  ///           over the global domain.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Obtain the satisfying assignment that is minimal for the given linear cost function
+  ///        over the global domain.
   ///
   /// \param f
   ///   The BDD of feasible solutions
@@ -2229,17 +2229,17 @@ namespace adiar
   /// \returns The cost of the satisfying solution if any, otherwise NaN.
   ///
   /// \remark If `f` is a terminal, `cb` will never be called
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   double
   bdd_optmin(const bdd& f,
              const cost<bdd::label_type>& c,
              const consumer<pair<bdd::label_type, bool>>& cb);
 
   /// \cond
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Obtain the satisfying assignment that is minimal for the given linear cost function
   ///        over the global domain.
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   double
   bdd_optmin(const exec_policy& ep,
              const bdd& f,
