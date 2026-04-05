@@ -77,7 +77,8 @@ namespace adiar
   ///          to the prior value without recreating the entire file.
   ///
   /// \param dom
-  ///    A \ref shared_file containing all labels of the problem domain in ascending order.
+  ///    A \ref adiar::internal::shared_file containing all labels of the problem domain in
+  ///    ascending order.
   ///
   /// \see domain_get()
   //////////////////////////////////////////////////////////////////////////////////////////////////

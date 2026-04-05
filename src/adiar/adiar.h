@@ -87,7 +87,7 @@ namespace adiar
   ///
   /// \warning All of Adiar's file objects must be destructed **before** this functions i called.
   ///          That is, any \ref bdd \ref bdd_builder, \ref zdd \ref zdd_builder or any \ref
-  ///          shared_file objects you may be using.
+  ///          adiar::internal::shared_file objects you may be using.
   ///
   /// \throws runtime_error
   ///   If compiled with *debug* and one of Adiar's objects have *not* been destructed.
