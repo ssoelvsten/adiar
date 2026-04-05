@@ -7,16 +7,16 @@
 /// \brief A Zero-suppressed Decision Diagram (ZDD) represents a family of a set of \f$ n \f$
 ///        numbers, i.e. an \f$ S \subseteq 2^{\{ 0, 1, \dots, n-1 \}} \f$.
 ///
-/// The \ref zdd class takes care of reference counting and optimal garbage collection of the
-/// underlying files. To ensure the most disk-space is available, try to garbage collect the \ref
-/// zdd objects as quickly as possible and/or minimise the number of lvalues of said type.
+/// \details The \ref zdd class takes care of reference counting and optimal garbage collection of
+///          the underlying files. To ensure the most disk-space is available, try to garbage
+///          collect the \ref zdd objects as quickly as possible and/or minimise the number of
+///          lvalues of said type.
 ///
-/// To construct a more complex but well-structured \ref zdd by hand, please use the \ref
-/// zdd_builder (see \ref builder) instead.
+/// \details An \ref exec_policy can be provided as an optional *first* argument for (most) of the
+///          ZDD functions. This provides you with the ability to change settings on the algorithm
+///          execution, e.g. the type of priority queue and algorithm used.
 ///
-/// An \ref exec_policy can be provided as an optional *first* argument for (most) of the functions
-/// that follow. This provides you with the ability to change settings on the algorithm execution,
-/// e.g. the type of priority queue and algorithm used.
+/// \hidegroupgraph
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -31,7 +31,17 @@
 namespace adiar
 {
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Basic Constructors
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__constructors Basic Constructors
+  ///
+  /// \brief Construction of constants, singletons, and points.
+  ///
+  /// \remark To construct a more complex but well-structured \ref zdd by hand, please use the \ref
+  ///         zdd_builder (see \ref builder) instead.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -411,10 +421,18 @@ namespace adiar
   zdd_top();
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Basic Operations
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__basic_operations Basic ZDD Operations
+  ///
+  /// \brief Basic set operations.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1251,10 +1269,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Predicates
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__predicates Predicates
+  ///
+  /// \brief Predicative information on ZDDs.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1475,10 +1501,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Counting Operations
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__counting Counting Operations
+  ///
+  /// \brief Numerical information on ZDDs.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1510,10 +1544,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Set Elements
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__inputs Set Elements
+  ///
+  /// \brief Information on the elements in a ZDD.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1708,10 +1750,18 @@ namespace adiar
   }
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Conversion from other Decision Diagrams
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__conversion Conversion to ZDDs
+  ///
+  /// \brief Conversion from \ref module__bdd .
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1801,10 +1851,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__zdd Dot Files
+  /// \addtogroup module__zdd
+  /// \{
+  ///
+  /// \defgroup module__zdd__dot ZDD Visualization
+  ///
+  /// \brief Printing of `.dot` files.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1820,6 +1878,7 @@ namespace adiar
   void
   zdd_printdot(const zdd& A, const std::string& file_name, bool include_id = false);
 
+  /// \}
   /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 }
