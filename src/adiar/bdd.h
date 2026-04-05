@@ -1236,7 +1236,7 @@ namespace adiar
   /// \param f
   ///    BDD to be quantified.
   ///
-  /// \param gen
+  /// \param vars
   ///    Generator function, that produces variables to be quantified in \em descending order. These
   ///    values have to be smaller than or equals to `bdd::max_label`.
   ///
@@ -1471,7 +1471,7 @@ namespace adiar
   /// \param relation
   ///    A relation between *current* and *next* states.
   ///
-  /// \param m
+  /// \param pred
   ///    Predicate whether a variable should be existentially quantified.
   ///
   /// \returns \f$ \exists x \in \mathit{pred}(x) : (\mathit{states} \land \mathit{relation}) \f$
@@ -1542,6 +1542,9 @@ namespace adiar
   /// \param relation
   ///    A relation between *current* and *next* state variables. The *next* state is encoded with
   ///    variables `varcount`, `varcount+1`, ... `2*varcount - 1`.
+  ///
+  /// \param varcount
+  ///    Number of variables used for the *current* set of states.
   ///
   /// \returns \f$ (\exists x \in \{ x \mid x < \mathit{varcount} \}
   ///                        : (\mathit{states} \land \mathit{relation}))
@@ -1642,6 +1645,9 @@ namespace adiar
   /// \param relation
   ///    A relation between *current* and *next* state variables. The *next* state is encoded with
   ///    variables `varcount`, `varcount+1`, ... `2*varcount - 1`.
+  ///
+  /// \param varcount
+  ///    Number of variables used for the *current* set of states.
   ///
   /// \returns \f$ (\exists x' \in \{ x' \mid \geq \mathit{varcount} \}
   ///                         : (\mathit{states}[x \mapsto x + \mathit{varcount}]
@@ -2006,6 +2012,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The lexicographically smallest x such that f(x) is true within the given domain.
   ///
+  /// \param f
+  ///    BDD of interest.
+  ///
   /// \param d
   ///    Generator of domain in ascending order.
   ///
@@ -2026,10 +2035,10 @@ namespace adiar
   /// \param f
   ///    BDD of interest.
   ///
-  /// \param begin
+  /// \param cbegin
   ///    Single-pass forward iterator of *immutable* variables in *ascending* ordering.
   ///
-  /// \param end
+  /// \param cend
   ///    Marks the end for `begin`.
   ///
   /// \returns A bdd whos only path to the `true` terminal reflects the minimal assignment and
@@ -2062,6 +2071,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The lexicographically smallest x such that f(x) is true.
   ///
+  /// \param f
+  ///    BDD of interest.
+  ///
   /// \param c
   ///    Consumer that is called in ascending order of the bdd's levels with the (var, value)
   ///    pairs of the assignment.
@@ -2075,7 +2087,7 @@ namespace adiar
   /// \param f
   ///    BDD of interest.
   ///
-  /// \param begin
+  /// \param iter
   ///    Single-pass output iterator for where to place the output.
   ///
   /// \returns The output iterator at its final state.
@@ -2093,6 +2105,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The lexicographically largest cube x such that f(x) is true.
   ///
+  /// \param f
+  ///    BDD of interest.
+  ///
   /// \details Outputs the trace of the high-most path to the true terminal. The resulting
   ///          assignment is lexicographically largest, where every variable is treated as a digit
   ///          and \f$ x_0 > x_1 > \dots \f$.
@@ -2104,6 +2119,9 @@ namespace adiar
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The lexicographically largest x such that f(x) is true within the given domain.
+  ///
+  /// \param f
+  ///    BDD of interest.
   ///
   /// \param d
   ///    Generator of domain in ascending order.
@@ -2124,11 +2142,11 @@ namespace adiar
   /// \param f
   ///    BDD of interest.
   ///
-  /// \param begin
+  /// \param cbegin
   ///    Single-pass forward iterator of *immutable* variables in *ascending* ordering.
   ///
-  /// \param end
-  ///    Marks the end for `begin`.
+  /// \param cend
+  ///    Marks the end for `cbegin`.
   ///
   /// \returns A bdd whos only path to the `true` terminal reflects the maximal assignment and
   ///          (at least) includes the variables in *[begin, end)*.
@@ -2160,6 +2178,9 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The lexicographically largest x such that f(x) is true.
   ///
+  /// \param f
+  ///    BDD of interest.
+  ///
   /// \param c
   ///    Consumer that is called in ascending order of the bdd's levels with the (var, value) pairs
   ///    of the assignment.
@@ -2173,7 +2194,7 @@ namespace adiar
   /// \param f
   ///    BDD of interest.
   ///
-  /// \param begin
+  /// \param iter
   ///    Single-pass output iterator for where to place the output.
   ///
   /// \returns The output iterator at its final state.

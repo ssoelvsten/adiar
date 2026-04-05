@@ -487,6 +487,9 @@ namespace adiar
   operator+(__zdd&& A);
   /// \endcond
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \see zdd_union
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   __zdd
   operator+(const zdd& lhs, const zdd& rhs);
 
@@ -768,7 +771,8 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Expands the domain of the given ZDD to also include the given set of labels.
   ///
-  /// \copydetails
+  /// \details Adds don't care nodes on each levels in `vars`. That is, this essentially is the
+  ///          inverse of the `zdd_project` and lifts the set of sets unprojects to a larger domain.
   ///
   /// \param A
   ///    Family of set to expand.
@@ -1532,7 +1536,7 @@ namespace adiar
   /// \param A
   ///    ZDD of interest.
   ///
-  /// \param begin
+  /// \param iter
   ///    Single-pass output iterator for where to place the output.
   ///
   /// \returns The output iterator at its final state.
@@ -1641,7 +1645,7 @@ namespace adiar
   /// \param A
   ///    Set of sets of interest.
   ///
-  /// \param begin
+  /// \param iter
   ///    Single-pass forward iterator for where to place the output.
   ///
   /// \returns The output iterator at its final state.
@@ -1689,7 +1693,7 @@ namespace adiar
   /// \param A
   ///    Set of sets of interest.
   ///
-  /// \param begin
+  /// \param iter
   ///    Single-pass output iterator for where to place the output.
   ///
   /// \returns The output iterator at its final state.
