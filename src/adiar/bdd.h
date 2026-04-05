@@ -7,16 +7,16 @@
 /// \brief A Binary Decision Diagram (BDD) represents a boolean function \f$ \{ 0, 1 \}^n
 /// \rightarrow \{ 0, 1 \} \f$ over a finite domain of \f$ n \f$ boolean input variables.
 ///
-/// The \ref bdd class takes care of reference counting and optimal garbage collection of the
-/// underlying files. To ensure the most disk-space is available, try to release your \ref bdd
-/// objects as quickly as possible and/or minimise the number of lvalues of said type.
+/// \details The \ref bdd class takes care of reference counting and optimal garbage collection of
+///          the underlying files. To ensure the most disk-space is available, try to release your
+///          \ref bdd objects as quickly as possible and/or minimise the number of lvalues of said
+///          type.
 ///
-/// To construct a more complex but well-structured \ref bdd by hand, please
-/// use the \ref bdd_builder (see \ref builder) instead.
+/// \details An \ref exec_policy can be provided as an optional *first* argument for (most) of the
+///          BDD functions. This provides you with the ability to change settings on the algorithm
+///          execution, e.g. the type of priority queue and algorithm used.
 ///
-/// An \ref exec_policy can be provided as an optional *first* argument for (most) of the functions
-/// that follow. This provides you with the ability to change settings on the algorithm execution,
-/// e.g. the type of priority queue and algorithm used.
+/// \hidegroupgraph
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -33,7 +33,18 @@
 namespace adiar
 {
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Basic Constructors
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__constructors Basic Constructors
+  ///
+  /// \brief Construction of constants, variables, and cubes.
+  ///
+  /// \remark To construct a more complex but well-structured \ref bdd by hand, please use the \ref
+  ///         bdd_builder (see \ref builder) instead.
+  ///
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -309,10 +320,18 @@ namespace adiar
   }
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Basic Operations
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__basic_operations Basic Operations
+  ///
+  /// \brief Basic Boolean operations.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1384,10 +1403,20 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Variable Reordering / Substitution
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__replace Variable Substitution
+  ///
+  /// \brief Variable substitution and reordering.
+  ///
+  /// \remark Variable substitution can be used as a poor man's explicit reordering operation.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1455,10 +1484,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Transition System Operations
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__relprod Transition System Operations
+  ///
+  /// \brief Relational operations on BDDs.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1695,10 +1732,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Predicates
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__predicates Predicates
+  ///
+  /// \brief Predicative information on BDDs
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1851,10 +1896,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Counting Operations
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__counting Counting Operations
+  ///
+  /// \brief Numerical information on BDDs.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -1932,10 +1985,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Input Variables
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__inputs Input Variables
+  ///
+  /// \brief Information on variables in BDDs.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -2327,10 +2388,18 @@ namespace adiar
   }
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd Conversion from other Decision Diagrams
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__conversion Conversion to BDDs
+  ///
+  /// \brief Conversion from \ref module__zdd .
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -2422,10 +2491,18 @@ namespace adiar
   /// \endcond
 
   /// \}
+  /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \addtogroup module__bdd DOT Files
+  /// \addtogroup module__bdd
+  /// \{
+  ///
+  /// \defgroup module__bdd__dot Visualization
+  ///
+  /// \brief Printing of `.dot` files.
+  ///
+  /// \hidegroupgraph
   ///
   /// \{
 
@@ -2441,6 +2518,7 @@ namespace adiar
   void
   bdd_printdot(const bdd& f, const std::string& file_name, bool include_id = false);
 
+  /// \}
   /// \}
   //////////////////////////////////////////////////////////////////////////////////////////////////
 }
