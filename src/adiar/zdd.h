@@ -36,7 +36,7 @@ namespace adiar
   /// \{
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief       The ZDD of only a single terminal.
+  /// \brief The ZDD of only a single terminal.
   ///
   /// \param value
   ///    The constant terminal value.
@@ -59,7 +59,7 @@ namespace adiar
   zdd_null();
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The set of bitvectors over a given domain where *var* is set to true.
+  /// \brief The set of bitvectors over a given domain where *var* is set to true.
   ///
   /// \details This function is (given the same domain of variables) semantically equivalent to
   ///          `bdd_ithvar` even though the ZDD DAG does not at all look like the BDD DAG.
@@ -116,7 +116,7 @@ namespace adiar
   zdd_ithvar(zdd::label_type var);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The set of bitvectors over a given domain where *var* is set to false.
+  /// \brief The set of bitvectors over a given domain where *var* is set to false.
   ///
   /// \details Creates a ZDD with a don't care chain of nodes to the true child except for the node
   ///          for `var`; this one instead is forced to be true.
@@ -173,7 +173,7 @@ namespace adiar
   zdd_nithvar(zdd::label_type var);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The family { { 1, 2, ..., k } }.
+  /// \brief The family { { 1, 2, ..., k } }.
   ///
   /// \details Creates a ZDD with a chain of nodes on the 'high' arc to the true child, and false
   ///          otherwise.
@@ -295,7 +295,7 @@ namespace adiar
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The powerset of all given variables.
+  /// \brief The powerset of all given variables.
   ///
   /// \details Creates a ZDD with a don't care chain of nodes to the true child.
   ///
@@ -500,7 +500,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The intersection of two families of sets.
+  /// \brief The intersection of two families of sets.
   ///
   /// \returns \f$ A \cap B \f$
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -546,7 +546,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   The set difference of two families of sets.
+  /// \brief The set difference of two families of sets.
   ///
   /// \returns \f$ A \setminus B \f$
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -704,7 +704,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief     Complement of A within the global \ref module__domain
+  /// \brief Complement of A within the global \ref module__domain
   ///
   /// \param A
   ///    family of sets to complement
@@ -740,7 +740,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief   Expands the domain of the given ZDD to also include the given set of labels.
+  /// \brief Expands the domain of the given ZDD to also include the given set of labels.
   ///
   /// \details Adds don't care nodes on each levels in `vars`. That is, this essentially is the
   ///          inverse of the `zdd_project` and lifts the set of sets unprojects to a larger domain.
@@ -849,7 +849,7 @@ namespace adiar
   /// \endcond
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief      Subset that do \em not include the given set of variables.
+  /// \brief Subset that do \em not include the given set of variables.
   ///
   /// \param A
   ///    Family of set
@@ -1586,7 +1586,7 @@ namespace adiar
   zdd_contains(const zdd& A, const generator<zdd::label_type>& a);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief       Whether the family includes the given set of labels.
+  /// \brief Whether the family includes the given set of labels.
   ///
   /// \param A
   ///    Set of interest
@@ -1621,7 +1621,7 @@ namespace adiar
   zdd_minelem(const zdd& A);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief    Retrieves the lexicographically smallest set a in A.
+  /// \brief Retrieves the lexicographically smallest set a in A.
   ///
   /// \param A
   ///    Set of sets of interest.
