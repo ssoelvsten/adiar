@@ -288,7 +288,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = false;
+  constexpr bool debug_enabled = true;
 
   //types
   template <uint8_t nodes_carried>
@@ -664,7 +664,7 @@ namespace adiar::internal
 
     //setup input
     node_ifstream<> in(dd_shifted);
-    node v = in.pull();
+    node root = in.pull();
     
     //setup output
     shared_levelized_file<arc> out_arcs;
@@ -714,17 +714,18 @@ namespace adiar::internal
 
     //init request
     cor_req_t<0> init_req;
-    if(v.uid().label() == next_swap){
+    if(root.uid().label() == next_swap){
       //push 2-ary to children
       if(debug_enabled) std::cout << "root is part of a swap\n";
-      init_req = {{v.low(), v.high()},{},{ptr_uint64::nil()}};
+      init_req = {{root.low(), root.high()},{},{ptr_uint64::nil()}};
     } else {
       //just push 1-ary
       if(debug_enabled) std::cout << "root is NOT part of a swap\n";
-      init_req = {{v.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
+      init_req = {{root.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
     }
     pq1.push(init_req);
     
+    node v = in.pull();
     while(!pq1.empty()){ 
       pq1.setup_next_level();
       typename Policy::label_type label = pq1.current_level();
@@ -737,10 +738,11 @@ namespace adiar::internal
         //we just pushing 2 ary reqs
          while(!pq1.empty_level()){
           cor_req_t<0> req = pq1.pull();
+          if (debug_enabled) std::cout << "found req " << req << "\n";
           const ptr_uint64 t_uid(req.data.level, 0);
           ptr_uint64 tseek = std::min(req.target.first(), t_uid);
           while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
-          cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source}};
+          cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, next_target.value() +1 }};
           if (debug_enabled) std::cout << "pushing req to PQ1 " << n_req << "\n";
           pq1.push(n_req);
         }
