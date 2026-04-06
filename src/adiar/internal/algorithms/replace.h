@@ -664,7 +664,7 @@ namespace adiar::internal
 
     //setup input
     node_ifstream<> in(dd_shifted);
-    node root = in.pull();
+    node v = in.pull();
     
     //setup output
     shared_levelized_file<arc> out_arcs;
@@ -714,18 +714,17 @@ namespace adiar::internal
 
     //init request
     cor_req_t<0> init_req;
-    if(root.uid().label() == next_swap){
+    if(v.uid().label() == next_swap){
       //push 2-ary to children
       if(debug_enabled) std::cout << "root is part of a swap\n";
-      init_req = {{root.low(), root.high()},{},{ptr_uint64::nil()}};
+      init_req = {{v.low(), v.high()},{},{ptr_uint64::nil()}};
     } else {
       //just push 1-ary
       if(debug_enabled) std::cout << "root is NOT part of a swap\n";
-      init_req = {{root.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
+      init_req = {{v.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
     }
     pq1.push(init_req);
     
-    node v = in.pull();
     while(!pq1.empty()){ 
       pq1.setup_next_level();
       typename Policy::label_type label = pq1.current_level();
@@ -985,8 +984,6 @@ replace(typename Policy::dd_type dd,
 
   ///JUMP_UP special case
   //TBA
-  ///ADJ_SWAP special case
-  //TBA
 
   ///NON_MONOTONE
 
@@ -1158,6 +1155,7 @@ public:
     
   static constexpr bool final_canonical = true;
   static constexpr bool fast_reduce     = true; //should not reduce
+  static constexpr bool skip_term_reqs = false; //terminal-only requests should still be passed to inner sweep!
 
 };
 
