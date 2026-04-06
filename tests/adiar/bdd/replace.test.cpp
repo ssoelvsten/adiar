@@ -12,6 +12,7 @@
 #include "adiar/types.h"
 #include "bandit/assertion_frameworks/snowhouse/assert.h"
 #include "bandit/assertion_frameworks/snowhouse/fluent/fluent.h"
+#include <cassert>
 #include <string>
 
 void fixed_printdot(__bdd bdd, std::string fn) {
@@ -313,6 +314,29 @@ go_bandit([]() {
       nw << n3 << n2 << n1;
     }
     const bdd bdd_8(bdd_8_nf);
+
+    shared_levelized_file<bdd::node_type> bdd_9_nf;
+    //purpose - many levels to facilitate swaps not side by side
+    // also exp worst case if bad order
+    /*
+    //  (x0 /\ x1) \/ (x2 /\ x3) \/ (x4 /\ x5) \/ (x6 /\ x7)
+    */
+
+    { // Garbage collect early and free write-lock
+      const node n7 = node(7, bdd::max_id, terminal_F, terminal_T);
+      const node n6 = node(6, bdd::max_id, terminal_F, n7.uid());
+      const node n5 = node(5, bdd::max_id, n6.uid(), terminal_T);
+      const node n4 = node(4, bdd::max_id, n6.uid(), n5.uid());
+      const node n3 = node(3, bdd::max_id, n4.uid(), terminal_T);
+      const node n2 = node(2, bdd::max_id, n4.uid(), n3.uid());
+      const node n1 = node(1, bdd::max_id, n2.uid(), terminal_T);
+      const node n0 = node(0, bdd::max_id, n2.uid(), n1.uid());
+
+      node_ofstream nw(bdd_9_nf);
+      nw << n7 << n6 << n5 << n4 << n3 << n2 << n1 << n0;
+    }
+    const bdd bdd_9(bdd_9_nf);
+
 
     describe("bdd_replace(const bdd&, <...>)", [&]() {
       describe("<non-monotonic>", [&]() {
@@ -737,6 +761,22 @@ go_bandit([]() {
 
             AssertThat(out_arcs.can_pull_terminal(), Is().False());
           });
+
+          it("jumps down and relables levels [bdd_2]", [&]() {
+            const mapping_type m = [](const int x) { return 4 - x; };
+            //technically also "swaps" levels but not detected as such since the levels that are mapped to are currently empty
+            const bdd out = bdd_replace(bdd_2, m);
+
+            node_test_ifstream out_nodes(out);
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id-1, terminal_T,terminal_F)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,bdd::max_id,
+              node::pointer_type(4, bdd::max_id),node::pointer_type(4, bdd::max_id-1))));
+            AssertThat(out_nodes.can_pull(), Is().False());
+          });
         });
 
         describe( "Adjacent swap cases", [&]() {
@@ -823,7 +863,7 @@ go_bandit([]() {
                                                            if (x == 2) return 1;
                                                            else return x; };
 
-            //AssertThat(replace__infer_type<bdd_policy>(bdd_3, m), Is().EqualTo(replace_type::Swap_Adjacent));
+            AssertThat(replace__infer_type<bdd_policy>(bdd_3, m) == replace_type::Swap_Adjacent, Is().True());
             bdd out = bdd_replace(bdd_3, m, replace_type::Swap_Adjacent);
 
             node_test_ifstream out_nodes(out);
@@ -840,19 +880,81 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().False());
           });
 
-          it("swaps and relables levels [bdd_2]", [&]() {
-            //technically an adjecent swap?
-            const mapping_type m = [](const int x) { return 4 - x; };
-            const bdd out = bdd_replace(bdd_2, m);
+          it("handles two side-by-side non-overlapping swaps [bdd_6]", [&](){
+            const replace_func<bdd_policy> m = [](const int x) { if (x == 0) {return 1;}
+                                                               if (x == 1) {return 0;}
+                                                               if (x == 2) {return 3;}
+                                                               if (x == 3) {return 2;}
+                                                               else return x; };
 
+            AssertThat(replace__infer_type<bdd_policy>(bdd_6, m) == replace_type::Swap_Adjacent, Is().True());                                                  
+            bdd out = bdd_replace(bdd_6,m);
             node_test_ifstream out_nodes(out);
             AssertThat(out_nodes.can_pull(), Is().True());
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,node::max_id, terminal_F, terminal_T)));
             AssertThat(out_nodes.can_pull(), Is().True());
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id-1, terminal_T,terminal_F)));
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,node::max_id-1, terminal_T, terminal_F)));
             AssertThat(out_nodes.can_pull(), Is().True());
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,bdd::max_id,
-              node::pointer_type(4, bdd::max_id),node::pointer_type(4, bdd::max_id-1))));
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,node::max_id, node::pointer_type(3,node::max_id), terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,node::max_id-1, node::pointer_type(3,node::max_id-1), terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,node::max_id, node::pointer_type(2,node::max_id-1), node::pointer_type(3,node::max_id))));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,node::max_id-1, node::pointer_type(3,node::max_id-1), node::pointer_type(2,node::max_id))));
+            AssertThat(out_nodes.can_pull(), Is().True());    
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0,node::max_id, node::pointer_type(1,node::max_id), node::pointer_type(1,node::max_id-1))));
+            AssertThat(out_nodes.can_pull(), Is().False());
+          });
+
+          it("handles two sperated non-overlapping swaps [bdd_9]", [&](){
+            const replace_func<bdd_policy> m = [](const int x) { if (x == 1) {return 2;}
+                                                               if (x == 2) {return 1;}
+                                                               if (x == 5) {return 6;}
+                                                               if (x == 6) {return 5;}
+                                                               return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_9, m) == replace_type::Swap_Adjacent, Is().True());
+            bdd out = bdd_replace(bdd_9, m);
+
+            node_test_ifstream out_nodes(out);
+            //for readability: predefined node uids..
+            node::pointer_type n7_uid(7,node::max_id);
+            node::pointer_type n6m_uid(6,node::max_id);
+            node::pointer_type n6m1_uid(6,node::max_id-1);
+            node::pointer_type n5m_uid(5,node::max_id);
+            node::pointer_type n5m1_uid(5,node::max_id-1);
+            node::pointer_type n4_uid(4,node::max_id);
+            node::pointer_type n3_uid(3,node::max_id);
+            node::pointer_type n2m_uid(2,node::max_id);
+            node::pointer_type n2m1_uid(2,node::max_id-1);
+            node::pointer_type n1m_uid(1,node::max_id);
+            node::pointer_type n1m1_uid(1,node::max_id-1);
+            node::pointer_type n0_uid(0,node::max_id);
+
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(7,node::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(6,node::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(6,node::max_id-1, n7_uid, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(5,node::max_id, terminal_F, n7_uid)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(5,node::max_id-1,  n6m_uid, n6m1_uid)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,node::max_id,  n5m_uid, n5m1_uid)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(3,node::max_id,  n4_uid, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,node::max_id,  n4_uid, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2,node::max_id-1,  n3_uid, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,node::max_id,  n4_uid, n3_uid)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1,node::max_id-1,  n2m_uid , n2m1_uid)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0,node::max_id,  n1m_uid, n1m1_uid)));
             AssertThat(out_nodes.can_pull(), Is().False());
           });
 
