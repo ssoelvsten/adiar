@@ -229,8 +229,9 @@ namespace adiar::internal
         push(const value_type& v)
         {
           
-          adiar_assert(v.target.first().is_node(),
-                       "Requests should have at least one internal node");
+          //This is not true for replace!
+          /*adiar_assert(v.target.first().is_node(),
+                       "Requests should have at least one internal node");*/
 
           _max_source = _max_source.is_nil() ? v.data.source : std::max(_max_source, v.data.source);
 
@@ -543,10 +544,12 @@ namespace adiar::internal
         /// \see request request_with_data
         ////////////////////////////////////////////////////////////////////////////////////////////
         void
-        push(const typename OuterRoots::value_type& e)
+        push(const typename OuterRoots::value_type& e, bool skip_terms = true)
         {
           adiar_assert(e.data.source.is_nil() || e.data.source.label() < _next_inner);
-          if (e.target.first().is_terminal()) {
+
+          //FIX: terminal_request skipping now handled through policy_impl class - (they shouldn't be skipped for replace)
+          if (e.target.first().is_terminal() && skip_terms) {
 #ifdef ADIAR_STATS
             nested_sweeping::stats.inner_down.requests.terminals += 1u;
 #endif
@@ -1888,7 +1891,7 @@ namespace adiar::internal
               non_gc_request |= r.targets() > 1;
 
               if (r.target.first().is_terminal()) { return reduced_t(r.target.first().value()); }
-              outer_pq_decorator.push(r);
+              outer_pq_decorator.push(r,policy_impl.skip_term_reqs);
             } else {
               do {
                 const request_t r =
@@ -1896,8 +1899,7 @@ namespace adiar::internal
 
                 adiar_assert(r.targets() > 0, "Requests are always to something");
                 non_gc_request |= r.targets() > 1;
-
-                outer_pq_decorator.push(r);
+                outer_pq_decorator.push(r, policy_impl.skip_term_reqs);
               } while (outer_arcs.can_pull_internal()
                        && outer_arcs.peek_internal().target() == n.uid());
             }
