@@ -209,6 +209,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////////////
   static constexpr bool final_canonical = FinalCanonical;
   static constexpr bool fast_reduce     = FastReduce;
+  static constexpr bool skip_term_reqs  = true;
 };
 
 class test_terminal_sweep
@@ -383,6 +384,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////////////
   static constexpr bool final_canonical = true;
   static constexpr bool fast_reduce     = false;
+  static constexpr bool skip_term_reqs  = true;
 };
 
 go_bandit([]() {

@@ -842,6 +842,8 @@ namespace adiar::internal
       std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename Policy::dd_type(outer_file)};
       return res;
     }
+    //flag for wether requests with only leaf targets should be pushed to inner sweeps
+    static constexpr bool skip_term_reqs = true;
 
   public:
     prod2u_nested_policy()
