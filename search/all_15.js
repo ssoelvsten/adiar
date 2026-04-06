@@ -10,7 +10,7 @@ var searchData=
   ['pq_5f2_5felems_7',['pq_2_elems',['../structadiar_1_1statistics_1_1____pq2__base.html#af362936d8736946b48884437106cf2a8',1,'adiar::statistics::__pq2_base']]],
   ['pq_5fruns_8',['pq_runs',['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t.html#a1a8f5dd05a5f77541dfc770c0b2f3f8d',1,'adiar::statistics::nested_sweeping_t::inner_down_t']]],
   ['predicate_9',['predicate',['../group__module____functional.html#ga8faa1a3ec042e38209635188c27636de',1,'adiar']]],
-  ['predicates_10',['predicates',['../page__basic.html#autotoc_md16',1,'Predicates'],['../page__functional.html#autotoc_md25',1,'Predicates']]],
+  ['predicates_10',['predicates',['../group__module____zdd____predicates.html',1,'Predicates'],['../page__basic.html#autotoc_md16',1,'Predicates'],['../page__functional.html#autotoc_md25',1,'Predicates'],['../group__module____bdd____predicates.html',1,'Predicates']]],
   ['preserving_11',['preserving',['../structadiar_1_1statistics_1_1nested__sweeping__t_1_1inner__down__t_1_1requests__t.html#a493adfe41f38dca28ba8a6f9c430d8c8',1,'adiar::statistics::nested_sweeping_t::inner_down_t::requests_t']]],
   ['priority_5fqueue_12',['Priority_Queue',['../classadiar_1_1exec__policy.html#a34534681bd89bb97b4cfc8bcbe3c19bbadfef4a1c7f44eb64de65c26b0fcaaae6',1,'adiar::exec_policy']]],
   ['prod2b_13',['prod2b',['../structadiar_1_1statistics.html#a17bf96476f6172a8e35700478307817b',1,'adiar::statistics']]],

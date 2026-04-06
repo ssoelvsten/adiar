@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['variable_20domain_0',['Variable Domain',['../group__module____domain.html',1,'']]]
+  ['kernel_0',['Adiar Kernel',['../group__module____adiar.html',1,'']]]
 ];

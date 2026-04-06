@@ -190,7 +190,7 @@ template&lt;&gt; </td></tr>
 </div><div class="memdoc">
 
 <p>Closes and cleans up everything by Adiar. </p>
-<dl class="section warning"><dt>Warning</dt><dd>All of Adiar's file objects must be destructed <b>before</b> this functions i called. That is, any <a class="el" href="classadiar_1_1bdd.html">bdd</a> <a class="el" href="group__module____builder.html#gacd91e76ef56facef01409c952e0ec8ef">bdd_builder</a>, <a class="el" href="classadiar_1_1zdd.html">zdd</a> <a class="el" href="group__module____builder.html#ga0b9034da68843a3fff87b408e2c2b4fe">zdd_builder</a> or any <a class="el" href="group__module____functional.html#gad03c9cc7b4569454beac5e739ff6e44f">shared_file</a> objects you may be using.</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>All of Adiar's file objects must be destructed <b>before</b> this functions i called. That is, any <a class="el" href="classadiar_1_1bdd.html">bdd</a> <a class="el" href="group__module____builder.html#gacd91e76ef56facef01409c952e0ec8ef">bdd_builder</a>, <a class="el" href="classadiar_1_1zdd.html">zdd</a> <a class="el" href="group__module____builder.html#ga0b9034da68843a3fff87b408e2c2b4fe">zdd_builder</a> or any adiar::internal::shared_file objects you may be using.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">runtime_error</td><td>If compiled with <em>debug</em> and one of Adiar's objects have <em>not</em> been destructed. </td></tr>

@@ -7,9 +7,12 @@ var searchData=
   ['the_20project_4',['About the Project',['../index.html#autotoc_md1',1,'']]],
   ['then_20else_20operator_5',['If-Then-Else Operator',['../page__basic.html#autotoc_md12',1,'']]],
   ['this_20project_6',['Citing this Project',['../page__cite.html',1,'page__papers']]],
-  ['total_7',['total',['../structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a5528e809829233a8f28065318e4c06ae',1,'adiar::statistics::__alg_base::__lpq_t']]],
-  ['trivial_5ffile_8',['trivial_file',['../structadiar_1_1statistics_1_1prod2b__t.html#a1a62057405b5a407d2a67a7a1a2f6bdb',1,'adiar::statistics::prod2b_t']]],
-  ['trivial_5fterminal_9',['trivial_terminal',['../structadiar_1_1statistics_1_1prod2b__t.html#a5028a584def1e486b19a7c8bb9d3098d',1,'adiar::statistics::prod2b_t']]],
-  ['true_10',['True',['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642af827cf462f62848df37c5e1e94a4da74',1,'adiar']]],
-  ['tutorial_11',['Tutorial',['../page__tutorial.html',1,'']]]
+  ['to_20bdds_7',['Conversion to BDDs',['../group__module____bdd____conversion.html',1,'']]],
+  ['to_20zdds_8',['Conversion to ZDDs',['../group__module____zdd____conversion.html',1,'']]],
+  ['total_9',['total',['../structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a5528e809829233a8f28065318e4c06ae',1,'adiar::statistics::__alg_base::__lpq_t']]],
+  ['transition_20system_20operations_10',['Transition System Operations',['../group__module____bdd____relprod.html',1,'']]],
+  ['trivial_5ffile_11',['trivial_file',['../structadiar_1_1statistics_1_1prod2b__t.html#a1a62057405b5a407d2a67a7a1a2f6bdb',1,'adiar::statistics::prod2b_t']]],
+  ['trivial_5fterminal_12',['trivial_terminal',['../structadiar_1_1statistics_1_1prod2b__t.html#a5028a584def1e486b19a7c8bb9d3098d',1,'adiar::statistics::prod2b_t']]],
+  ['true_13',['True',['../namespaceadiar.html#ae0011ac93212d71c2e4310b76e76d642af827cf462f62848df37c5e1e94a4da74',1,'adiar']]],
+  ['tutorial_14',['Tutorial',['../page__tutorial.html',1,'']]]
 ];

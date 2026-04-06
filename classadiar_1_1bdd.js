@@ -32,7 +32,6 @@ var classadiar_1_1bdd =
     [ "shift", "classadiar_1_1bdd.html#a9f72e51b81c9752618d97cae443d5ea0", null ],
     [ "size", "classadiar_1_1bdd.html#adc08e814ccd31b2c213cae02421a7856", null ],
     [ "width", "classadiar_1_1bdd.html#ae50a9dc1b8fcd0a6a907e4b1e3f22ac3", null ],
-    [ "bdd_ite", "classadiar_1_1bdd.html#a27912dac242552a6c0b6cc13a52b3f8c", null ],
     [ "bdd_nodecount", "classadiar_1_1bdd.html#a467df9b676300170cb751965d4d9556a", null ],
     [ "bdd_not", "classadiar_1_1bdd.html#afef586ff33a4179291f3b9040648f1b0", null ],
     [ "bdd_varcount", "classadiar_1_1bdd.html#adfd62966af1ea3f7edc6ba81f698e178", null ],

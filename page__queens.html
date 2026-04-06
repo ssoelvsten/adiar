@@ -154,7 +154,7 @@ S(i,j) : Single Position</h3>
 <div class="line">  └─────────────────┘</div>
 <div class="line">    a b c d e f g h</div>
 </div><!-- fragment --><p>This essentially is the formula \(fx_{i,j} \wedge \neg
-\mathit{is\_threatened}(i,j)\) where \(\mathit{is\_threatened}(i,j)\) is \(\top\) if one or more queens are placed on conflicting positions. We could construct this BDD using <code><a class="el" href="group__module____bdd.html#ga4967671bd4f3386c612bb0f13214543c" title="The BDD representing the i&#39;th variable.">adiar::bdd_ithvar</a></code>, <code><a class="el" href="group__module____bdd.html#ga7fae475d2fde0a55f486cefabd001ac3" title="Negation of a BDD.">adiar::bdd_not</a></code>, and <code><a class="el" href="group__module____bdd.html#gaee15c2a51e9b6e0cc62b7ce9e1b44d6e" title="The BDD representing the logical &#39;and&#39; of all the given variables, i.e. a term of variables.">adiar::bdd_and</a></code>. Yet, the resulting (reduced) BDD is very well structured. So, we can construct it explicitly! All BDDs are stored on disk bottom-up, so we'll have to start at the bottom-right corner and work ourselves back up to the top-left corner. We can skip all labels for cells that don't lie on the same row, column or the two diagonals. For the remaining cells, we have to check that all but the one for cell \((i,j)\) they are \(\bot\) while \((i,j)\) is \(\top\).</p>
+\mathit{is\_threatened}(i,j)\) where \(\mathit{is\_threatened}(i,j)\) is \(\top\) if one or more queens are placed on conflicting positions. We could construct this BDD using <code><a class="el" href="group__module____bdd____constructors.html#ga4967671bd4f3386c612bb0f13214543c" title="The BDD representing the i&#39;th variable.">adiar::bdd_ithvar</a></code>, <code><a class="el" href="group__module____bdd____basic__operations.html#ga7fae475d2fde0a55f486cefabd001ac3" title="Negation of a BDD.">adiar::bdd_not</a></code>, and <code><a class="el" href="group__module____bdd____constructors.html#gaee15c2a51e9b6e0cc62b7ce9e1b44d6e" title="The BDD representing the logical &#39;and&#39; of all the given variables, i.e. a term of variables.">adiar::bdd_and</a></code>. Yet, the resulting (reduced) BDD is very well structured. So, we can construct it explicitly! All BDDs are stored on disk bottom-up, so we'll have to start at the bottom-right corner and work ourselves back up to the top-left corner. We can skip all labels for cells that don't lie on the same row, column or the two diagonals. For the remaining cells, we have to check that all but the one for cell \((i,j)\) they are \(\bot\) while \((i,j)\) is \(\top\).</p>
 <p>For example, for \(N = 3\) and \((i,j) = (1,0)\), i.e. for a queen placed at position 2A on a \(3\times 3\) chess board, the variable is \(x_3\) and no queen is allowed to be placed on the same row, \(x_4\) and \(x_5\), nor its column, \(x_0\) and \(6\), nor either column, \(x_1\) and \(x_7\). The resulting BDD looks like this.</p>
 <div class="dotgraph">
 <iframe scrolling="no" frameborder="0" src="dot_inline_dotgraph_2.svg" width="366" height="795"><p><b>This browser is not able to show SVG: try Firefox, Chrome, Safari, or Opera instead.</b></p></iframe></div>
@@ -200,7 +200,7 @@ S(i,j) : Single Position</h3>
 <div class="line"> </div>
 <div class="line">  <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a> res = builder.<a class="code hl_function" href="classadiar_1_1builder.html#ad352fdf568e8d100de19174386fc200c">build</a>();</div>
 <div class="line"> </div>
-<div class="line">  largest_nodes = std::max(largest_nodes, <a class="code hl_function" href="group__module____bdd.html#ga1117a062b67bed809d230f6fac83f60a">bdd_nodecount</a>(res));</div>
+<div class="line">  largest_nodes = std::max(largest_nodes, <a class="code hl_function" href="group__module____bdd____counting.html#ga1117a062b67bed809d230f6fac83f60a">bdd_nodecount</a>(res));</div>
 <div class="line">  <span class="keywordflow">return</span> res;</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassadiar_1_1bdd_html"><div class="ttname"><a href="classadiar_1_1bdd.html">adiar::bdd</a></div><div class="ttdoc">A reduced Binary Decision Diagram.</div><div class="ttdef"><b>Definition</b> bdd.h:58</div></div>
@@ -208,7 +208,7 @@ S(i,j) : Single Position</h3>
 <div class="ttc" id="aclassadiar_1_1builder_html"><div class="ttname"><a href="classadiar_1_1builder.html">adiar::builder</a></div><div class="ttdoc">A builder for decision diagrams.</div><div class="ttdef"><b>Definition</b> builder.h:146</div></div>
 <div class="ttc" id="aclassadiar_1_1builder_html_a865e87726a9135ab4d2c8d17c2a8fe9a"><div class="ttname"><a href="classadiar_1_1builder.html#a865e87726a9135ab4d2c8d17c2a8fe9a">adiar::builder::add_node</a></div><div class="ttdeci">builder_ptr&lt; Policy &gt; add_node(typename Policy::label_type label, const builder_ptr&lt; Policy &gt; &amp;low, const builder_ptr&lt; Policy &gt; &amp;high)</div><div class="ttdoc">Add an internal node with a given label and its two children.</div><div class="ttdef"><b>Definition</b> builder.h:241</div></div>
 <div class="ttc" id="aclassadiar_1_1builder_html_ad352fdf568e8d100de19174386fc200c"><div class="ttname"><a href="classadiar_1_1builder.html#ad352fdf568e8d100de19174386fc200c">adiar::builder::build</a></div><div class="ttdeci">Policy::dd_type build()</div><div class="ttdoc">Builds the decision diagram with the added nodes. This also clears the builder.</div><div class="ttdef"><b>Definition</b> builder.h:421</div></div>
-<div class="ttc" id="agroup__module____bdd_html_ga1117a062b67bed809d230f6fac83f60a"><div class="ttname"><a href="group__module____bdd.html#ga1117a062b67bed809d230f6fac83f60a">adiar::bdd_nodecount</a></div><div class="ttdeci">size_t bdd_nodecount(const bdd &amp;f)</div><div class="ttdoc">The number of (internal) nodes used to represent the function.</div></div>
+<div class="ttc" id="agroup__module____bdd____counting_html_ga1117a062b67bed809d230f6fac83f60a"><div class="ttname"><a href="group__module____bdd____counting.html#ga1117a062b67bed809d230f6fac83f60a">adiar::bdd_nodecount</a></div><div class="ttdeci">size_t bdd_nodecount(const bdd &amp;f)</div><div class="ttdoc">The number of (internal) nodes used to represent the function.</div></div>
 </div><!-- fragment --><h3><a class="anchor" id="autotoc_md34"></a>
 R(i) : Row</h3>
 <p>Now that we have a formula each cell, we can accumulate them with an \(\vee\). This ensures that there is at least one queen on each row since each <code>n_queens_S</code> is only \(\top\) if the queen is placed. Furthermore, the placed queen(s) are not in conflicts. Implicitly, this also provides an at-most-one constraints.</p>
@@ -250,13 +250,13 @@ Counting Solutions</h2>
 <p>Above, we constructed a single BDD that os \(\top\) if and only if we have placed \(N\) queen on each row and without putting them in conflict with each other. That is, we have constructed the set of all valid solutions to the Queens problem. So, now we can merely count the number of satisfying assignments.</p>
 <div class="fragment"><div class="line">uint64_t queens_count(<span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a> &amp;board)</div>
 <div class="line">{</div>
-<div class="line">  <span class="keywordflow">return</span> <a class="code hl_function" href="group__module____bdd.html#ga1f863a598b430b6c936900f855abb8c4">adiar::bdd_satcount</a>(board);</div>
+<div class="line">  <span class="keywordflow">return</span> <a class="code hl_function" href="group__module____bdd____counting.html#ga1f863a598b430b6c936900f855abb8c4">adiar::bdd_satcount</a>(board);</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__module____bdd_html_ga1f863a598b430b6c936900f855abb8c4"><div class="ttname"><a href="group__module____bdd.html#ga1f863a598b430b6c936900f855abb8c4">adiar::bdd_satcount</a></div><div class="ttdeci">uint64_t bdd_satcount(const bdd &amp;f, bdd::label_type varcount)</div><div class="ttdoc">Count the number of assignments x that make f(x) true.</div></div>
+<div class="ttc" id="agroup__module____bdd____counting_html_ga1f863a598b430b6c936900f855abb8c4"><div class="ttname"><a href="group__module____bdd____counting.html#ga1f863a598b430b6c936900f855abb8c4">adiar::bdd_satcount</a></div><div class="ttdeci">uint64_t bdd_satcount(const bdd &amp;f, bdd::label_type varcount)</div><div class="ttdoc">Count the number of assignments x that make f(x) true.</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md37"></a>
 Enumerating all Solutions</h2>
 <p>Based on this <a href="github.com/MartinFaartoft/n-queens-bdd/blob/master/report.tex">project report</a> by Thorbjørn Nielsen and Martin Faartoft, we can use the BDD constructed above to guide a recursive procedure to enumerate all satisfying solutions. The BDD prunes the search tree when recursing.</p>
-<p>Starting from the BDD created with <code>queens_B</code> above, we use <code><a class="el" href="group__module____bdd.html#gafbf9600fb919ec4d16144c8744ee276e" title="Restrict a single variable to a constant value.">adiar::bdd_restrict</a></code> to place queens one row at a time: starting from the left-most column in a row, we place the queen and then recurse. Recursion can stop early in two cases:</p>
+<p>Starting from the BDD created with <code>queens_B</code> above, we use <code><a class="el" href="group__module____bdd____basic__operations.html#gafbf9600fb919ec4d16144c8744ee276e" title="Restrict a single variable to a constant value.">adiar::bdd_restrict</a></code> to place queens one row at a time: starting from the left-most column in a row, we place the queen and then recurse. Recursion can stop early in two cases:</p>
 <ul>
 <li>If the given BDD already is trivially false. We have placed a queen, such that it conflicts with another.</li>
 <li>If the number of unique paths in the restricted BDD is exactly one. Then we are forced to place the remaining queens.</li>
@@ -266,7 +266,7 @@ Enumerating all Solutions</h2>
 <div class="line">                         std::vector&lt;uint64_t&gt;&amp; partial_assignment,</div>
 <div class="line">                         <span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a>&amp; constraints)</div>
 <div class="line">{</div>
-<div class="line">  <span class="keywordflow">if</span> (<a class="code hl_function" href="group__module____bdd.html#ga89c8736e3461536eb39cf4a323ab875b">adiar::bdd_isfalse</a>(constraints)) {</div>
+<div class="line">  <span class="keywordflow">if</span> (<a class="code hl_function" href="group__module____bdd____predicates.html#ga89c8736e3461536eb39cf4a323ab875b">adiar::bdd_isfalse</a>(constraints)) {</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">  }</div>
 <div class="line">  deepest_row = std::max(deepest_row, row);</div>
@@ -283,16 +283,16 @@ Enumerating all Solutions</h2>
 <div class="line">      column_assignment.push_back({label_of_position(row, col), col == col_q});</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a> restricted_constraints = <a class="code hl_function" href="group__module____bdd.html#gafbf9600fb919ec4d16144c8744ee276e">adiar::bdd_restrict</a>(constraints,</div>
+<div class="line">    <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a> restricted_constraints = <a class="code hl_function" href="group__module____bdd____basic__operations.html#gafbf9600fb919ec4d16144c8744ee276e">adiar::bdd_restrict</a>(constraints,</div>
 <div class="line">                                                            column_assignment.begin(),</div>
 <div class="line">                                                            column_assignment.end());</div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordflow">if</span> (<a class="code hl_function" href="group__module____bdd.html#gadd0becff66aaae9313c29248bc33750e">adiar::bdd_pathcount</a>(restricted_constraints) == 1) {</div>
+<div class="line">    <span class="keywordflow">if</span> (<a class="code hl_function" href="group__module____bdd____counting.html#gadd0becff66aaae9313c29248bc33750e">adiar::bdd_pathcount</a>(restricted_constraints) == 1) {</div>
 <div class="line">      solutions += 1;</div>
 <div class="line"> </div>
 <div class="line">      <span class="comment">// Obtain the lexicographically minimal true assignment. Well, only one</span></div>
 <div class="line">      <span class="comment">// exists, so we get the only one left.</span></div>
-<div class="line">      <a class="code hl_function" href="group__module____bdd.html#ga82d50901064486da23984c7dfac196c0">adiar::bdd_satmin</a>(restricted_constraints,</div>
+<div class="line">      <a class="code hl_function" href="group__module____bdd____inputs.html#ga82d50901064486da23984c7dfac196c0">adiar::bdd_satmin</a>(restricted_constraints,</div>
 <div class="line">                        [&amp;partial_assignment](<a class="code hl_typedef" href="namespaceadiar.html#a0bd43cb068187d7c464b6547ba6585d5">adiar::pair&lt;adiar::bdd::label_type, bool&gt;</a> xv) {</div>
 <div class="line">                          <span class="comment">// Skip all empty cells, i.e. assignments to `false`.</span></div>
 <div class="line">                          <span class="keywordflow">if</span> (!xv.second) { return; }</div>
@@ -307,7 +307,7 @@ Enumerating all Solutions</h2>
 <div class="line">      <span class="keywordflow">for</span> (uint64_t r = N-1; r &gt; row; r--) {</div>
 <div class="line">        partial_assignment.pop_back();</div>
 <div class="line">      }</div>
-<div class="line">    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<a class="code hl_function" href="group__module____bdd.html#ga81eb97e73e588784178e8eaee96cdbc8">adiar::bdd_istrue</a>(restricted_constraints)) {</div>
+<div class="line">    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<a class="code hl_function" href="group__module____bdd____predicates.html#ga81eb97e73e588784178e8eaee96cdbc8">adiar::bdd_istrue</a>(restricted_constraints)) {</div>
 <div class="line">      print_assignment(partial_assignment);</div>
 <div class="line">      solutions += 1;</div>
 <div class="line">    } <span class="keywordflow">else</span> {</div>
@@ -318,11 +318,11 @@ Enumerating all Solutions</h2>
 <div class="line"> </div>
 <div class="line">  <span class="keywordflow">return</span> solutions;</div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__module____bdd_html_ga81eb97e73e588784178e8eaee96cdbc8"><div class="ttname"><a href="group__module____bdd.html#ga81eb97e73e588784178e8eaee96cdbc8">adiar::bdd_istrue</a></div><div class="ttdeci">bool bdd_istrue(const bdd &amp;f)</div><div class="ttdoc">Whether a BDD is the constant true.</div></div>
-<div class="ttc" id="agroup__module____bdd_html_ga82d50901064486da23984c7dfac196c0"><div class="ttname"><a href="group__module____bdd.html#ga82d50901064486da23984c7dfac196c0">adiar::bdd_satmin</a></div><div class="ttdeci">bdd bdd_satmin(const bdd &amp;f)</div><div class="ttdoc">The lexicographically smallest cube x such that f(x) is true.</div></div>
-<div class="ttc" id="agroup__module____bdd_html_ga89c8736e3461536eb39cf4a323ab875b"><div class="ttname"><a href="group__module____bdd.html#ga89c8736e3461536eb39cf4a323ab875b">adiar::bdd_isfalse</a></div><div class="ttdeci">bool bdd_isfalse(const bdd &amp;f)</div><div class="ttdoc">Whether a BDD is the constant false.</div></div>
-<div class="ttc" id="agroup__module____bdd_html_gadd0becff66aaae9313c29248bc33750e"><div class="ttname"><a href="group__module____bdd.html#gadd0becff66aaae9313c29248bc33750e">adiar::bdd_pathcount</a></div><div class="ttdeci">uint64_t bdd_pathcount(const bdd &amp;f)</div><div class="ttdoc">Count all unique (but not necessarily disjoint) paths to the true terminal.</div></div>
-<div class="ttc" id="agroup__module____bdd_html_gafbf9600fb919ec4d16144c8744ee276e"><div class="ttname"><a href="group__module____bdd.html#gafbf9600fb919ec4d16144c8744ee276e">adiar::bdd_restrict</a></div><div class="ttdeci">__bdd bdd_restrict(const bdd &amp;f, bdd::label_type var, bool val)</div><div class="ttdoc">Restrict a single variable to a constant value.</div></div>
+<div class="ttc" id="agroup__module____bdd____basic__operations_html_gafbf9600fb919ec4d16144c8744ee276e"><div class="ttname"><a href="group__module____bdd____basic__operations.html#gafbf9600fb919ec4d16144c8744ee276e">adiar::bdd_restrict</a></div><div class="ttdeci">__bdd bdd_restrict(const bdd &amp;f, bdd::label_type var, bool val)</div><div class="ttdoc">Restrict a single variable to a constant value.</div></div>
+<div class="ttc" id="agroup__module____bdd____counting_html_gadd0becff66aaae9313c29248bc33750e"><div class="ttname"><a href="group__module____bdd____counting.html#gadd0becff66aaae9313c29248bc33750e">adiar::bdd_pathcount</a></div><div class="ttdeci">uint64_t bdd_pathcount(const bdd &amp;f)</div><div class="ttdoc">Count all unique (but not necessarily disjoint) paths to the true terminal.</div></div>
+<div class="ttc" id="agroup__module____bdd____inputs_html_ga82d50901064486da23984c7dfac196c0"><div class="ttname"><a href="group__module____bdd____inputs.html#ga82d50901064486da23984c7dfac196c0">adiar::bdd_satmin</a></div><div class="ttdeci">bdd bdd_satmin(const bdd &amp;f)</div><div class="ttdoc">The lexicographically smallest cube x such that f(x) is true.</div></div>
+<div class="ttc" id="agroup__module____bdd____predicates_html_ga81eb97e73e588784178e8eaee96cdbc8"><div class="ttname"><a href="group__module____bdd____predicates.html#ga81eb97e73e588784178e8eaee96cdbc8">adiar::bdd_istrue</a></div><div class="ttdeci">bool bdd_istrue(const bdd &amp;f)</div><div class="ttdoc">Whether a BDD is the constant true.</div></div>
+<div class="ttc" id="agroup__module____bdd____predicates_html_ga89c8736e3461536eb39cf4a323ab875b"><div class="ttname"><a href="group__module____bdd____predicates.html#ga89c8736e3461536eb39cf4a323ab875b">adiar::bdd_isfalse</a></div><div class="ttdeci">bool bdd_isfalse(const bdd &amp;f)</div><div class="ttdoc">Whether a BDD is the constant false.</div></div>
 <div class="ttc" id="anamespaceadiar_html_a0bd43cb068187d7c464b6547ba6585d5"><div class="ttname"><a href="namespaceadiar.html#a0bd43cb068187d7c464b6547ba6585d5">adiar::pair</a></div><div class="ttdeci">std::pair&lt; T1, T2 &gt; pair</div><div class="ttdoc">A pair of values.</div><div class="ttdef"><b>Definition</b> types.h:75</div></div>
 </div><!-- fragment --><p>The recursion can then be started with an empty assignment.</p>
 <div class="fragment"><div class="line">uint64_t queens_list(uint64_t N, <span class="keyword">const</span> <a class="code hl_class" href="classadiar_1_1bdd.html">adiar::bdd</a>&amp; board)</div>

@@ -7,10 +7,12 @@ var searchData=
   ['v2_201_4',['v2.1',['../page__cite.html#autotoc_md53',1,'']]],
   ['variable_20domain_5',['Variable Domain',['../group__module____domain.html',1,'']]],
   ['variable_20ordering_6',['Variable Ordering',['../page__queens.html#autotoc_md31',1,'']]],
-  ['variables_7',['variables',['../page__basic.html#autotoc_md13',1,'Restricting Variables'],['../page__basic.html#autotoc_md18',1,'Single Variables'],['../page__basic.html#autotoc_md8',1,'Variables']]],
-  ['version_8',['version',['../group__module____adiar.html#gaecb0c967c2f53bb1700c2e6f01fc64c5',1,'adiar']]],
-  ['version_5fmajor_9',['version_major',['../group__module____adiar.html#ga470bef8262702a036e8da5b8f83b1f16',1,'adiar']]],
-  ['version_5fminor_10',['version_minor',['../group__module____adiar.html#ga0769c8ffe7eff8a5bd9c0c19803f27eb',1,'adiar']]],
-  ['version_5fpatch_11',['version_patch',['../group__module____adiar.html#gaaab9926b93b85f6010cbe053ba977047',1,'adiar']]],
-  ['version_5fstring_12',['version_string',['../group__module____adiar.html#ga20907cb6855b4e605b25bd15a9c860fd',1,'adiar']]]
+  ['variable_20substitution_7',['Variable Substitution',['../group__module____bdd____replace.html',1,'']]],
+  ['variables_8',['variables',['../group__module____bdd____inputs.html',1,'Input Variables'],['../page__basic.html#autotoc_md13',1,'Restricting Variables'],['../page__basic.html#autotoc_md18',1,'Single Variables'],['../page__basic.html#autotoc_md8',1,'Variables']]],
+  ['version_9',['version',['../group__module____adiar.html#gaecb0c967c2f53bb1700c2e6f01fc64c5',1,'adiar']]],
+  ['version_5fmajor_10',['version_major',['../group__module____adiar.html#ga470bef8262702a036e8da5b8f83b1f16',1,'adiar']]],
+  ['version_5fminor_11',['version_minor',['../group__module____adiar.html#ga0769c8ffe7eff8a5bd9c0c19803f27eb',1,'adiar']]],
+  ['version_5fpatch_12',['version_patch',['../group__module____adiar.html#gaaab9926b93b85f6010cbe053ba977047',1,'adiar']]],
+  ['version_5fstring_13',['version_string',['../group__module____adiar.html#ga20907cb6855b4e605b25bd15a9c860fd',1,'adiar']]],
+  ['visualization_14',['visualization',['../group__module____bdd____dot.html',1,'Visualization'],['../group__module____zdd____dot.html',1,'ZDD Visualization']]]
 ];

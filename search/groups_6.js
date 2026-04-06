@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['statistics_0',['Statistics',['../group__module____statistics.html',1,'']]],
-  ['suppressed_20decision_20diagrams_1',['Zero-suppressed Decision Diagrams',['../group__module____zdd.html',1,'']]]
+  ['input_20variables_0',['Input Variables',['../group__module____bdd____inputs.html',1,'']]]
 ];
