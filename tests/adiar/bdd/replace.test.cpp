@@ -292,6 +292,28 @@ go_bandit([]() {
     }
     const bdd bdd_7(bdd_7_nf);
 
+    shared_levelized_file<bdd::node_type> bdd_8_nf;
+    //purpose - minimal(ish) example highligting need to change nested sweeping terminal case
+    /*
+    //          1         ---- x0
+    //         / \  
+    //        /   2       ---- x1
+    //       /    |\
+    //      3     | \     ---- x2
+    //     / \    |  \
+    //    F   T   F   T
+    */
+
+    { // Garbage collect early and free write-lock
+      const node n3 = node(2, bdd::max_id, terminal_F, terminal_T);
+      const node n2 = node(1, bdd::max_id, terminal_F, terminal_T);
+      const node n1 = node(0, bdd::max_id, n3.uid(), n2.uid());
+
+      node_ofstream nw(bdd_8_nf);
+      nw << n3 << n2 << n1;
+    }
+    const bdd bdd_8(bdd_8_nf);
+
     describe("bdd_replace(const bdd&, <...>)", [&]() {
       describe("<non-monotonic>", [&]() {
         it("returns the original file for 'F'", [&]() {
@@ -348,7 +370,6 @@ go_bandit([]() {
           const mapping_type m = [](const int x) { return 4 - x; };
           AssertThat(replace__infer_type<bdd_policy>(bdd_1,m), Is().EqualTo(replace_type::Non_Monotone));
           const bdd out = bdd_replace(bdd_1, m);
-          //AssertThrows(invalid_argument, bdd_replace(bdd_1, m));
           node_test_ifstream out_nodes(out);
           AssertThat(out_nodes.can_pull(), Is().True());
           AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
@@ -784,7 +805,7 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().True());
             AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, node::pointer_type(1,bdd::max_id), node::pointer_type(1,bdd::max_id-1))));
           });
-          it( "swaps bottom layers in bdd_2" , [&]() {
+          it( "swaps bottom layers in bdd_3" , [&]() {
             //map swapping levels 1 and 2
             /*
             //       _1_        ---- x0       //        _1_
@@ -802,10 +823,8 @@ go_bandit([]() {
                                                            if (x == 2) return 1;
                                                            else return x; };
 
-            AssertThat(replace__infer_type<bdd_policy>(bdd_3, m), Is().EqualTo(replace_type::Swap_Adjacent));
-            bdd out = bdd_replace(bdd_3, m);
-
-            bdd_printdot(out, "what_this.dot");
+            //AssertThat(replace__infer_type<bdd_policy>(bdd_3, m), Is().EqualTo(replace_type::Swap_Adjacent));
+            bdd out = bdd_replace(bdd_3, m, replace_type::Swap_Adjacent);
 
             node_test_ifstream out_nodes(out);
             AssertThat(out_nodes.can_pull(), Is().True());
@@ -835,7 +854,7 @@ go_bandit([]() {
             AssertThat(out_nodes.pull(), Is().EqualTo(node(3,bdd::max_id,
               node::pointer_type(4, bdd::max_id),node::pointer_type(4, bdd::max_id-1))));
             AssertThat(out_nodes.can_pull(), Is().False());
-        });
+          });
 
         });
 
@@ -1071,6 +1090,23 @@ go_bandit([]() {
             bdd res = bdd_replace(bdd_5, m, replace_type::Non_Monotone);
             AssertThat(res, Is().EqualTo(expected_res));
 
+        });
+
+        it("correctly handles terminal requests in nested sweeping [bdd_8]", [&](){
+            /*
+            */
+            const mapping_type m = [](const int x) {if (x == 1) return 2;
+                                                          if (x == 2) return 1; 
+                                                          return x;};
+            bdd out = bdd_replace(bdd_8, m, replace_type::Non_Monotone);
+            node_test_ifstream out_nodes(out);
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(2, node::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(1, node::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(0, node::max_id, node::pointer_type(1,node::max_id), node::pointer_type(2,node::max_id))));
+            AssertThat(out_nodes.can_pull(), Is().False());
         });
 
         //TODO: more tests?!
