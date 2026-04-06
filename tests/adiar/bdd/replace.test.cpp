@@ -1639,9 +1639,7 @@ go_bandit([]() {
         AssertThat(out.is_negated(), Is().False());
       });
 
-      // TODO: Replace AssertThrows tests with checks for the output is correct (and reduced because
-      //       it uses the most general algorithm).
-
+ 
       it(" renames single node in [x0] to x1 if 'replace_type' is 'Non_Monotone'", [&]() {
         // NOTE: This function is in fact 'Affine'/'Shift'
         const mapping_type m = [](const int x) { return x + 1; };
@@ -1659,7 +1657,6 @@ go_bandit([]() {
         const mapping_type m = [](const int x) { return 4 - x; }; //swaps top and bottom levels
         const bdd out = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
 
-        //AssertThrows(invalid_argument, bdd_replace(bdd_1, m, replace_type::Non_Monotone));
         node_test_ifstream out_nodes(out);
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
@@ -1675,7 +1672,7 @@ go_bandit([]() {
         // runs no inner sweeps for this
         const mapping_type m = [](const int x) { return x + 1; };
         const bdd out = bdd_replace(bdd_2, m, replace_type::Non_Monotone);
-        //AssertThrows(invalid_argument, bdd_replace(bdd_2, m, replace_type::Non_Monotone));
+
         //TODO - look into why the two bottom nodes get swapped id's in this case
         node_test_ifstream out_nodes(out);
         AssertThat(out_nodes.can_pull(), Is().True());
@@ -2222,11 +2219,15 @@ go_bandit([]() {
           AssertThat(out->number_of_terminals[true], Is().EqualTo(1u));
         });
 
-        it("throws exception if level-swapping is potentially necessary [__bdd_x0_unreduced]",
+        it("re-labels and reduces bdd when map is non monotone [__bdd_x0_unreduced]",
            [&]() {
-             // const mapping_type m = [](const int x) { return 4 - x; };
-             // AssertThrows(invalid_argument,
-             //              bdd_replace(__bdd(__bdd_x0_unreduced, exec_policy()), m));
+            const mapping_type m = [](const int x) { return 4 - x; };
+            bdd out = bdd_replace(__bdd(__bdd_x0_unreduced, exec_policy()), m);
+
+            node_test_ifstream out_nodes(out);
+            AssertThat(out_nodes.can_pull(), Is().True());
+            AssertThat(out_nodes.pull(), Is().EqualTo(node(4,node::max_id, terminal_F, terminal_T)));
+            AssertThat(out_nodes.can_pull(), Is().False());
            });
         
         it("swaps top and bottom levels [__bdd_1]", [&]() {
@@ -2246,7 +2247,7 @@ go_bandit([]() {
         it("swaps levels [__bdd_2]", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
           const bdd out = bdd_replace(__bdd(__bdd_2, exec_policy()), m);
-          //AssertThrows(invalid_argument, bdd_replace(__bdd(__bdd_2, exec_policy()), m));
+
           node_test_ifstream out_nodes(out);
           AssertThat(out_nodes.can_pull(), Is().True());
           AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
@@ -2814,8 +2815,6 @@ go_bandit([]() {
         AssertThat(out.is_negated(), Is().False());
       });
 
-      // TODO: Replace AssertThrows tests with checks for the output is correct (and reduced because
-      //       it uses the most general algorithm).
 
       it("shifts x0 to x1 when 'replace_type' is 'Non_Monotone' [bdd_x0]", [&]() {
         // NOTE: This function is in fact 'Affine'/'Shift'
@@ -2827,8 +2826,6 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id, terminal_F, terminal_T)));
         AssertThat(out_nodes.can_pull(), Is().False());
-        /*AssertThrows(invalid_argument,
-                     bdd_replace(exec_policy(), __bdd(bdd_x0_nf), m, replace_type::Non_Monotone));*/
       });
 
       it("shifts x0 to x1 when 'replace_type' is 'Non_Monotone' [__bdd_x0]", [&]() {
@@ -2840,8 +2837,6 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id, terminal_F, terminal_T)));
         AssertThat(out_nodes.can_pull(), Is().False());
-        /*AssertThrows(invalid_argument,
-                     bdd_replace(__bdd(__bdd_x0, exec_policy()), m, replace_type::Non_Monotone))*/;
       });
 
       it("produces reduced node x1 when 'replace_type' is 'Non_Monotone' [__bdd_x0_unreduced]", [&]() {
@@ -2854,16 +2849,12 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id, terminal_F, terminal_T)));
         AssertThat(out_nodes.can_pull(), Is().False());
-        /*AssertThrows(
-          invalid_argument,
-          bdd_replace(__bdd(__bdd_x0_unreduced, exec_policy()), m, replace_type::Non_Monotone));*/
       });
 
       it("swaps top and bottom levels if 'replace_type' is 'Non_Monotone' [bdd_1]", [&]() {
         // NOTE: This mapping proves it can swap levels
         const mapping_type m = [](const int x) { return 4 - x; };
         const bdd out = bdd_replace(__bdd(bdd_1_nf), m, replace_type::Non_Monotone);
-        //AssertThrows(invalid_argument, bdd_replace(__bdd(bdd_1_nf), m, replace_type::Non_Monotone));
         node_test_ifstream out_nodes(out);
         AssertThat(out_nodes.can_pull(), Is().True());
         AssertThat(out_nodes.pull(), Is().EqualTo(node(4,bdd::max_id, terminal_F,terminal_T)));
@@ -2875,7 +2866,7 @@ go_bandit([]() {
 
       });
 
-      it("throws exception if 'replace_type' is 'Non_Monotone' [__bdd_1]", [&]() {
+      it("performs replacement when 'replace_type' is 'Non_Monotone' [__bdd_1]", [&]() {
         // NOTE: This mapping proves it can swap levels
         const mapping_type m = [](const int x) { return 4 - x; };
         const bdd out = bdd_replace(__bdd(__bdd_1, exec_policy()), m, replace_type::Non_Monotone);
@@ -2889,15 +2880,12 @@ go_bandit([]() {
         AssertThat(out_nodes.pull(), Is().EqualTo(node(0,bdd::max_id, bdd::pointer_type(2,bdd::max_id), terminal_T)));
         AssertThat(out_nodes.can_pull(), Is().False());
 
-        /*AssertThrows(invalid_argument,
-                     bdd_replace(__bdd(__bdd_1, exec_policy()), m, replace_type::Non_Monotone));*/
       });
 
-      it("throws exception if 'replace_type' is 'Non_Monotone' [bdd_3]", [&]() {
+      it("shifts and reduces if 'replace_type' is 'Non_Monotone' [bdd_3]", [&]() {
         // NOTE: This function is in fact 'Affine'/'Shift'; the BDD should end up reduced.
         const mapping_type m = [](const int x) { return x + 1; };
         const bdd out = bdd_replace(__bdd(bdd_3), m, replace_type::Non_Monotone);
-        //AssertThrows(invalid_argument, bdd_replace(__bdd(bdd_3), m, replace_type::Non_Monotone));
         //TODO once again - why do the ids of nodes get swapped
         node_test_ifstream out_nodes(out);
         AssertThat(out_nodes.can_pull(), Is().True());
@@ -2912,7 +2900,7 @@ go_bandit([]() {
         AssertThat(out_nodes.can_pull(), Is().False());
       });
 
-      it("throws exception if 'replace_type' is 'Non_Monotone' [__bdd_3_unreduced]", [&]() {
+      it("shifts and reduces if 'replace_type' is 'Non_Monotone' [__bdd_3_unreduced]", [&]() {
         // NOTE: This function is in fact 'Affine'/'Shift'; the BDD should end up reduced.
         const mapping_type m = [](const int x) { return x + 1; };
         const bdd out = bdd_replace(__bdd(__bdd_3_unreduced, exec_policy()), m, replace_type::Non_Monotone);
@@ -2928,9 +2916,6 @@ go_bandit([]() {
         AssertThat(out_nodes.pull(), Is().EqualTo(node(1,bdd::max_id,
            bdd::pointer_type(2,bdd::max_id), bdd::pointer_type(2,bdd::max_id-1))));
         AssertThat(out_nodes.can_pull(), Is().False());
-        /*AssertThrows(
-          invalid_argument,
-          bdd_replace(__bdd(__bdd_3_unreduced, exec_policy()), m, replace_type::Non_Monotone));*/
       });
 
       it("reduces and affinely maps 'x0' if 'replace_type' is 'Monotone'", [&]() {
