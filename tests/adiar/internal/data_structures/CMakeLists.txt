@@ -1,5 +1,6 @@
 add_test(adiar-internal-data_structures-level_merger             level_merger.test.cpp)
 add_test(adiar-internal-data_structures-levelized_priority_queue levelized_priority_queue.test.cpp)
+add_test(adiar-internal-data_structures-node_table               node_table.test.cpp)
 add_test(adiar-internal-data_structures-priority_queue           priority_queue.test.cpp)
 add_test(adiar-internal-data_structures-sorter                   sorter.test.cpp)
 add_test(adiar-internal-data_structures-stack                    stack.test.cpp)

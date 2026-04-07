@@ -63,6 +63,7 @@ set(HEADERS
   # adiar/internal/data_structures
   internal/data_structures/level_merger.h
   internal/data_structures/levelized_priority_queue.h
+  internal/data_structures/node_table.h
   internal/data_structures/priority_queue.h
   internal/data_structures/sorter.h
   internal/data_structures/stack.h

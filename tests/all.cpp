@@ -50,6 +50,7 @@ go_bandit([]() {
 #include "adiar/internal/algorithms/reduce.test.cpp"
 #include "adiar/internal/data_structures/level_merger.test.cpp"
 #include "adiar/internal/data_structures/levelized_priority_queue.test.cpp"
+#include "adiar/internal/data_structures/node_table.test.cpp"
 #include "adiar/internal/data_structures/priority_queue.test.cpp"
 #include "adiar/internal/data_types/arc.test.cpp"
 #include "adiar/internal/data_types/convert.test.cpp"
