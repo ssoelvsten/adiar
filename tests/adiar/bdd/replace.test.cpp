@@ -295,6 +295,7 @@ go_bandit([]() {
 
     shared_levelized_file<bdd::node_type> bdd_8_nf;
     //purpose - minimal(ish) example highligting need to change nested sweeping terminal case
+    // sweeping on lvl 1 here -> request with 2 leaf children, should not be surpressed 
     /*
     //          1         ---- x0
     //         / \  
@@ -336,6 +337,33 @@ go_bandit([]() {
       nw << n7 << n6 << n5 << n4 << n3 << n2 << n1 << n0;
     }
     const bdd bdd_9(bdd_9_nf);
+
+    shared_levelized_file<bdd::node_type> bdd_10_nf;
+    //purpose - has edge crossing 2 layers
+    /*
+    //       _1      --x0   
+    //      / |             
+    //     /  2      --x1   
+    //    /  / \            
+    //   /  3   4    --x2   
+    //  /  /|   | \          
+    //  | F  \  F  T         
+    //   \____5      --x3   
+    //       / \            
+    //      F   T           
+    */
+
+    { // Garbage collect early and free write-lock
+      const node n5 = node(3, bdd::max_id, terminal_F, terminal_T);
+      const node n4 = node(2, bdd::max_id, terminal_T, terminal_F);
+      const node n3 = node(2, bdd::max_id-1, terminal_F, n5.uid());
+      const node n2 = node(1, bdd::max_id, n3.uid(), n4.uid());
+      const node n1 = node(0, bdd::max_id, n5.uid(), n2.uid());
+
+      node_ofstream nw(bdd_10_nf);
+      nw << n5 << n4 << n3 << n2 << n1;
+    }
+    const bdd bdd_10(bdd_10_nf);
 
 
     describe("bdd_replace(const bdd&, <...>)", [&]() {
@@ -803,7 +831,7 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().False());
           });
           
-          it("swap top many children" , [&]() {
+          it("swap top many children [bdd_6]" , [&]() {
             /*
             //            1         ---- x0...1?
             //           / \
@@ -929,7 +957,6 @@ go_bandit([]() {
             node::pointer_type n2m1_uid(2,node::max_id-1);
             node::pointer_type n1m_uid(1,node::max_id);
             node::pointer_type n1m1_uid(1,node::max_id-1);
-            node::pointer_type n0_uid(0,node::max_id);
 
             AssertThat(out_nodes.can_pull(), Is().True());
             AssertThat(out_nodes.pull(), Is().EqualTo(node(7,node::max_id, terminal_F, terminal_T)));
@@ -958,6 +985,43 @@ go_bandit([]() {
             AssertThat(out_nodes.can_pull(), Is().False());
           });
 
+          it("handles adjacent-swap crossing arcs", [&](){
+            /*
+            //       _1      --x0   //            1
+            //      / |             //           / \
+            //     /  2      --x1   //          /   2
+            //    /  / \            //         /   / \
+            //   /  3   4    --x2   //        /   3   4
+            //  /  /|   | \          //      /   / \  | \
+            //  | F  \  F  T         //      |  F   T |  F
+            //   \____5      --x3   //       5________/
+            //       / \            //      / \
+            //      F   T           //     F   T 
+            */
+          
+
+          const replace_func<bdd_policy> m = [](const int x) { if (x == 1) {return 2;}
+                                                                     if (x == 2) {return 1;}
+                                                                    return x; };
+          bdd out = bdd_replace(bdd_10,m);
+          node_test_ifstream out_nodes(out);
+          node::pointer_type n5_uid(3,node::max_id);
+          node::pointer_type n4_uid(2,node::max_id-1);
+          node::pointer_type n3_uid(2,node::max_id);
+          node::pointer_type n2_uid(1,node::max_id);
+
+          AssertThat(out_nodes.can_pull(), Is().True());
+          AssertThat(out_nodes.pull(), Is().EqualTo(node(3,node::max_id, terminal_F, terminal_T)));
+          AssertThat(out_nodes.can_pull(), Is().True());
+          AssertThat(out_nodes.pull(), Is().EqualTo(node(2,node::max_id, terminal_F, terminal_T)));
+          AssertThat(out_nodes.can_pull(), Is().True());
+          AssertThat(out_nodes.pull(), Is().EqualTo(node(2,node::max_id-1, n5_uid, terminal_F)));
+          AssertThat(out_nodes.can_pull(), Is().True());
+          AssertThat(out_nodes.pull(), Is().EqualTo(node(1,node::max_id, n3_uid, n4_uid)));
+          AssertThat(out_nodes.can_pull(), Is().True());
+          AssertThat(out_nodes.pull(), Is().EqualTo(node(0,node::max_id, n5_uid, n2_uid)));
+          AssertThat(out_nodes.can_pull(), Is().False());
+          });
         });
 
         describe("Jump-up cases", [&](){
