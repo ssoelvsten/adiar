@@ -542,25 +542,25 @@ namespace adiar::internal
         }
 
         //CASE wrong layer
-        if (debug_enabled) std::cout << "wrong layer case \n";
-        id = (label == tseek.label()) ? id+1 : 0; 
-        label = tseek.label() ;
-        if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+          if (debug_enabled) std::cout << "wrong layer case \n";
+          id = (label == tseek.label()) ? id+1 : 0; 
+          label = tseek.label() ;
+          if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
 
-        tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
-        tuple<typename Policy::pointer_type> rlow = reqs[0]; 
-        tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
-        
-        //forward outgoing
-        typename Policy::label_type out_label = create_label<Policy>(li, label);
-        typename Policy::uid_type out_uid(out_label, id);
-        //typename Policy::node_type::uid_type out_uid = (shift_back) ?  Policy::node_type::uid_type(label/2, id) : Policy::node_type::uid_type(label,id);
-        pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
-        pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+          tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
+          tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+          tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
+          
+          //forward outgoing
+          typename Policy::label_type out_label = create_label<Policy>(li, label);
+          typename Policy::uid_type out_uid(out_label, id);
+          //typename Policy::node_type::uid_type out_uid = (shift_back) ?  Policy::node_type::uid_type(label/2, id) : Policy::node_type::uid_type(label,id);
+          pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
 
-        // forward incoming
-        internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
-        internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
+          // forward incoming
+          internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+          internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
         }
         if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
         typename Policy::label_type out_label = create_label<Policy>(li, label);
@@ -568,7 +568,7 @@ namespace adiar::internal
         if (id >= 0) { aw.push(level_info(out_label, id+1)); }
   }
 
-  //--------------------------JUMP_DOWN special case-----------------------------------
+  //--------------------------------------- JUMP_DOWN special case ---------------------------------------
 
   template <typename Policy, typename PQ1, typename PQ2>
   inline typename Policy::__dd_type
@@ -582,7 +582,7 @@ namespace adiar::internal
     if (debug_enabled) std::cout << "start jump_down special case! \n";
     //setup input
     node_ifstream<> in(dd);
-    node root = in.pull();
+    node v = in.pull();
     
     //setup output
     shared_levelized_file<arc> out_arcs;
@@ -619,28 +619,28 @@ namespace adiar::internal
 
     //init req
     cor_req_t<0> init_r;
-    if (root.uid().level() == next_jump_down) {
+    if (v.uid().level() == next_jump_down) {
       if (debug_enabled) {std::cout << "CASE first level moves down\n";}
       //push proper req
-       init_r = {{root.low(), root.high()},{},{ptr_uint64::nil(), m(root.uid().level())}};
+       init_r = {{v.low(), v.high()},{},{ptr_uint64::nil(), m(v.uid().level())}};
        next_jump_down = level_gen();
     } else {
       if (debug_enabled) {std::cout << "CASE first level doesn't moves down\n";}
       //just init copy req
-       init_r = {{root.uid(),node::pointer_type::nil() },
+       init_r = {{v.uid(),node::pointer_type::nil() },
                  {},{ptr_uint64::nil(), node::pointer_type::nil().level()}};
     }
     if (debug_enabled) std::cout << "init jump_down req: " << init_r << "\n";
     
     pq1.push(init_r); 
 
-    node v = in.pull();
     while(!pq1.empty()){
       pq1.setup_next_level();
       typename Policy::label_type lable = pq1.current_level();
       //typename Policy::label_type id = -1;
 
       if (lable == next_jump_down) {
+      ///////////////////////////////////////// case jump down start //////////////////////////////////////////
         if (debug_enabled) std::cout << "found jump down level " << lable << "\n";
         //push reqs
         while(!pq1.empty_level()){
@@ -657,6 +657,7 @@ namespace adiar::internal
         //no level update since this level no longer exists
 
       } else {
+        ///////////////////////////////////////// case normal layer //////////////////////////////////////////
         //do normal cor stuff for this level
         correctify_single_level<Policy>(in, aw, pq1, pq2,  v, label_indicator::NORMAL);
       }
@@ -664,9 +665,7 @@ namespace adiar::internal
     return typename Policy::__dd_type(out_arcs,ep); 
   }
 
-
-
-// -------------------------- Adj Swap special case -------------------------------------
+// ------------------------------------- Adj Swap special case -------------------------------------
 
 //NOTE TO SELF
 //all levels are multiplied by 2 to ensure that the extra level we work with for each swap is free
@@ -683,9 +682,8 @@ namespace adiar::internal
                           size_t max_pq2_size) {
     if (debug_enabled) std::cout << "\n start adj_swap special case! \n";
     //makign room for intermediate layers
-    //could maybe do this in the PQ init thing? eeeh..
     replace_func<Policy> shift_forward = [](int x){ return x*2;};
-    replace_func<Policy> shift_back = [](int x){ return x / 2;};
+    //TODO - do this as a affine shift??
     const typename Policy::dd_type dd_shifted = bdd_replace(dd, shift_forward,replace_type::Monotone); //expeeensive                       
 
     //setup input
@@ -700,7 +698,7 @@ namespace adiar::internal
     level_info_ifstream<> info_in(dd_shifted);
     std::vector<typename Policy::label_type> swap_starts; //top of adj swap
     std::vector<typename Policy::label_type> swap_end; // bot of adj swap
-     std::vector<typename Policy::label_type> swap_extra; // fresh layer below bottom (need to load PQ with these)
+    std::vector<typename Policy::label_type> swap_extra; // fresh layer below bottom (need to load PQ with these)
     while (info_in.can_pull()){
       level_info l = info_in.pull();
       if (debug_enabled) std::cout << "found level " << l << "\n";
@@ -710,9 +708,9 @@ namespace adiar::internal
         swap_extra.push_back(m(l.label()/2)*2 + 1);
       }
     }
-    std::cout << "extra levels [ ";
-    for(typename Policy::label_type e : swap_extra) {std::cout << e << ",";}
-    std::cout << "]";
+    if (debug_enabled) std::cout << "extra levels [ ";
+    for(typename Policy::label_type e : swap_extra) {if (debug_enabled) std::cout << e << ",";}
+    if (debug_enabled) std::cout << "]";
 
     typename std::vector<typename Policy::label_type>::iterator s_begin = swap_starts.begin(), s_end = swap_starts.end();
     typename std::vector<typename Policy::label_type>::iterator t_begin = swap_end.begin(), t_end = swap_end.end();
@@ -764,9 +762,10 @@ namespace adiar::internal
       } else if (label == next_target){
        /////////////////////////////////////////// xj level //////////////////////////////////////////////////////
         if (debug_enabled) std::cout << "found target of next adjacent swap: " << label << "\n";
-        //correctify but
+        // TODO: evetually - could specialize single layer correctify to do these things -> would need a new policy prob..
+        //correctify but 
         // (0) ignore correct layer case..
-        // (1) out_uid has label (next_swap)
+        // (1) out_uid has label (next_swap)/2
         // (2) pushes to PQ1 are given level = label+1 (aka next_extra) for non-copy case
         
         //just copy-paste single layer correctify for now..
@@ -819,8 +818,8 @@ namespace adiar::internal
       /////////////////////////////////////////// extra level //////////////////////////////////////////////////////
       if (debug_enabled) std::cout << "found extra level: " << label << "\n";
         //correctify but
-        // (0) we always in correct layer case
-        // (1) push to out with label-1 (aka next_target)
+        // (0) we always in correct layer case 
+        // (1) push to out with label-1 /2 (aka next_target)
         while(!pq1.empty_level()) {
           cor_req_t<0> r = pq1.top();
           if(debug_enabled) std::cout << "found req " << r << "\n";
@@ -842,7 +841,6 @@ namespace adiar::internal
             id = (label == tseek.label()) ? id+1 : 0; 
             label = tseek.label() ;
             if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
-            //if one of the chilren nil what we do??
 
             //push copy reqs
             const node::uid_type out_uid(next_target.value()/2, id); //x_label,id
@@ -921,8 +919,8 @@ replace(typename Policy::dd_type dd,
 
   const size_t max_pq_1_size = internal_only ? std::min(pq_1_memory_fits, pq_1_bound) : pq_1_bound;
   const size_t max_pq_2_size = internal_only ? std::min(pq_2_memory_fits, pq_2_bound) : pq_2_bound;
+
   //(2) switch on replace-type and run correct thing from there...
-  
   //TODO: the code duplication here is horrible 
   if(!external_only && max_pq_1_size <= no_lookahead_bound(2)){ //internal mem no lookahead case
     using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,2u>;
@@ -972,14 +970,13 @@ replace(typename Policy::dd_type dd,
   }
 }
 
-//----------------------------- full correctify sweep ---------------------------------
+//-------------------------------------------------- full correctify sweep --------------------------------------------------
   template <typename Policy, typename PQ1, typename PQ2, typename In>
   inline typename Policy::__dd_type
   replace_cor_scan_level(const In& in, 
-                         PQ1& pq1,
+                         PQ1& pq1,    //we assume that pqs have been preloaded when given here  
                          PQ2& pq2,
-                         exec_policy ep)
-    //we assume that pqs have been preloaded when given here - as done by nested sweeping                    
+                         exec_policy ep)               
   {
      // Set up output
     shared_levelized_file<arc> out_arcs;
@@ -1005,7 +1002,7 @@ replace(typename Policy::dd_type dd,
   ///SWAP special case
   //TBA
 
-  ///NON_MONOTONE
+///NON_MONOTONE
 
 //Policy for use in nested sweeping 
 template <typename Policy>
@@ -1149,7 +1146,7 @@ public:
     inline request_t
     request_from_node(const node& n, const ptr_uint64& parent)
     {
-        //only run for nodes where we want to update level?
+        //only run for nodes where we want to update level
         std::cout << "runs req from node with " << n << "\n";
         typename Policy::label_type new_lvl = _m(n.label());
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
@@ -1178,14 +1175,15 @@ public:
                        const replace_func<Policy>& m,
                        exec_policy ep) {
     
-    //setup policy
+    
+    //calculate sweeping levels and their targets from map
     std::vector<typename Policy::label_type> nest_levels = levels_from_map<Policy>(m, dd);
     
     if(debug_enabled) std::cout << "levels to sweep on: [";
     for(typename Policy::label_type e : nest_levels) {if(debug_enabled) std::cout << e << ", ";}
     if(debug_enabled) std::cout << "]\n";
-    auto begin = nest_levels.begin();
-    auto end = nest_levels.end();
+    auto begin = nest_levels.begin(); auto end = nest_levels.end();
+    
     generator<typename Policy::label_type> level_gen = make_generator(begin,end);
     
     std::vector<typename Policy::label_type> targets;
@@ -1196,6 +1194,7 @@ public:
     auto t_end = targets.end();
     generator<typename Policy::label_type> targets_gen = make_generator(t_begin,t_end);
 
+    //setup policy
     nested_sweeping_replace<Policy> test_inner_impl(m, level_gen, targets_gen);
 
     //run nested sweep
