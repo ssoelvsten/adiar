@@ -1259,7 +1259,14 @@ go_bandit([]() {
         });
 
         it("correctly handles terminal requests in nested sweeping [bdd_8]", [&](){
-            /*
+            /*            
+            //          1         ---- x0  //         1
+            //         / \                 //        / \
+            //        /   2       ---- x1  //       2   \
+            //       /    |\               //      /|    \
+            //      3     | \     ---- x2  //     / |     3
+            //     / \    |  \             //    /  |    / \
+            //    F   T   F   T            //   F   T   F   T
             */
             const mapping_type m = [](const int x) {if (x == 1) return 2;
                                                           if (x == 2) return 1; 
