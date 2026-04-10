@@ -751,12 +751,13 @@ namespace adiar
   }
 
   void
-  __printstat_replace(std::ostream& o)
+  __printstat_replace(std::ostream& o, statistics::replace_t& stats_struct = internal::stats_replace)
   {
     const uintwide total_runs = internal::stats_replace.terminal_returns
       + internal::stats_replace.identity_returns + internal::stats_replace.identity_reduces
       + internal::stats_replace.monotonic_scans + internal::stats_replace.monotonic_reduces
-      + internal::stats_replace.nested_sweeps;
+      + internal::stats_replace.nested_sweeps + internal::stats_replace.adj_swap_scans
+      + internal::stats_replace.jump_down_scans;
 
     o << indent << bold_on << label << "Replace" << bold_off << total_runs << endl;
 
@@ -809,8 +810,24 @@ namespace adiar
     o << indent << label << "monotonic" << internal::stats_replace.monotonic_reduces << " = "
       << internal::percent_frac(internal::stats_replace.monotonic_reduces, total_runs) << percent
       << endl;
+
+    //TODO: double check that this should be here..
+    o << indent << label << "adjacent swap" << internal::stats_replace.adj_swap_scans << " = "
+      << internal::percent_frac(internal::stats_replace.adj_swap_scans, total_runs) << percent
+      << endl;
     indent_level--;
 
+    o << indent << endl;
+
+    //TODO: double check that this should be here..
+    o << indent << bold_on << label << "case O(sort(N+T))" << bold_off << reduce_runs << " = "
+      << internal::percent_frac(reduce_runs, total_runs) << percent << endl;
+    indent_level++;
+     o << indent << label << "jump down" << internal::stats_replace.jump_down_scans << " = "
+      << internal::percent_frac(internal::stats_replace.jump_down_scans, total_runs) << percent
+      << endl;
+
+    indent_level--;
     o << indent << endl;
 
     o << indent << bold_on << label << "case O(N sort(T))" << bold_off << endl;
@@ -822,6 +839,8 @@ namespace adiar
     indent_level--;
 
     indent_level--;
+
+    __printstat_alg_base(o, stats_struct);
   }
 
   void
