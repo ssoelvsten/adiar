@@ -206,7 +206,7 @@ namespace adiar::internal
   __replace__shift_return(const typename Policy::dd_type& dd, const replace_func<Policy>& m)
   {
     adiar_assert(!dd->is_terminal());
-
+    
     const typename Policy::signed_label_type topvar         = dd_topvar(dd);
     const typename Policy::signed_label_type shifted_topvar = m(topvar);
 
@@ -468,7 +468,6 @@ namespace adiar::internal
     return 0;
   }
   
-  
   template <typename Policy, typename In, typename Out, typename PQ1, typename PQ2>
   void
   correctify_single_level(In& in, Out& aw, PQ1& pq1, PQ2& pq2, typename Policy::node_type& v, const label_indicator li){
@@ -660,6 +659,21 @@ namespace adiar::internal
   }
 
 // ------------------------------------- Adj Swap special case -------------------------------------
+
+//new version - using an extra PQ
+// instead of duplicating layers have another pq that holds stuff for the extra layer 
+// i think - really we only need one "bucket" as it will be entirely emptied at the end of each adj swap??"
+// dont know if there is data structure stuff to specify that tho?
+// mempry stuff will be a bit annoying got this as well i guess? - cus only this special case needs an extra PQ?
+//TBA
+
+//pseudo
+// find adj swaps like before
+// init pq1 and 2 like before
+// init pq 3 - levelized with levels = xjs
+// whenever a request is made where passed level is the minimum it should be pushed to PQ3 instead of Pq1
+// the outermost loop either initialized next level for pq1 or for pq3
+
 
 //NOTE TO SELF
 //all levels are multiplied by 2 to ensure that the extra level we work with for each swap is free
