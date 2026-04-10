@@ -472,8 +472,7 @@ namespace adiar::internal
   template <typename Policy, typename In, typename Out, typename PQ1, typename PQ2>
   void
   correctify_single_level(In& in, Out& aw, PQ1& pq1, PQ2& pq2, typename Policy::node_type& v, const label_indicator li){
-    //does all the correctify stuff for single level - for use both in general non-monotone replace and jump-down special case
-    //TODO: flag is kinda dummy currently - added such that adj_swap can do shift-back on the fly
+    //does all the correctify stuff for single level - for use both in general non-monotone replace and special cases
 
     //vars
     typename Policy::label_type label = pq1.current_level();
@@ -483,7 +482,7 @@ namespace adiar::internal
         cor_req_t<1> r = getNext(pq1, pq2);
 
         //updating tseek, v
-        const ptr_uint64 t_uid(r.data.level, 0); //id here is questionable..
+        const ptr_uint64 t_uid(r.data.level, 0); 
         ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
         while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
         
@@ -507,10 +506,8 @@ namespace adiar::internal
             if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
 
             //push copy reqs
-            //typename Policy::uid_type test = (label/2, id);
             typename Policy::label_type out_label = create_label<Policy>(li, label);
             typename Policy::uid_type out_uid(out_label, id);
-            //node::uid_type out_uid = (shift_back) ?  node::uid_type(label/2, id) : node::uid_type(label,id);
             typename Policy::label_type nil_lbl = node::pointer_type::nil().level();
             tuple<typename Policy::pointer_type> tl = {r.target[0],node::pointer_type::nil()};
             tuple<typename Policy::pointer_type> th = {r.target[1],node::pointer_type::nil()};
@@ -554,7 +551,6 @@ namespace adiar::internal
           //forward outgoing
           typename Policy::label_type out_label = create_label<Policy>(li, label);
           typename Policy::uid_type out_uid(out_label, id);
-          //typename Policy::node_type::uid_type out_uid = (shift_back) ?  Policy::node_type::uid_type(label/2, id) : Policy::node_type::uid_type(label,id);
           pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
           pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
 
@@ -564,7 +560,6 @@ namespace adiar::internal
         }
         if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
         typename Policy::label_type out_label = create_label<Policy>(li, label);
-        //const typename Policy::label_type level_to_push = (shift_back) ? label/2 : label;
         if (id >= 0) { aw.push(level_info(out_label, id+1)); }
   }
 
@@ -613,8 +608,7 @@ namespace adiar::internal
     optional<typename Policy::label_type> next_jump_down = level_gen();
 
     //setup PQs
-    statistics::levelized_priority_queue_t test;
-    PQ1 pq1({dd,target_gen}, pq1_mem , max_pq1_size, test);
+    PQ1 pq1({dd,target_gen}, pq1_mem , max_pq1_size, stats_replace.lpq);
     PQ2 pq2(pq2_mem, max_pq2_size);
 
     //init req
@@ -722,8 +716,7 @@ namespace adiar::internal
     optional<typename Policy::label_type> next_target = end_gen();
 
     //setup PQs
-    statistics::levelized_priority_queue_t test;
-    PQ1 pq1({dd_shifted, extra_gen}, pq1_mem , max_pq1_size, test);
+    PQ1 pq1({dd_shifted, extra_gen}, pq1_mem , max_pq1_size, stats_replace.lpq);
     PQ2 pq2(pq2_mem, max_pq2_size);
 
     //init request
@@ -925,7 +918,9 @@ replace(typename Policy::dd_type dd,
   if(!external_only && max_pq_1_size <= no_lookahead_bound(2)){ //internal mem no lookahead case
     using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,2u>;
     using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-
+#ifdef ADIAR_STATS
+      stats_replace.lpq.unbucketed += 1u;
+#endif
     switch (t) {
       case replace_type::Jump_Down: 
         return replace_jump_down_sweep<Policy,PQ1,PQ2>(dd,  m,  ep, 
@@ -938,6 +933,10 @@ replace(typename Policy::dd_type dd,
     }
 
   } else if (!external_only && max_pq_1_size <= pq_1_memory_fits && max_pq_2_size <= pq_2_memory_fits) { //internal mem with lookahead case
+#ifdef ADIAR_STATS
+      stats_replace.lpq.internal += 1u;
+#endif  
+    if(debug_enabled) std::cout << "picks internal PQ case..?\n";
     using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,2u>;
     using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
 
@@ -954,6 +953,9 @@ replace(typename Policy::dd_type dd,
     }
 
   } else { // PQs dont fit in internal so external
+#ifdef ADIAR_STATS
+      stats_replace.lpq.external += 1u;
+#endif   
     using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,2u>;
     using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
 
@@ -1048,8 +1050,6 @@ public:
         * data_structures_in_pq_1;
     }
 
-    static size_t pq_pull() {return 2u;}
-
     //DUMMY - RA not supported so just give max
     static size_t
     ra_memory(const shared_levelized_file<node>& /*outer_file*/) {return std::numeric_limits<size_t>::max();}
@@ -1067,7 +1067,7 @@ public:
     //heavily based on sweep_pq from the prod2u sweeping policy
     //main differences:
     // - pq2_bound based on 2-level-cut instead of one 
-    // - __cor_ilevel_upper_bound is different -> takes all arcs int oaccount for cut??
+    // - __cor_ilevel_upper_bound is different -> takes all arcs into account for cut??
     template <typename inner_pq_t>
     __bdd sweep_pq([[maybe_unused]]const exec_policy& ep,
                    [[maybe_unused]]const shared_levelized_file<node>& outer_file,
@@ -1138,9 +1138,8 @@ public:
           const size_t inner_memory)
     {
         std::cout << "runs sweep \n";
-        adiar::statistics::__alg_base::__lpq_t test;
         return nested_sweeping::inner::down__sweep_switch(
-            ep, *this, outer_file, outer_roots, inner_memory, test);
+            ep, *this, outer_file, outer_roots, inner_memory, stats_replace.lpq);
     }
 
     inline request_t
@@ -1163,7 +1162,7 @@ public:
     }
     
   static constexpr bool final_canonical = true;
-  static constexpr bool fast_reduce     = true; //should not reduce
+  static constexpr bool fast_reduce     = true; //should not reduce until final
   static constexpr bool skip_term_reqs = false; //terminal-only requests should still be passed to inner sweep!
 
 };
@@ -1195,10 +1194,10 @@ public:
     generator<typename Policy::label_type> targets_gen = make_generator(t_begin,t_end);
 
     //setup policy
-    nested_sweeping_replace<Policy> test_inner_impl(m, level_gen, targets_gen);
+    nested_sweeping_replace<Policy> inner_impl(m, level_gen, targets_gen);
 
     //run nested sweep
-    bdd res = nested_sweep<>(ep, dd, test_inner_impl);
+    bdd res = nested_sweep<>(ep, dd, inner_impl);
     std::cout << "Replace nested-sweeping complete! \n";
 
     return res;
@@ -1208,7 +1207,7 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables based on the given (total) map.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////Process//////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   typename Policy::__dd_type
   replace(const exec_policy& ep,
@@ -1240,7 +1239,14 @@ public:
 #endif
       return replace_nested_sweep<Policy>(dd,m,ep);
     case replace_type::Jump_Down:
+#ifdef ADIAR_STATS
+      stats_replace.jump_down_scans += 1u;
+#endif
+    return replace<Policy>(dd,m,inferred_type, ep);
     case replace_type::Swap_Adjacent:
+#ifdef ADIAR_STATS
+      stats_replace.adj_swap_scans += 1u;
+#endif
       return replace<Policy>(dd,m,inferred_type, ep);
 
     case replace_type::Monotone:
