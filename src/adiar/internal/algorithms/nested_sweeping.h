@@ -235,16 +235,11 @@ namespace adiar::internal
 
           _max_source = _max_source.is_nil() ? v.data.source : std::max(_max_source, v.data.source);
 
-          // TODO: support requests with more than just the source
-          // update v such that source is flagged
-          // should work for any request with a source
-          //value_type v1 = {v.target , {} , {flag(v.data.source)}};
           value_type v2 = v;
           v2.data.source = flag(v.data.source);
           const value_type v3 = v2;
           _sorter_ptr->push(v3);
 
-          
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +256,6 @@ namespace adiar::internal
           // TODO: Is there a better way to explicitly set the remainders of
           //       target to nil?
 
-          std::cout << "is this run?\n";
           if constexpr (value_type::cardinality == 1u) {
             push(value_type({ a.target() }, {}, { a.source() }));
           } else if constexpr (value_type::cardinality == 2u) {
@@ -543,8 +537,9 @@ namespace adiar::internal
         ///
         /// \see request request_with_data
         ////////////////////////////////////////////////////////////////////////////////////////////
+        template<bool skip_terms>
         void
-        push(const typename OuterRoots::value_type& e, bool skip_terms = true)
+        push(const typename OuterRoots::value_type& e)
         {
           adiar_assert(e.data.source.is_nil() || e.data.source.label() < _next_inner);
 
@@ -1891,7 +1886,7 @@ namespace adiar::internal
               non_gc_request |= r.targets() > 1;
 
               if (r.target.first().is_terminal()) { return reduced_t(r.target.first().value()); }
-              outer_pq_decorator.push(r,policy_impl.skip_term_reqs);
+              outer_pq_decorator.template push<policy_impl.skip_term_reqs>(r);
             } else {
               do {
                 const request_t r =
@@ -1899,7 +1894,7 @@ namespace adiar::internal
 
                 adiar_assert(r.targets() > 0, "Requests are always to something");
                 non_gc_request |= r.targets() > 1;
-                outer_pq_decorator.push(r, policy_impl.skip_term_reqs);
+                outer_pq_decorator.template push<policy_impl.skip_term_reqs>(r);
               } while (outer_arcs.can_pull_internal()
                        && outer_arcs.peek_internal().target() == n.uid());
             }
