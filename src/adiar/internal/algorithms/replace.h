@@ -450,6 +450,8 @@ namespace adiar::internal
 
   //------------------------------------- correctify logic for single level ------------------------------------------
   
+  
+
   //helper type for diff cases
   enum class label_indicator : signed char
   {
@@ -562,6 +564,7 @@ namespace adiar::internal
         if (id >= 0) { aw.push(level_info(out_label, id+1)); }
   }
 
+
   //--------------------------------------- JUMP_DOWN special case ---------------------------------------
 
   template <typename Policy, typename PQ1, typename PQ2>
@@ -673,11 +676,321 @@ namespace adiar::internal
 // init pq 3 - levelized with levels = xjs
 // whenever a request is made where passed level is the minimum it should be pushed to PQ3 instead of Pq1
 // the outermost loop either initialized next level for pq1 or for pq3
+template <typename Policy, typename PQ1, typename PQ2>
+inline typename Policy::__dd_type
+replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd, 
+                          replace_func<Policy> m,
+                          exec_policy ep,
+                          size_t pq1_mem,
+                          size_t max_pq1_size,
+                          size_t pq2_mem,
+                          size_t max_pq2_size) {
+//for now dummy: external 3rd PQ
+//setup input
+    node_ifstream<> in(dd);
+    node v = in.pull();
+    
+    //setup output
+    shared_levelized_file<arc> out_arcs;
+    arc_ofstream aw(out_arcs);   
 
+    //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
+    level_info_ifstream<> info_in(dd);
+    std::vector<typename Policy::label_type> swap_starts; //top of adj swap
+    std::vector<typename Policy::label_type> swap_end; // bot of adj swap
+    std::vector<typename Policy::label_type> swap_extra; // fresh layer below bottom (need to load PQ with these)
+    while (info_in.can_pull()){
+      level_info l = info_in.pull();
+      if (debug_enabled) std::cout << "found level " << l << "\n";
+      if (m(l.label()) > l.label()) {
+        swap_starts.push_back(l.label());
+        swap_end.push_back(m(l.label()));
+        swap_extra.push_back(m(l.label()) + 1);
+      }
+    }
+    if (debug_enabled) std::cout << "extra levels [ ";
+    for(typename Policy::label_type e : swap_extra) {if (debug_enabled) std::cout << e << ",";}
+    if (debug_enabled) std::cout << "]";
+
+    typename std::vector<typename Policy::label_type>::iterator s_begin = swap_starts.begin(), s_end = swap_starts.end();
+    typename std::vector<typename Policy::label_type>::iterator t_begin = swap_end.begin(), t_end = swap_end.end();
+    typename std::vector<typename Policy::label_type>::iterator e_begin = swap_extra.begin(), e_end = swap_extra.end();
+    generator<typename Policy::label_type> level_gen = make_generator(s_begin, s_end);
+    generator<typename Policy::label_type> end_gen = make_generator(t_begin, t_end);
+    generator<typename Policy::label_type> extra_gen = make_generator(e_begin, e_end);
+    optional<typename Policy::label_type> next_swap = level_gen();
+    optional<typename Policy::label_type> next_target = end_gen();
+
+    //setup PQs
+    PQ1 pq1({dd}, (pq1_mem/4)*3 , (max_pq1_size/4)*3, stats_replace.lpq); //give pq1 3/4 of memory available for it..
+    PQ1 pq3({extra_gen}, (pq1_mem/4) , (max_pq1_size/4), stats_replace.lpq); //give pq3 1/4 of memory available for pq1
+    PQ2 pq2(pq2_mem, max_pq2_size);
+
+    //so idea -> anytime level is min push to pq3 instead of pq1
+    //init request
+    cor_req_t<0> init_req;
+    if(v.uid().label() == next_swap){
+      //push 2-ary to children
+      if(debug_enabled) std::cout << "root is part of a swap\n";
+      init_req = {{v.low(), v.high()},{},{ptr_uint64::nil(),next_target.value() +1}};
+      
+    } else {
+      //just push 1-ary
+      if(debug_enabled) std::cout << "root is NOT part of a swap\n";
+      init_req = {{v.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
+    }
+    if (init_req.data.level <= init_req.target.first().level() || init_req.target.first().is_terminal()){
+        pq3.push(init_req);
+    } else {
+        pq1.push(init_req);
+    }
+
+    while(!pq1.empty()){
+      if (debug_enabled) std::cout << "about to setup level from pq1 \n";
+      pq1.setup_next_level();
+      typename Policy::label_type label = pq1.current_level();
+      typename Policy::label_type id = -1;
+      if(debug_enabled) std::cout << "starting work for level" << label <<"\n";
+
+      if(label == next_swap){ 
+        if (debug_enabled) std::cout << "found top of next adjacent swap: " << label << "\n";
+        //we just pushing 2 ary reqs
+         while(!pq1.empty_level()){
+          cor_req_t<0> req = pq1.pull();
+          if (debug_enabled) std::cout << "found req " << req << "\n";
+          const ptr_uint64 t_uid(req.data.level, 0);
+          ptr_uint64 tseek = std::min(req.target.first(), t_uid);
+          while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+          cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, next_target.value() +1 }};
+          //shouldn't leaves be strictly larger than levels or is that only true if the level already exists in BDD??
+          if (next_target.value() +1 <= std::min(v.low().level(), v.high().level()) || n_req.target.first().is_terminal()){
+            if (debug_enabled) std::cout << "pushing req to PQ3 " << n_req << "\n";
+            pq3.push(n_req);
+          } else {
+            if (debug_enabled) std::cout << "pushing req to PQ1 " << n_req << "\n";
+            pq1.push(n_req);
+          }
+        }
+
+      } else if (label == next_target) {
+        if (debug_enabled) std::cout << "found netx target level: " << label << "\n";
+        //do
+        //(1) what this case did before
+        //(2) the work of the extra level -> initialize level of pq3 pull until empty
+        while((!pq1.empty_level()) || pq2.has_top()){
+          //do what we did before -> correctify but ignore correct layer case? 
+          // but now: if extra layer is min in request push to pq3
+          // (ideally cus we're pushing to pq3 we actually dont even need to ignore it cus it never occurs?)
+          cor_req_t<1> r = getNext(pq1, pq2);
+          const ptr_uint64 t_uid(r.data.level, 0);
+          ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
+          while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+
+          
+          //CASE should push to PQ2
+          //big copy-paste from prod + small changes 
+          if (r.empty_carry() && r.target[0].is_node() && r.target[1].is_node()
+                && r.target[0].label() == r.target[1].label()
+                && r.target[0].id() != r.target[1].id()) {
+              if(debug_enabled) std::cout << "enters pq2 push if-statement! r is" << r << "\n";
+              const typename Policy::children_type children = v.children();
+              while (pq1.has_top() && pq1.top().target == r.target) {
+                cor_req_t<1> nr = {r.target, { children }, pq1.top().data};
+                pq2.push(nr);
+                pq1.pop();
+              }
+              continue;
+          }
+
+          //CASE wrong layer
+          if (debug_enabled) std::cout << "wrong layer case \n";
+          id = (label == tseek.label()) ? id+1 : 0; 
+          label = tseek.label() ;
+          if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+
+          tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
+          tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+          tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
+          
+          //forward outgoing (if extra level min poush to q3)
+          const node::uid_type out_uid(next_swap.value(), id); //
+          if (r.data.level <= rlow.first().level()){
+            if (debug_enabled) std::cout << "actually pushing to q3 \n";
+            pusher<Policy, PQ1>(pq3, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          } else {
+            
+            pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          }
+
+          if (r.data.level <= rhigh.first().level()){
+            if (debug_enabled) std::cout << "actually pushing to q3 \n";
+            pusher<Policy, PQ1>(pq3, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+          } else {
+            pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+          }
+          
+          // forward incoming
+          internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+          internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
+        }
+        if (id >= 0) {aw.push(level_info(next_swap.value(), id+1));}
+        //now: we must have reached q3 
+        //do we know for sure that there are requests for the extra level tho?
+        if (!pq3.empty()){
+          std::cout << "entered extra level case";
+          if (debug_enabled) std::cout << "about to setup level from pq3 \n";
+          pq3.setup_next_level();
+          while(!pq3.empty_level()){
+            //always in correct layer case
+            cor_req_t<0> r = pq3.top();
+            if(debug_enabled) std::cout << "found req " << r << "\n";
+            const ptr_uint64 t_uid(r.data.level, 0);
+            ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
+            while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+            
+            //SUBCASE suppresible node case - push one req
+            if (r.target[0] == r.target[1]) {
+              if (debug_enabled)std::cout << "skip surpressible node! \n";
+              pq1.pop(); //remove req without pushing internal
+              //(source -> (target[0], nil))
+              cor_req_t<0> r1 = {{r.target[0],node::pointer_type::nil()}, {}, {r.data.source}};
+              if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+              pq1.push(r1);
+              
+            } else {
+              //SUBCASE not surpressible
+              id = (label == tseek.label()) ? id+1 : 0; 
+              label = tseek.label() ;
+              if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+
+              //push copy reqs
+              const node::uid_type out_uid(next_target.value(), id); //x_label,id
+              typename Policy::label_type nil_lbl = node::pointer_type::nil().level();
+              tuple<typename Policy::pointer_type> tl = {r.target[0],node::pointer_type::nil()};
+              tuple<typename Policy::pointer_type> th = {r.target[1],node::pointer_type::nil()};
+              pusher<Policy>(pq1,aw,out_uid.as_ptr(false),tl,nil_lbl);
+              pusher<Policy>(pq1,aw,out_uid.as_ptr(true), th,nil_lbl);
+
+              // forward incoming
+              internal_pusher<Policy, PQ1, 0>(pq3, aw, out_uid, r.target,  r.data.level);
+            }
+          }
+          //push the level
+          if (id >= 0) {aw.push(level_info(next_target.value(), id+1));}
+          //now update all the values!
+          next_swap = level_gen();
+          next_target = end_gen();
+        }
+
+      } else {
+         if (debug_enabled) std::cout << "found regular level: " << label << "\n";
+        //on regular level, just do copying but.. extra pq3 stuff.. again copy pasted for now...
+        //is this ever on right level??
+         //vars
+    typename Policy::label_type label = pq1.current_level();
+    typename Policy::label_type id = -1; 
+
+     while(!pq1.empty_level() || pq2.has_top()) {
+        cor_req_t<1> r = getNext(pq1, pq2);
+
+        //updating tseek, v
+        const ptr_uint64 t_uid(r.data.level, 0); 
+        ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
+        while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+        
+        //CASE found correct layer!
+        if (r.target.first().level() > r.data.level) {
+          if (debug_enabled) std::cout << "enters copy case - DONT THINK THIS SHOULD HAPPEN?\n";
+          
+          //SUBCASE suppresible node case - push one req
+          if (r.target[0] == r.target[1]) {
+            if (debug_enabled)std::cout << "skip surpressible node! \n";
+            pq1.pop(); //remove req without pushing internal
+            //(source -> (target[0], nil))
+            cor_req_t<0> r1 = {{r.target[0],node::pointer_type::nil()}, {}, {r.data.source}};
+            if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+            pq1.push(r1);
+            
+          } else {
+            //SUBCASE not surpressible
+            id = (label == tseek.label()) ? id+1 : 0; 
+            label = tseek.label() ;
+            if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+
+            //push copy reqs
+            typename Policy::uid_type out_uid(label, id);
+            typename Policy::label_type nil_lbl = node::pointer_type::nil().level();
+            tuple<typename Policy::pointer_type> tl = {r.target[0],node::pointer_type::nil()};
+            tuple<typename Policy::pointer_type> th = {r.target[1],node::pointer_type::nil()};
+            pusher<Policy>(pq1,aw,out_uid.as_ptr(false),tl,nil_lbl);
+            pusher<Policy>(pq1,aw,out_uid.as_ptr(true), th,nil_lbl);
+
+            // forward incoming
+            internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+            
+          }
+          continue;
+        }
+      
+        //CASE should push to PQ2
+        //big copy-paste from prod + small changes 
+        if (r.empty_carry() && r.target[0].is_node() && r.target[1].is_node()
+              && r.target[0].label() == r.target[1].label()
+              && r.target[0].id() != r.target[1].id()) {
+            if(debug_enabled) std::cout << "enters pq2 push if-statement! r is" << r << "\n";
+            if(debug_enabled) std::cout << "top of pq1 is" << pq1.top() << "\n";
+            const typename Policy::children_type children = v.children();
+            while (pq1.has_top() && pq1.top().target == r.target) {
+              if(debug_enabled) std::cout << "enters pq2 while\n";
+              cor_req_t<1> nr = {r.target, { children }, pq1.top().data};
+              pq2.push(nr);
+              pq1.pop();
+            }
+            continue;
+        }
+
+        //CASE wrong layer
+          if (debug_enabled) std::cout << "wrong layer case \n";
+          id = (label == tseek.label()) ? id+1 : 0; 
+          label = tseek.label() ;
+          if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+
+          tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
+          tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+          tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
+          
+          //forward outgoing
+          typename Policy::uid_type out_uid(label, id);
+          if (r.data.level <= rlow.first()){
+
+            pusher<Policy, PQ1>(pq3, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          } else {
+            pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          }
+
+          if (r.data.level <= rhigh.first()){
+            pusher<Policy, PQ1>(pq3, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+          } else {
+            pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+          }
+
+          // forward incoming
+          internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+          internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
+        }
+        if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
+        if (id >= 0) { aw.push(level_info(label, id+1)); }
+        
+      }
+
+    }
+    if (debug_enabled) std::cout << "finished all levels :D \n";
+    return typename Policy::__dd_type(out_arcs,ep); 
+}
 
 //NOTE TO SELF
 //all levels are multiplied by 2 to ensure that the extra level we work with for each swap is free
-//the initial doubling means that we do an extra sweep but i dont see how this can be avoided
+//the initial doubling means that we do an extra sweep - could be done with affine shift instead to avoid (TODO?)
 //shiftign back again is doen on the fly as arcs are output
   template <typename Policy, typename PQ1, typename PQ2>
   inline typename Policy::__dd_type
@@ -940,7 +1253,9 @@ replace(typename Policy::dd_type dd,
         return replace_jump_down_sweep<Policy,PQ1,PQ2>(dd,  m,  ep, 
         pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       case replace_type::Swap_Adjacent:
-        return replace_adj_swap_sweep<Policy, PQ1, PQ2>(dd, m, ep,
+        using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
+        using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
+        return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
            pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
         adiar_unreachable();
@@ -959,7 +1274,9 @@ replace(typename Policy::dd_type dd,
         return replace_jump_down_sweep<Policy,PQ1,PQ2>(dd,  m,  ep, 
         pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       case replace_type::Swap_Adjacent:
-        return replace_adj_swap_sweep<Policy, PQ1, PQ2>(dd, m, ep,
+        using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
+        using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
+        return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
            pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
 
       default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
@@ -978,7 +1295,9 @@ replace(typename Policy::dd_type dd,
         return replace_jump_down_sweep<Policy,PQ1,PQ2>(dd,  m,  ep, 
         pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       case replace_type::Swap_Adjacent:
-        return replace_adj_swap_sweep<Policy, PQ1, PQ2>(dd, m, ep,
+        using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
+        using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
+        return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
            pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
         adiar_unreachable();
