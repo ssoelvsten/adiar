@@ -739,7 +739,7 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
       if(debug_enabled) std::cout << "root is NOT part of a swap\n";
       init_req = {{v.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
     }
-    if (init_req.data.level <= init_req.target.first().level() || init_req.target.first().is_terminal()){
+    if (init_req.data.level <= init_req.target.first().level() ){
         pq3.push(init_req);
     } else {
         pq1.push(init_req);
@@ -763,7 +763,7 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
           while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
           cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, next_target.value() +1 }};
           //shouldn't leaves be strictly larger than levels or is that only true if the level already exists in BDD??
-          if (next_target.value() +1 <= std::min(v.low().level(), v.high().level()) || n_req.target.first().is_terminal()){
+          if (next_target.value() +1 <= n_req.target.first().level() ){
             if (debug_enabled) std::cout << "pushing req to PQ3 " << n_req << "\n";
             pq3.push(n_req);
           } else {
@@ -785,7 +785,7 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
           const ptr_uint64 t_uid(r.data.level, 0);
           ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
           while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
-
+          adiar_assert(!(r.data.level < r.target.first().level()), "should never have right level requests when on next_target level");
           
           //CASE should push to PQ2
           //big copy-paste from prod + small changes 
@@ -812,7 +812,7 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
           tuple<typename Policy::pointer_type> rlow = reqs[0]; 
           tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
           
-          //forward outgoing (if extra level min poush to q3)
+          //forward outgoing (if extra level min push to q3)
           const node::uid_type out_uid(next_swap.value(), id); //
           if (r.data.level <= rlow.first().level()){
             if (debug_enabled) std::cout << "actually pushing to q3 \n";
@@ -835,10 +835,8 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
         }
         if (id >= 0) {aw.push(level_info(next_swap.value(), id+1));}
         //now: we must have reached q3 
-        //do we know for sure that there are requests for the extra level tho?
         if (!pq3.empty()){
-          std::cout << "entered extra level case";
-          if (debug_enabled) std::cout << "about to setup level from pq3 \n";
+          std::cout << "entered extra level case\n";
           pq3.setup_next_level();
           while(!pq3.empty_level()){
             //always in correct layer case
@@ -961,14 +959,15 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
           
           //forward outgoing
           typename Policy::uid_type out_uid(label, id);
-          if (r.data.level <= rlow.first()){
-
+          if (r.data.level <= rlow.first().level()){
+            if (debug_enabled) std::cout << "actually pushes to pq3 (regular level case) \n";
             pusher<Policy, PQ1>(pq3, aw, out_uid.as_ptr(false), rlow, r.data.level);
           } else {
             pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
           }
 
-          if (r.data.level <= rhigh.first()){
+          if (r.data.level <= rhigh.first().level()){
+            if (debug_enabled) std::cout << "actually pushes to pq3 (regular level case) \n";
             pusher<Policy, PQ1>(pq3, aw, out_uid.as_ptr(true), rhigh, r.data.level);
           } else {
             pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
@@ -1253,6 +1252,7 @@ replace(typename Policy::dd_type dd,
         return replace_jump_down_sweep<Policy,PQ1,PQ2>(dd,  m,  ep, 
         pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       case replace_type::Swap_Adjacent:
+      //uses extra pq for acting like it has more levels.. (so only needs one initializer)
         using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
         return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
