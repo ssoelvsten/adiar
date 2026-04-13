@@ -33,7 +33,7 @@ jobs:
         arch: x64
 
     - name: Install Boost
-      uses: MarkusJx/install-boost@v2.5.1
+      uses: MarkusJx/install-boost@v2.6.0
       id: install-boost
       with:
         # List of all versions here:
