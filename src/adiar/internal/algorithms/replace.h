@@ -17,9 +17,6 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
-#include <initializer_list>
-#include <optional>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -288,7 +285,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = true;
+  constexpr bool debug_enabled = false;
 
   //types
   template <uint8_t nodes_carried>
@@ -316,50 +313,54 @@ namespace adiar::internal
          ptr_uint64 source, 
          tuple<typename Policy::pointer_type>& target, 
          typename Policy::label_type& level) {
+
     if (target[0].is_nil() && target[1].is_terminal()){
         arc a =  {source, target[1]};
         if (debug_enabled) std::cout << "pushing term arc: " << a << "\n";
         out_stream.push_terminal(a);
         return;
     }
-
     if (target[1].is_nil() && target[0].is_terminal()){
         arc a =  {source, target[0]};
         if (debug_enabled) std::cout << "pushing term arc: " << a << "\n";
         out_stream.push_terminal(a);
         return;
     }
-
     if (target[0].is_terminal() && target[1].is_terminal() && target[0] == target[1]) {
         //push leaf arc from current
         arc alow =  {source, target[0]};
         if (debug_enabled) std::cout << "pushing term arc: " << alow << "\n";
         out_stream.push_terminal(alow);
-      } else {
-        //push request from current
-        cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
-        if (debug_enabled) std::cout<< "pushing req to pq1: " << lreq << "\n";
-        pq.push(lreq);
-      }
+        return;
+    } else {
+      //Non-terminal: push request from current
+      cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
+      if (debug_enabled) std::cout<< "pushing req to pq1: " << lreq << "\n";
+      pq.push(lreq);
+    }
   }
 
   template<typename Policy, typename pq_t, uint8_t nc>
   inline void 
   internal_pusher(pq_t& pq, 
-                  arc_ofstream& aw , 
+                  arc_ofstream& aw, 
                   typename Policy::uid_type out_uid, 
                   tuple<typename Policy::pointer_type> target,
-                  typename Policy::label_type level){
-     while(pq.has_top() && pq.top().target == target && pq.top().data.level == level) {
-          const cor_req_t<nc> r1 = pq.top(); pq.pop(); //non-levelized has no pull
-          if (debug_enabled) std::cout << "has popped: " << r1 << "\n";
-          if (r1.data.source.level() != ptr_uint64::nil().level()) {
-            //push to out!
-            arc in = {r1.data.source , out_uid};
-            if (debug_enabled) std::cout << "has pushed internal: " << in << "\n";
-            aw.push_internal(in);
-          } 
-        }
+                  typename Policy::label_type level)
+  {
+    while(pq.has_top() ) {
+      const cor_req_t<nc>& r1 = pq.top(); 
+      if (r1.target != target || r1.data.level != level) break;
+
+      pq.pop(); //non-levelized has no pull so simulate with pop..
+      if (debug_enabled) std::cout << "has popped: " << r1 << "\n";
+
+      if (r1.data.source.level() != ptr_uint64::nil().level()) {//push to out!
+        arc in{r1.data.source , out_uid};
+        if (debug_enabled) std::cout << "has pushed internal: " << in << "\n";
+        aw.push_internal(in);
+      } 
+    }
   }
 
   template<typename Policy>
@@ -367,90 +368,84 @@ namespace adiar::internal
   reqFor(tuple<typename Policy::pointer_type> t, node v , 
          typename Policy::pointer_type low,
          typename Policy::pointer_type high) {
-      if (debug_enabled) std::cout << "running reqFor with " << t << "\n";
-      bdd::pointer_type tl = t[0];
-      bdd::pointer_type th = t[1];
+    if (debug_enabled) std::cout << "running reqFor with " << t << "\n";
+    const bdd::pointer_type tl = t[0];
+    const bdd::pointer_type th = t[1];
 
-      if (tl.is_terminal() && th.is_terminal()) {
-        if(debug_enabled) std::cout << " \t both terminal case\n";
-        return { {tl,tl}, {th,th} };
-      }
+    if (tl.is_terminal() && th.is_terminal()) {
+      if(debug_enabled) std::cout << " \t both terminal case\n";
+      return { {tl,tl}, {th,th} };
+    }
 
-      if (th.is_terminal() || tl.level() < th.level()) {
-        if(debug_enabled) std::cout << " \t th terminal  or tl less case\n";
-        return { {v.low(), th}, {v.high(), th}};
-      }
+    if (th.is_terminal() || tl.level() < th.level()) {
+      if(debug_enabled) std::cout << " \t th terminal or tl less case\n";
+      return { {v.low(), th}, {v.high(), th}};
+    }
 
-      if (tl.is_terminal() || tl.level() > th.level()) {
-        if(debug_enabled) std::cout << " \t tl terminal or th less case\n";
-        return { {tl, v.low()}, {tl, v.high()}};
-      }
+    if (tl.is_terminal() || tl.level() > th.level()) {
+      if(debug_enabled) std::cout << " \t tl terminal or th less case\n";
+      return { {tl, v.low()}, {tl, v.high()}};
+    }
 
-      if (v.uid() == tl && v.uid() == th ) {
-        if(debug_enabled) std::cout << " \t both are v case \n";
-        return { {v.low(), v.low()}, {v.high(), v.high()}};
-      }
-      //low high must exist!
-      if(v.uid() == tl) {
-        if(debug_enabled) std::cout << " \t lt is v case \n";
-        return { {v.low(), low}, {v.high(), high}};
-      }
+    if (v.uid() == tl && v.uid() == th ) {
+      if(debug_enabled) std::cout << " \t both are v case \n";
+      return { {v.low(), v.low()}, {v.high(), v.high()}};
+    }
+    //low high must exist!
+    if(v.uid() == tl) {
+      if(debug_enabled) std::cout << " \t lt is v case \n";
+      return { {v.low(), low}, {v.high(), high}};
+    }
 
-      if(v.uid() == th) {
-        if(debug_enabled) std::cout << " \t lh is v case \n";
-        return { {low, v.low()}, {high, v.high()}};
-      }
-
-      else {
-          throw invalid_argument("Unexpected case missing!");
-      }
-
+    if(v.uid() == th) {
+      if(debug_enabled) std::cout << " \t lh is v case \n";
+      return { {low, v.low()}, {high, v.high()}};
+    }
+    throw invalid_argument("reqFor: Unexpected case missing!");
   }
-  
+
   //calculate from BDD levels and m what levels should be sweeped - maybe shouldn't be in this file??
   template<typename Policy>
   std::vector<typename Policy::label_type>
-  levels_from_map(const replace_func<Policy>& m, const typename Policy::dd_type& dd){
+  levels_from_map(const replace_func<Policy>& m, const typename Policy::dd_type& dd)
+  {
     level_info_ifstream<true> level_info_file(dd);
-    std::vector<typename Policy::label_type> vec_to_fill;
-    level_info init = level_info_file.pull();
-    bdd::label_type min_seen = m(init.level());
-    while(level_info_file.can_pull()){
-      level_info l = level_info_file.pull();
+    std::vector<typename Policy::label_type> sweep_levels;
+
+    level_info lvl_info = level_info_file.pull();
+    bdd::label_type min_seen = m(lvl_info.level());
+
+    while(level_info_file.can_pull()) {
+      lvl_info = level_info_file.pull();
+      bdd::label_type mapped = m(lvl_info.level());
       //std::cout << "levels from map order" << l << "\n";
-      if (m(l.level()) > min_seen) {vec_to_fill.push_back(l.level()); continue;}
-      min_seen = m(l.level());
+      if (mapped > min_seen) sweep_levels.push_back(lvl_info.level());
+      else min_seen = mapped;
     }
-    return vec_to_fill;
+    return sweep_levels;
   }
 
   //find top req from given PQs
   template<typename PQ1, typename PQ2>
-  cor_req_t<1>
-  getNext(PQ1& pq1 , PQ2& pq2){
-    cor_req_t<1> r;
+  cor_req_t<1> getNext(PQ1& pq1 , PQ2& pq2)
+  {
     if (pq1.can_pull()) {
-          ptr_uint64 l_uid(pq1.top().data.level, 0);  //for treating level like uid for comp
-          ptr_uint64 min_pq1 = std::min(pq1.top().target.first() , l_uid);
-          if(pq2.empty() || min_pq1 < pq2.top().target.second()) {
-            r = {pq1.top().target, 
-                  { { { node::pointer_type::nil(), node::pointer_type::nil() } } }, 
-                  pq1.top().data};
-            if(debug_enabled) std::cout << "takes req " << r << " from pq1\n";
-          } else {
-            r = pq2.top();
-            if(debug_enabled) std::cout << "takes req " << r << " from pq2\n";
-          }
-    } else {
-          r = pq2.top();
-          if(debug_enabled) std::cout << "takes req " << r << " from pq2\n";
-    }
-    return r;
+      ptr_uint64 l_uid(pq1.top().data.level, 0);  //for treating level like uid for comp
+      ptr_uint64 min_pq1 = std::min(pq1.top().target.first() , l_uid);
+
+      if(pq2.empty() || min_pq1 < pq2.top().target.second()) {
+        cor_req_t<1> r = { pq1.top().target, 
+                          { { { node::pointer_type::nil(), node::pointer_type::nil() } } }, 
+                          pq1.top().data};
+        if(debug_enabled) std::cout << "takes req " << r << " from pq1\n";
+        return r;
+      } 
+    } 
+    if(debug_enabled) std::cout << "takes req " << pq2.top() << " from pq2\n";
+    return pq2.top();
   }
 
   //------------------------------------- correctify logic for single level ------------------------------------------
-  
-  
 
   //helper type for diff cases
   enum class label_indicator : signed char
@@ -469,99 +464,130 @@ namespace adiar::internal
     adiar_unreachable();
     return 0;
   }
-  
+
   template <typename Policy, typename In, typename Out, typename PQ1, typename PQ2>
   void
-  correctify_single_level(In& in, Out& aw, PQ1& pq1, PQ2& pq2, typename Policy::node_type& v, const label_indicator li){
+  correctify_single_level(In& in, Out& aw,
+                          PQ1& pq1, PQ2& pq2,
+                          typename Policy::node_type& v,
+                          const label_indicator li)
+  {
+    using label_t   = typename Policy::label_type;
+    using uid_t     = typename Policy::uid_type;
+    using ptr_t     = typename Policy::pointer_type;
+    using children_t = typename Policy::children_type;
+
     //does all the correctify stuff for single level - for use both in general non-monotone replace and special cases
-
     //vars
-    typename Policy::label_type label = pq1.current_level();
-    typename Policy::label_type id = -1; 
+    label_t label = pq1.current_level();
+    label_t id = -1; 
 
-     while(!pq1.empty_level() || pq2.has_top()) {
-        cor_req_t<1> r = getNext(pq1, pq2);
+    // --- Helpers ------------------------------------------------------------
 
-        //updating tseek, v
-        const ptr_uint64 t_uid(r.data.level, 0); 
-        ptr_uint64 tseek = (r.empty_carry()) ? std::min(r.target.first(), t_uid) : r.target.second(); 
-        while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
-        
-        //CASE found correct layer!
-        if (r.target.first().level() > r.data.level) {
-          if (debug_enabled) std::cout << "enters copy case \n";
-          
-          //SUBCASE suppresible node case - push one req
-          if (r.target[0] == r.target[1]) {
-            if (debug_enabled)std::cout << "skip surpressible node! \n";
-            pq1.pop(); //remove req without pushing internal
-            //(source -> (target[0], nil))
-            cor_req_t<0> r1 = {{r.target[0],node::pointer_type::nil()}, {}, {r.data.source}};
-            if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
-            pq1.push(r1);
-            
-          } else {
-            //SUBCASE not surpressible
-            id = (label == tseek.label()) ? id+1 : 0; 
-            label = tseek.label() ;
-            if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+    auto update_label_and_id = [&](const ptr_uint64& tseek) {
+      id = (label == tseek.label()) ? (id + 1) : 0; 
+      label = tseek.label() ;
+      if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+    };
 
-            //push copy reqs
-            typename Policy::label_type out_label = create_label<Policy>(li, label);
-            typename Policy::uid_type out_uid(out_label, id);
-            typename Policy::label_type nil_lbl = node::pointer_type::nil().level();
-            tuple<typename Policy::pointer_type> tl = {r.target[0],node::pointer_type::nil()};
-            tuple<typename Policy::pointer_type> th = {r.target[1],node::pointer_type::nil()};
-            pusher<Policy>(pq1,aw,out_uid.as_ptr(false),tl,nil_lbl);
-            pusher<Policy>(pq1,aw,out_uid.as_ptr(true), th,nil_lbl);
+    auto compute_tseek = [&](const cor_req_t<1>& r) -> ptr_uint64 {
+      const ptr_uint64 level_uid(r.data.level, 0);
+      return (r.empty_carry())
+        ? std::min(r.target.first(), level_uid)
+        : r.target.second();
+    };
 
-            // forward incoming
-            internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
-            
-          }
+    // --- Main Loop ------------------------------------------------------------
+
+    while (!pq1.empty_level() || pq2.has_top()) {
+
+      cor_req_t<1> r = getNext(pq1, pq2);
+
+      //updating tseek, v
+      const ptr_uint64 tseek = compute_tseek(r);
+
+      while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+
+      //CASE found correct layer!
+      if (r.target.first().level() > r.data.level) {
+        if (debug_enabled) std::cout << "enters copy case\n";
+
+        //SUBCASE suppresible node case - push one req
+        if (r.target[0] == r.target[1]) {
+          if (debug_enabled)std::cout << "skip surpressible node! \n";
+
+          pq1.pop(); //remove req without pushing internal -- NOTE: how do we know it comes from pq1?
+
+          //(source -> (target[0], nil))
+          cor_req_t<0> r1 = {{r.target[0],node::pointer_type::nil()}, {}, {r.data.source}};
+          if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+          pq1.push(r1);
+
           continue;
         }
-      
-        //CASE should push to PQ2
-        //big copy-paste from prod + small changes 
-        if (r.empty_carry() && r.target[0].is_node() && r.target[1].is_node()
-              && r.target[0].label() == r.target[1].label()
-              && r.target[0].id() != r.target[1].id()) {
-            if(debug_enabled) std::cout << "enters pq2 push if-statement! r is" << r << "\n";
-            if(debug_enabled) std::cout << "top of pq1 is" << pq1.top() << "\n";
-            const typename Policy::children_type children = v.children();
-            while (pq1.has_top() && pq1.top().target == r.target) {
-              if(debug_enabled) std::cout << "enters pq2 while\n";
-              cor_req_t<1> nr = {r.target, { children }, pq1.top().data};
-              pq2.push(nr);
-              pq1.pop();
-            }
-            continue;
+        //SUBCASE not surpressible
+        update_label_and_id(tseek);
+
+        //push copy reqs
+        label_t out_label = create_label<Policy>(li, label);
+        uid_t out_uid(out_label, id);
+
+        label_t nil_lbl = node::pointer_type::nil().level();
+        tuple<ptr_t> tl = {r.target[0],node::pointer_type::nil()};
+        tuple<ptr_t> th = {r.target[1],node::pointer_type::nil()};
+        pusher<Policy>(pq1, aw, out_uid.as_ptr(false), tl, nil_lbl);
+        pusher<Policy>(pq1, aw, out_uid.as_ptr(true),  th, nil_lbl);
+
+        // forward incoming
+        internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+
+        continue;
+      }
+
+      //CASE should move request from PQ1 to PQ2
+      //big copy-paste from prod + small changes 
+      if ( r.empty_carry() 
+           && r.target[0].is_node() && r.target[1].is_node()
+           && r.target[0].label() == r.target[1].label()
+           && r.target[0].id() != r.target[1].id()) 
+      {
+        if(debug_enabled) std::cout << "enters pq2 push if-statement! r is" << r << "\n";
+        if(debug_enabled) std::cout << "top of pq1 is" << pq1.top() << "\n";
+
+        const children_t children = v.children();
+
+        while (pq1.has_top() && pq1.top().target == r.target) {
+          if(debug_enabled) std::cout << "enters pq2 while\n";
+          cor_req_t<1> nr = {r.target, { children }, pq1.top().data};
+          pq2.push(nr);
+          pq1.pop();
         }
+        continue;
+      }
 
-        //CASE wrong layer
-          if (debug_enabled) std::cout << "wrong layer case \n";
-          id = (label == tseek.label()) ? id+1 : 0; 
-          label = tseek.label() ;
-          if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+      //CASE wrong layer
+        if (debug_enabled) std::cout << "wrong layer case \n";
+        update_label_and_id(tseek);
 
-          tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
-          tuple<typename Policy::pointer_type> rlow = reqs[0]; 
-          tuple<typename Policy::pointer_type> rhigh = reqs[1]; 
-          
-          //forward outgoing
-          typename Policy::label_type out_label = create_label<Policy>(li, label);
-          typename Policy::uid_type out_uid(out_label, id);
-          pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
-          pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+        tuple<tuple<ptr_t>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
+        tuple<ptr_t> rlow = reqs[0]; 
+        tuple<ptr_t> rhigh = reqs[1]; 
 
-          // forward incoming
-          internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
-          internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
-        }
-        if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
-        typename Policy::label_type out_label = create_label<Policy>(li, label);
-        if (id >= 0) { aw.push(level_info(out_label, id+1)); }
+        label_t out_label = create_label<Policy>(li, label);
+        uid_t out_uid(out_label, id);
+
+        // Forward outgoing
+        pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
+        pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+
+        // Forward incoming
+        internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, r.target,  r.data.level);
+        internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
+      }
+      if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
+
+      label_t out_label = create_label<Policy>(li, label);
+      if (id >= 0) { aw.push(level_info(out_label, id+1)); }
   }
 
 
@@ -575,39 +601,50 @@ namespace adiar::internal
                           size_t pq1_mem,
                           size_t max_pq1_size,
                           size_t pq2_mem,
-                          size_t max_pq2_size) {
+                          size_t max_pq2_size) 
+  {
+    using label_t = typename Policy::label_type;
     if (debug_enabled) std::cout << "start jump_down special case! \n";
+
     //setup input
     node_ifstream<> in(dd);
-    node v = in.pull();
-    
+    node v = in.pull(); // NOTE: is it always non-empty?
+
     //setup output
     shared_levelized_file<arc> out_arcs;
     arc_ofstream aw(out_arcs);
-    
+
     //finding jump_down levels and targets
-    //TODO move to seperate function pls
+    //TODO move to seperate function pls.. NOTE: neccesary?
     if (debug_enabled) std::cout << "generating generators for jump down\n";
-    //open info file
-    level_info_ifstream<> info_in(dd);
+
     //vecs to fill
-    std::vector<typename Policy::label_type> jump_starts;
-    std::vector<typename Policy::label_type> jump_targets;
-    while (info_in.can_pull()){
-      level_info l = info_in.pull();
-      if (debug_enabled) std::cout << "found level " << l << "\n";
-      if (m(l.label()) > l.label()) {
-        jump_starts.push_back(l.label());
-        jump_targets.push_back(m(l.label()));
+    std::vector<label_t> jump_starts;
+    std::vector<label_t> jump_targets;
+
+    {
+      //open info file
+      level_info_ifstream<> info_in(dd);
+      while (info_in.can_pull()){
+        const level_info l = info_in.pull();
+        const label_t lbl  = l.label();
+        const label_t tgt  = m(lbl);
+        if (debug_enabled) std::cout << "found level " << l << "\n";
+        if (tgt > lbl) {
+          jump_starts.push_back(lbl);
+          jump_targets.push_back(tgt);
+        }
       }
     }
-    
+
     //build generators
-    typename std::vector<typename Policy::label_type>::iterator s_begin = jump_starts.begin(), s_end = jump_starts.end();
-    typename std::vector<typename Policy::label_type>::iterator t_begin = jump_targets.begin(), t_end = jump_targets.end() ;
-    generator<typename Policy::label_type> level_gen = make_generator(s_begin, s_end);
-    generator<typename Policy::label_type> target_gen = make_generator(t_begin, t_end);
-    optional<typename Policy::label_type> next_jump_down = level_gen();
+    typename std::vector<label_t>::iterator s_begin = jump_starts.begin(), s_end = jump_starts.end();
+    typename std::vector<label_t>::iterator t_begin = jump_targets.begin(), t_end = jump_targets.end();
+
+    generator<label_t> level_gen = make_generator(s_begin, s_end);
+    generator<label_t> target_gen = make_generator(t_begin, t_end);
+
+    optional<label_t> next_jump_down = level_gen();
 
     //setup PQs
     PQ1 pq1({dd,target_gen}, pq1_mem , max_pq1_size, stats_replace.lpq);
@@ -615,7 +652,8 @@ namespace adiar::internal
 
     //init req
     cor_req_t<0> init_r;
-    if (v.uid().level() == next_jump_down) {
+
+    if (v.uid().level() == *next_jump_down) {
       if (debug_enabled) {std::cout << "CASE first level moves down\n";}
       //push proper req
        init_r = {{v.low(), v.high()},{},{ptr_uint64::nil(), m(v.uid().level())}};
@@ -627,36 +665,37 @@ namespace adiar::internal
                  {},{ptr_uint64::nil(), node::pointer_type::nil().level()}};
     }
     if (debug_enabled) std::cout << "init jump_down req: " << init_r << "\n";
-    
     pq1.push(init_r); 
 
-    while(!pq1.empty()){
+    while(!pq1.empty()) {
       pq1.setup_next_level();
-      typename Policy::label_type lable = pq1.current_level();
-      //typename Policy::label_type id = -1;
+      const label_t cur_label = pq1.current_level();
+      //label_t id = -1;
 
-      if (lable == next_jump_down) {
-      ///////////////////////////////////////// case jump down start //////////////////////////////////////////
-        if (debug_enabled) std::cout << "found jump down level " << lable << "\n";
+      if (cur_label == next_jump_down) {
+      // CASE jump down start 
+        if (debug_enabled) std::cout << "found jump down level " << cur_label << "\n";
+
+        const label_t mapped = m(cur_label);
         //push reqs
-        while(!pq1.empty_level()){
+        while(!pq1.empty_level()) {
           cor_req_t<0> req = pq1.pull();
+
           const ptr_uint64 t_uid(req.data.level, 0);
-          ptr_uint64 tseek = std::min(req.target.first(), t_uid);
+          const ptr_uint64 tseek = std::min(req.target.first(), t_uid);
           while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
-          cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, m(lable)}};
+          cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, mapped}};
           if (debug_enabled) std::cout << "pushing req to PQ1 " << n_req << "\n";
           pq1.push(n_req);
         }
         //update next_jump_down
         next_jump_down = level_gen();
         //no level update since this level no longer exists
-
-      } else {
-        ///////////////////////////////////////// case normal layer //////////////////////////////////////////
-        //do normal cor stuff for this level
-        correctify_single_level<Policy>(in, aw, pq1, pq2,  v, label_indicator::NORMAL);
+        continue;
       }
+      // CASE normal layer 
+      // Do normal correctify for this level
+      correctify_single_level<Policy>(in, aw, pq1, pq2,  v, label_indicator::NORMAL);
     }
     return typename Policy::__dd_type(out_arcs,ep); 
   }
