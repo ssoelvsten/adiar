@@ -285,7 +285,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = true;
+  constexpr bool debug_enabled = false;
 
   //types
   template <uint8_t nodes_carried>
@@ -770,10 +770,10 @@ class adj_swap_pq_decorator{
   //pushing
   void push(const cor_req_t<0> r){
     if (r.data.level <= r.target.first().level()){
-      std::cout << "pushing to pq3: " << r << "\n";
+      if(debug_enabled) std::cout << "pushing to pq3: " << r << "\n";
       _pq3.push(r);
     } else {
-      std::cout << "pushing to pq1: " << r << "\n";
+      if(debug_enabled) std::cout << "pushing to pq1: " << r << "\n";
       _pq1.push(r);
     }
   }
@@ -895,7 +895,7 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
         //    (c) out_label should be current level -1 (handled by label_indicator)
         apq.set_active(false);  //move active to pq3
         if (!apq.empty()){
-          std::cout << "entered extra level case\n";
+          if(debug_enabled) std::cout << "entered extra level case\n";
           apq.setup_next_level();
           correctify_single_level<Policy>(in, aw, apq, pq2, v,  label_indicator::DEC);
         }
@@ -1332,7 +1332,7 @@ public:
                    [[maybe_unused]]const shared_levelized_file<node>& outer_file,
                    inner_pq_t& inner_pq,
                    const size_t inner_remaining_memory){
-      std::cout << "START sweep_pq \n";
+      if(debug_enabled) std::cout << "START sweep_pq \n";
       //should
       // (1) setup PQ2
       const size_t pq_2_memory_fits =
@@ -1341,12 +1341,12 @@ public:
       const size_t pq_2_bound =__cor_ilevel_upper_bound<Policy, get_2level_cut, 0u>(typename Policy::dd_type(outer_file))
         // Add crossing arcs
         + (inner_pq.size());
-      
+
       const size_t max_pq_2_size =
         ep.template get<exec_policy::memory>() == exec_policy::memory::Internal
         ? std::min(pq_2_memory_fits, pq_2_bound)
         : pq_2_bound;
-      
+
         if (ep.template get<exec_policy::memory>() != exec_policy::memory::External
           && max_pq_2_size <= pq_2_memory_fits) {
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
@@ -1376,7 +1376,7 @@ public:
     {   
         //this may be wrong..
         bool res = l == next_level(l);
-        std::cout << "testing if " << l << " has sweep -> " << res << "\n";
+        if(debug_enabled) std::cout << "testing if " << l << " has sweep -> " << res << "\n";
         return res;
     }
 
@@ -1396,7 +1396,7 @@ public:
           outer_roots_t& outer_roots,
           const size_t inner_memory)
     {
-        std::cout << "runs sweep \n";
+        if(debug_enabled) std::cout << "runs sweep \n";
         return nested_sweeping::inner::down__sweep_switch(
             ep, *this, outer_file, outer_roots, inner_memory, stats_replace.lpq);
     }
@@ -1405,7 +1405,7 @@ public:
     request_from_node(const node& n, const ptr_uint64& parent)
     {
         //only run for nodes where we want to update level
-        std::cout << "runs req from node with " << n << "\n";
+        if(debug_enabled) std::cout << "runs req from node with " << n << "\n";
         typename Policy::label_type new_lvl = _m(n.label());
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
     }
@@ -1419,7 +1419,7 @@ public:
       std::array<typename PQT::level_input_type , PQT::lvl_input> res = {typename Policy::dd_type(outer_file), make_generator(target)};
       return res;
     }
-    
+
   static constexpr bool final_canonical = true;
   static constexpr bool fast_reduce     = true; //should not reduce until final
   static constexpr bool skip_term_reqs = false; //terminal-only requests should still be passed to inner sweep!
@@ -1432,18 +1432,16 @@ public:
   replace_nested_sweep(const typename Policy::dd_type& dd,
                        const replace_func<Policy>& m,
                        exec_policy ep) {
-    
-    
     //calculate sweeping levels and their targets from map
     std::vector<typename Policy::label_type> nest_levels = levels_from_map<Policy>(m, dd);
-    
+
     if(debug_enabled) std::cout << "levels to sweep on: [";
     for(typename Policy::label_type e : nest_levels) {if(debug_enabled) std::cout << e << ", ";}
     if(debug_enabled) std::cout << "]\n";
     auto begin = nest_levels.begin(); auto end = nest_levels.end();
-    
+
     generator<typename Policy::label_type> level_gen = make_generator(begin,end);
-    
+
     std::vector<typename Policy::label_type> targets;
     for (typename Policy::label_type l : nest_levels) {
       targets.push_back(m(l));
@@ -1457,7 +1455,7 @@ public:
 
     //run nested sweep
     bdd res = nested_sweep<>(ep, dd, inner_impl);
-    std::cout << "Replace nested-sweeping complete! \n";
+    if (debug_enabled) std::cout << "Replace nested-sweeping complete! \n";
 
     return res;
     }
