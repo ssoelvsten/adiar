@@ -2,39 +2,39 @@
 #include <adiar/bvec.h>
 go_bandit([]() {
   describe("adiar/bvec.h", []() {
-    describe("bdd_false()", []() {
+    describe("bvec_false()", []() {
       it("has 16 bits when asked", [&]() {
         AssertThat(bvec_false(16).bitlen(), Is().EqualTo(16u));
       });
     });
-    describe("bdd_true()", []() {
+    describe("bvec_true()", []() {
       it("has 32 bits when asked", [&]() {
         AssertThat(bvec_true(32).bitlen(), Is().EqualTo(32u));
       });
     });
-    describe("bdd_const", []() {
+    describe("bvec_const", []() {
       describe("bitlength inference", []() {
-        it("has 0 bitlen when constructed with 0", [&]() {
+        it("has 32 bitlen 0 size when constructed with 0", [&]() {
           const bvec x = bvec_const(0);
           AssertThat(x.size(), Is().EqualTo(0u));
           AssertThat(x.bitlen(), Is().EqualTo(32u));
         });
-        it("has 8 bitlen when constructed with max unsigned char", [&]() {
+        it("has 8 size and bitlen when constructed with max unsigned char", [&]() {
           const bvec x = bvec_const((unsigned char)255);
           AssertThat(x.size(), Is().EqualTo(8u));
           AssertThat(x.bitlen(), Is().EqualTo(8u));
         });
-        it("has 8 bitlen when constructed with overflowing char", [&]() {
+        it("has 8 size and bitlen when constructed with overflowing char", [&]() {
           const bvec x = bvec_const((char)253);
           AssertThat(x.size(), Is().EqualTo(8u));
           AssertThat(x.bitlen(), Is().EqualTo(8u));
         });
-        it("has 8 bitlen when constructed with negative char", [&]() {
+        it("has 8 size and bitlen when constructed with negative char", [&]() {
           const bvec x = bvec_const((char)-52);
           AssertThat(x.size(), Is().EqualTo(8u));
           AssertThat(x.bitlen(), Is().EqualTo(8u));
         });
-        it("has 8 bitlen when constructed with max signed char", [&]() {
+        it("has 7 size and 8 bitlen when constructed with max signed char", [&]() {
           const bvec x = bvec_const((char)127);
           AssertThat(x.size(), Is().EqualTo(7u));
           AssertThat(x.bitlen(), Is().EqualTo(8u));
@@ -102,9 +102,7 @@ go_bandit([]() {
 
           const bvec res = bvec_and(x,y);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          AssertThat(res, Is().EqualTo(expected));
         });
       });
     });
@@ -118,9 +116,7 @@ go_bandit([]() {
 
           const bvec res = bvec_or(x,y);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          AssertThat(res, Is().EqualTo(expected));
         });
         it("computes 0 | 3 == 3 (000 | 011 == 011)", [&]() {
           const bvec x = bvec_const((char)0);
@@ -129,9 +125,7 @@ go_bandit([]() {
 
           const bvec res = bvec_or(x,y);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          AssertThat(res, Is().EqualTo(expected));
         });
       });
     });
@@ -144,8 +138,8 @@ go_bandit([]() {
           const bvec expected = bvec_const((char)6); //Is this expected, or should we check bdd structure?
 
           const bvec res = bvec_xor(x,y);
-          
-            AssertThat(res, Is().EqualTo(expected));
+        
+          AssertThat(res, Is().EqualTo(expected));
           
         });
         it("computes 0 ^ 3 == 3 (000 ^ 011 == 011)", [&]() {
@@ -155,9 +149,7 @@ go_bandit([]() {
 
           const bvec res = bvec_xor(x,y);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          AssertThat(res, Is().EqualTo(expected));
         });
         it("computes 255 ^ 3 == 252 (11111111 ^ 00000011 == 11111100)", [&]() {
           const bvec x = bvec_const((char)255);
@@ -166,9 +158,7 @@ go_bandit([]() {
 
           const bvec res = bvec_xor(x,y);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          AssertThat(res, Is().EqualTo(expected));
         });
       });
     });
@@ -189,9 +179,9 @@ go_bandit([]() {
 
           const bvec res = bvec_not(x);
           
-          for(size_t i = 0; i < x.bitlen(); i++) {
-            AssertThat(res.at(i), Is().EqualTo(expected.at(i)));
-          }
+          
+          AssertThat(res, Is().EqualTo(expected));
+          
         });
       });
     });
