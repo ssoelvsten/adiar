@@ -30,7 +30,11 @@ namespace adiar {
     /////////////////////////////////////////////////////////////////////////
     bvec::bvec(const std::vector<bdd>& bits, size_t bitlen) 
     : _bits(bits), _bitlen(bitlen)
-    {}
+    {
+        while (this->_bits.size() > 0 && !this->_bits.back()) {
+            this->_bits.pop_back();
+        }
+    }
     /////////////////////////////////////////////////////////////////////////
     /// \brief Conversion constructor from a raw bit-vector for right-hand values
     /////////////////////////////////////////////////////////////////////////
