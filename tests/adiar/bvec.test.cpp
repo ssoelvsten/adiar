@@ -171,7 +171,7 @@ go_bandit([]() {
 
           const bvec res = bvec_not(x);
           
-            AssertThat(res, Is().EqualTo(expected));
+          AssertThat(res, Is().EqualTo(expected));
         });
         it("computes ~3 == (65535 - 3) for bitlength 16 (~0000000000000011 == 1111111111111100)", [&]() {
           const bvec x = bvec_const((short)3);
@@ -183,6 +183,62 @@ go_bandit([]() {
           AssertThat(res, Is().EqualTo(expected));
           
         });
+      });
+    });
+    describe("bvec_equal", []() {
+      it("compares 101 == 101", [&]() {
+        std::vector<bdd> raw1 = {bdd_true(),bdd_false(),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_true(),bdd_false(),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().True()); 
+      });
+      it("compares 0101 == 101", [&]() {
+        std::vector<bdd> raw1 = {bdd_true(),bdd_false(),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_true(),bdd_false(),bdd_true(),bdd_false()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().True());
+      });
+      it("compares 101 == 0101", [&]() {
+        std::vector<bdd> raw1 = {bdd_true(),bdd_false(),bdd_true(),bdd_false()};
+        std::vector<bdd> raw2 = {bdd_true(),bdd_false(),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().True());
+      });
+      it("compares 101 != 1101", [&]() {
+        std::vector<bdd> raw1 = {bdd_true(),bdd_false(),bdd_true(),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_true(),bdd_false(),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().False());
+      });
+      it("compares 1101 != 101", [&]() {
+        std::vector<bdd> raw1 = {bdd_true(),bdd_false(),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_true(),bdd_false(),bdd_true(),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().False());
+      });
+      it("compares 1101 != 1110", [&]() {
+        std::vector<bdd> raw1 = {bdd_true(),bdd_false(),bdd_true(),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_false(),bdd_true(),bdd_true(),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().False());
+      });
+      it("compares 1100 != 1110", [&]() {
+        std::vector<bdd> raw1 = {bdd_false(),bdd_false(),bdd_true(),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_false(),bdd_true(),bdd_true(),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().False());
+      });
+      it("compares 1x0 == 1x0", [&]() {
+        std::vector<bdd> raw1 = {bdd_false(),bdd_ithvar(42),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_false(),bdd_ithvar(42),bdd_true()};
+
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().True());
+      });
+      it("compares 1x0 != 1y0", [&]() {
+        std::vector<bdd> raw1 = {bdd_false(),bdd_ithvar(42),bdd_true()};
+        std::vector<bdd> raw2 = {bdd_false(),bdd_ithvar(11),bdd_true()};
+        
+        AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().False());
       });
     });
   });
