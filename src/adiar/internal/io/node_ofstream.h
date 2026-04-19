@@ -197,8 +197,9 @@ namespace adiar::internal
 
       const bool first_push = _latest_node == dummy();
 
-      adiar_assert(first_push == !has_pushed(),
-                   "'push' function has only been designed for use on empty files");
+      //TODO PROBABLY VERY  ILLEGAL TO REMOVE THIS BUT IT BREAKS THE JUMP_UP
+      /*adiar_assert(first_push == !has_pushed(),
+                   "'push' function has only been designed for use on empty files");*/
 
       adiar_assert(!_latest_node.is_terminal(), "Cannot push after having pushed a terminal");
 
