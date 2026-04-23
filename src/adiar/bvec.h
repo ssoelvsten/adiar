@@ -117,6 +117,35 @@ namespace adiar {
     bvec
     bvec_add(const bvec& x, const bvec& y);
 
+    template<typename Integer> 
+    bvec 
+    bvec_add(const bvec& x, Integer i) {
+        return bvec_add(x,bvec_const(i));
+    }
+
+    template<typename Integer> 
+    bvec 
+    bvec_add(Integer i,const bvec& x) {
+        return bvec_add(x,i);
+    }
+
+    inline bvec
+    operator+(const bvec& x, const bvec& y) {
+        return bvec_add(x,y);
+    }
+    
+    template<typename Integer> 
+    bvec
+    operator+(const bvec& x, Integer i) {
+        return bvec_add(x,i);
+    }
+    template<typename Integer> 
+    bvec
+    operator+(Integer i,const bvec& x) {
+        return bvec_add(i,x);
+    }
+
+
     //Utility
     bvec
     bvec_truncate(const bvec& x, const size_t bitlen);

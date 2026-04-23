@@ -242,7 +242,7 @@ go_bandit([]() {
       });
     });
     describe("bvec_add", []() {
-      it("computes (char) 5 + (char) 3 = (char) 8", [&]() {
+      it("computes bvec[8](5) + bvec[8](3)", [&]() {
         bvec a = bvec_const((char)5);
         bvec b = bvec_const((char)3);
         // 00000101 +
@@ -256,7 +256,7 @@ go_bandit([]() {
         AssertThat(res.size(), Is().EqualTo(4u));
       });
 
-      it("computes (int) 5 + (char) 3 = (int) 8", [&]() {
+      it("computes bvec[32](5) + bvec[8](3)", [&]() {
         bvec a = bvec_const((int)5);
         bvec b = bvec_const((char)3);
         // 00000000000000000000000000000101 +
@@ -270,7 +270,7 @@ go_bandit([]() {
         AssertThat(res.size(), Is().EqualTo(4u));
       });
 
-      it("computes (int) 0 + (char) 3 = (int) 3", [&]() {
+      it("computes bvec[32](0) + bvec[8](3)", [&]() {
         bvec a = bvec_const((int)0);
         bvec b = bvec_const((char)3);
         // 00000000000000000000000000000000 +
@@ -284,7 +284,7 @@ go_bandit([]() {
         AssertThat(res.size(), Is().EqualTo(2u));
       });
 
-      it("computes (char) 0 + (int) 3 = (int) 3", [&]() {
+      it("computes bvec[8](0) + bvec[32](3)", [&]() {
         bvec a = bvec_const((char)0);
         bvec b = bvec_const((int)3);
         //                         00000000 +
@@ -298,7 +298,7 @@ go_bandit([]() {
         AssertThat(res.size(), Is().EqualTo(2u));
       });
 
-      it("computes (char) 255 + (char) 1 = (char) 0", [&]() {
+      it("computes bvec[8](255) + bvec[8](1)", [&]() {
         bvec a = bvec_const((char)255);
         bvec b = bvec_const((char)1);
         // 11111111 +
@@ -310,6 +310,46 @@ go_bandit([]() {
         AssertThat(res, Is().EqualTo(expected)); 
         AssertThat(res.bitlen(), Is().EqualTo(8u));
         AssertThat(res.size(), Is().EqualTo(0u));
+      });
+      
+      it("computes bvec[8](255) + bvec[8](1)", [&]() {
+        bvec a = bvec_const((char)255);
+        bvec b = bvec_const((char)1);
+        // 11111111 +
+        // 00000001 =
+        // 00000000
+        std::vector<bdd> raw_expected = {};
+        bvec expected = bvec(raw_expected);
+        bvec res = a+b;
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(0u));
+      });
+      
+      it("computes bvec[8](42) + char(3)", [&]() {
+        bvec a = bvec_const((char)42);
+        char b = 3;
+        // 00101010 +
+        // 00000011 =
+        // 00101101
+        bvec expected = bvec_const(45);
+        bvec res = a+b;
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(6u));
+      });
+      
+      it("computes int(17) + bvec[8](42)", [&]() {
+        int a = 17;
+        bvec b = bvec_const((char)42);
+        // 00010001 +
+        // 00101010 =
+        // 00111011
+        bvec expected = bvec_const(59);
+        bvec res = a+b;
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(32u));
+        AssertThat(res.size(), Is().EqualTo(6u));
       });
     });
     describe("bvec_truncate", []() {
