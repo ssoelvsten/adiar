@@ -308,8 +308,39 @@ go_bandit([]() {
         bvec expected = bvec(raw_expected);
         bvec res = bvec_add(a,b);
         AssertThat(res, Is().EqualTo(expected)); 
-        AssertThat(res.bitlen(), Is().EqualTo(8));
-        AssertThat(res.size(), Is().EqualTo(0));
+      });
+    });
+    describe("bvec_truncate", []() {
+      it("truncates to bitlen", [&](){
+        bvec x = bvec_true(32);
+
+
+        bvec expected = bvec_true(8);
+        bvec res = bvec_truncate(x,8);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(8u));
+      });
+      
+      it("extends to bitlen", [&](){
+        bvec x = bvec_true(4);
+        AssertThat(x.bitlen(), Is().EqualTo(4u));
+
+        bvec expected = bvec_true(4);
+        bvec res = bvec_truncate(x,8);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(4u));
+      });
+
+      it("truncates false prefix", [&](){
+        bvec x = bvec_const(18);
+
+        bvec expected = bvec_const(2);
+        bvec res = bvec_truncate(x,4);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(4u));
+        AssertThat(res.size(), Is().EqualTo(2u));
       });
     });
   });

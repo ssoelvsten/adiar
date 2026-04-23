@@ -64,6 +64,9 @@ namespace adiar {
 
         std::string
         to_string() const;
+
+        void
+        truncate(size_t bitlen);
     };
 
     std::ostream&
@@ -122,9 +125,12 @@ namespace adiar {
 
     bvec
     bvec_add(const bvec& x, const bvec& y);
+
+    //Utility
+    bvec
+    bvec_truncate(const bvec& x, const size_t bitlen);
 }
 
-//TODO: bvec_truncate(new_bitlen); use _bvec_bitwise_op(...new_bitlen...) to truncate
 //TODO: Implement arithmetic operations
 //TODO: Add variables, bvec_var(ITER begin, ITER end, bitlen)
 

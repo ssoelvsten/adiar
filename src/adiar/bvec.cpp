@@ -31,17 +31,16 @@ namespace adiar {
     bvec::bvec(const std::vector<bdd>& bits, size_t bitlen) 
     : _bits(bits), _bitlen(bitlen)
     {
-        //Truncates to bitlen and removes any prefix of false
-        while (this->_bits.size() > 0 && (!this->_bits.back() || this->_bitlen < this->_bits.size())) {
-            this->_bits.pop_back();
-        }
+        this->truncate(bitlen);
     }
     /////////////////////////////////////////////////////////////////////////
     /// \brief Conversion constructor from a raw bit-vector for right-hand values
     /////////////////////////////////////////////////////////////////////////
     bvec::bvec(std::vector<bdd>&& bits, size_t bitlen)
     : _bits(std::move(bits)), _bitlen(bitlen)
-    {}
+    {
+        this->truncate(bitlen);
+    }
 
     /////////////////////////////////////////////////////////////////////////
     /// \brief Parameterized constructor with length `bitlen` and given initial value `f`
@@ -99,6 +98,19 @@ namespace adiar {
 
         return out.str();
     }
+
+    void
+    bvec::truncate(size_t bitlen) {
+        this->_bitlen = bitlen;
+        //Truncates to bitlen and removes any prefix of false
+        while (this->_bitlen < this->_bits.size()) {
+            this->_bits.pop_back();
+        }
+        while (this->_bits.size() > 0 && !this->_bits.back()) {
+            this->_bits.pop_back();
+        }
+    }
+
     
     // Comparators
     
@@ -221,4 +233,11 @@ namespace adiar {
         return bvec(res, bitlen);
     }
 
+    //Helper
+    bvec
+    bvec_truncate(const bvec& x, const size_t bitlen) {
+        bvec y = x;
+        y.truncate(bitlen);
+        return y;
+    }
 }
