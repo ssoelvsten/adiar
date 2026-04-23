@@ -135,7 +135,7 @@ namespace adiar {
 
     bvec 
     bvec_const(size_t value, size_t bitlen) {
-        size_t max = std::max(std::ceil(std::log2(value)),1.0);
+        size_t max = std::ceil(std::log2(value))+1;
         size_t msb = std::min( value != 0 ? max : 0,bitlen);
         std::vector<bdd> res;
         res.reserve(msb);
