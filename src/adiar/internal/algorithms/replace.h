@@ -756,7 +756,7 @@ class adj_swap_pq_decorator{
 
 template<typename PQ1, typename sorter_t>
 class adj_swap_pq_decorator_v3{
-  //decorator very like up_pq_decorator 
+  //decorator very like up_pq_decorator but pushes to sorter when level is min
   public:
     using value_type = typename PQ1::value_type;
     using value_comp_type = typename PQ1::value_comp_type;
@@ -849,10 +849,9 @@ replace_adj_swap_sweep_v3(const typename Policy::dd_type& dd,
 
     const generator<typename Policy::label_type> level_gen = make_generator(swap_starts.begin(), swap_starts.end());
     const generator<typename Policy::label_type> end_gen = make_generator(swap_end.begin(), swap_end.end());
-    //const generator<typename Policy::label_type> extra_gen = make_generator(swap_extra.begin(), swap_extra.end());
     optional<typename Policy::label_type> next_swap = level_gen();
     optional<typename Policy::label_type> next_target = end_gen();
-    //optional<typename Policy::label_type> next_extra = extra_gen();
+
 
     //setup PQs
     PQ1 pq1({dd}, pq1_mem , max_pq1_size, stats_replace.lpq);
@@ -881,8 +880,7 @@ replace_adj_swap_sweep_v3(const typename Policy::dd_type& dd,
 
     while(!apq.empty()){
       apq.setup_next_level();
-      //TODO: something abot the way we update the max cut is wrong -> unless i write *2 here it fails!!
-      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, apq.size()*2);
+      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, apq.size());
       const typename Policy::label_type label = apq.current_level();
       if(debug_enabled) std::cout << "starting work for level" << label <<"\n";
 
@@ -907,6 +905,8 @@ replace_adj_swap_sweep_v3(const typename Policy::dd_type& dd,
         //    (b) when pushing reqs, if level is min, push to pq3 instead (handled by the new policy)
         //    (c) out_label should be next_swap aka current level -1 (handled by label_indicator)
         correctify_single_level<Policy>(in, aw, apq, pq2, v,  label_indicator::DEC);
+        //make sure to update cut since we just continue here 
+        out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, apq.size());
         //(2) handle the extra level as correctify but
         //    (a) always in correct layer case!
         //    (b) pulls requests from sorter
