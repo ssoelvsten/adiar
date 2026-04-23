@@ -233,6 +233,31 @@ namespace adiar {
         return bvec(res, bitlen);
     }
 
+    bvec
+    bvec_sub(const bvec& x, const bvec& y) {
+         const size_t bitlen = std::max(x.bitlen(),y.bitlen());
+        const size_t size = std::max(x.size(),bvec_not(y).size())+1;
+
+        bdd carry = bdd_true();
+
+        std::vector<bdd> res;
+        res.reserve(size);
+
+        for (size_t i = 0; i<size; ++i) {
+            const bdd xors = x.at(i) ^ ~y.at(i) ^ carry;
+            res.push_back(xors);
+            if (i+1 <= bitlen) {
+                adiar_assert(i != size-1 || bitlen >= size, "is not last bit with overflow");
+                carry = (carry & (x.at(i) | ~y.at(i))) | (x.at(i) & ~y.at(i));
+            }
+        }
+
+        // This assumes that the vector constructor truncates size above bitlen and false prefix.
+        res.push_back(carry);
+
+        return bvec(res, bitlen);
+    }
+
     //Helper
     bvec
     bvec_truncate(const bvec& x, const size_t bitlen) {

@@ -145,6 +145,8 @@ namespace adiar {
         return bvec_add(i,x);
     }
 
+    bvec
+    bvec_sub(const bvec& x, const bvec& y);
 
     //Utility
     bvec

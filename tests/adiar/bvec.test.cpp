@@ -352,6 +352,38 @@ go_bandit([]() {
         AssertThat(res.size(), Is().EqualTo(6u));
       });
     });
+    describe("bvec_sub", []() { 
+      it("compute bvec[8](42) - bvec[8](3)", [&](){
+        bvec x = bvec_const((char)42);
+        bvec y = bvec_const((char)3);
+
+        bvec expected = bvec_const((char)39);
+        bvec res = bvec_sub(x,y);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(6u));
+      });
+      it("compute bvec[8](140) - bvec[8](4)", [&](){
+        bvec x = bvec_const((char)140);
+        bvec y = bvec_const((char)4);
+
+        bvec expected = bvec_const((char)136);
+        bvec res = bvec_sub(x,y);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(8u));
+      });
+      it("compute bvec[8](4) - bvec[32](7000)", [&](){
+        bvec x = bvec_const((char)4);
+        bvec y = bvec_const((int)7000);
+
+        bvec expected = bvec_const((int)-6996);
+        bvec res = bvec_sub(x,y);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(32u));
+        AssertThat(res.size(), Is().EqualTo(32u));
+      });
+    });
     describe("bvec_truncate", []() {
       it("truncates to bitlen", [&](){
         bvec x = bvec_true(32);
