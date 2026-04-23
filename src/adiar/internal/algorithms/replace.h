@@ -428,7 +428,6 @@ namespace adiar::internal
   //------------------------------------- correctify logic for single level ------------------------------------------
 
   //helper type for diff cases
-  
   enum class label_indicator : signed char
   {
     NORMAL = 1, // label should just be the current level
@@ -461,7 +460,7 @@ namespace adiar::internal
     using ptr_t     = typename Policy::pointer_type;
     using children_t = typename Policy::children_type;
 
-    //does all the correctify stuff for single level - for use both in general non-monotone replace and special cases
+    //does all the correctify stuff for single level - for use both in general non-monotone replace and special cases jump_down and adj_swap
     //vars
     label_t label = pq1.current_level();
     label_t id = -1; 
@@ -761,7 +760,7 @@ class adj_swap_pq_decorator{
 // mempry stuff will be a bit annoying got this as well i guess? - cus only this special case needs an extra PQ?
 //TBA
 
-template <typename Policy, typename PQ1, typename PQ2>
+template <typename Policy, typename PQ1, typename PQ2/*, template <typename, typename> typename sorter_t*/>
 inline typename Policy::__dd_type
 replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd, 
                           replace_func<Policy> m,
@@ -806,6 +805,7 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
     //TODO - calc mem before and pass
     //DUMMY! should probably be set up pq1, pq3 in a good way -> potentially have the memory allocator thingy do it 
     PQ1 pq1({dd}, (pq1_mem/4)*3 , (max_pq1_size/4)*3, stats_replace.lpq); //give pq1 3/4 of memory available for it..
+    //external_sorter<cor_req_t<0>,request_data_first_lt<cor_req_t<0>>> test(pq1_mem/4, 12, 1 );
     //sorter istedet 
     PQ1 pq3({extra_gen}, (pq1_mem/4) , (max_pq1_size/4), stats_replace.lpq); //give pq3 1/4 of memory available for pq1
     PQ2 pq2(pq2_mem, max_pq2_size);
@@ -1333,7 +1333,7 @@ public:
       const size_t pq_2_memory_fits =
       cor_priority_queue_2_t<memory_mode::Internal>::memory_fits(inner_remaining_memory);
 
-      const size_t pq_2_bound =__cor_ilevel_upper_bound<Policy, get_2level_cut, 0u>(typename Policy::dd_type(outer_file)) //should this be 2 level?
+      const size_t pq_2_bound =__cor_ilevel_upper_bound<Policy, get_1level_cut, 0u>(typename Policy::dd_type(outer_file)) 
         + (inner_pq.size()); // Add crossing arcs
 
       const size_t max_pq_2_size =
