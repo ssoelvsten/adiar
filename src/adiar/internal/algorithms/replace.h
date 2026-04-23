@@ -736,7 +736,7 @@ class adj_swap_pq_decorator{
   //pushing
   void push(const cor_req_t<0> r){
     if (r.data.level <= r.target.first().level()){
-      if(debug_enabled) std::cout << "pushing to pq3: " << r << "\n";
+      std::cout << "pushing to pq3: " << r << "\n";
       _pq3.push(r);
     } else {
       if(debug_enabled) std::cout << "pushing to pq1: " << r << "\n";
@@ -753,6 +753,220 @@ class adj_swap_pq_decorator{
 
 };
 
+
+template<typename PQ1, typename sorter_t>
+class adj_swap_pq_decorator_v3{
+  //decorator very like up_pq_decorator 
+  public:
+    using value_type = typename PQ1::value_type;
+    using value_comp_type = typename PQ1::value_comp_type;
+    static constexpr memory_mode mem_mode = PQ1::mem_mode;
+    using level_type = typename value_type::pointer_type::label_type;
+    static constexpr level_type no_label = PQ1::no_label;
+  private:
+    PQ1& _pq1; //ref to pq1
+    sorter_t& _sorter; //ref to sorter
+
+  //constructor
+  public:
+    adj_swap_pq_decorator_v3(PQ1& pq1, sorter_t& sorter) :
+    _pq1(pq1), 
+    _sorter(sorter)
+    {}
+
+  size_t terminals(const bool terminal_value) const {return _pq1.terminals(terminal_value);}
+  size_t size() const {return _pq1.size() + _sorter.size();}
+
+  size_t size_without_terminals() const{
+    return size() - terminals(false) - terminals(true);
+  }
+
+  bool empty_level() const          { return  _pq1.empty_level();}
+  bool can_pull() const             { return  _pq1.can_pull();}
+  cor_req_t<0> pull()               { return  _pq1.pull(); }
+  bool has_top() const              { return  _pq1.has_top(); }
+  cor_req_t<0> top()                { return  _pq1.top(); }
+  void pop()                        { return  _pq1.pop(); }
+  bool has_current_level() const    { return  _pq1.has_current_level(); }
+  level_type current_level() const  { return  _pq1.current_level(); }
+  bool empty() const { return size() == 0u;}  
+
+  void setup_next_level(level_type stop_level = no_label)
+    { _pq1.setup_next_level(stop_level);}
+
+  //pushing
+  void push(const cor_req_t<0> r){
+    if (r.data.level <= r.target.first().level()){
+      std::cout << "pushing to sorter: " << r << "\n";
+      _sorter.push(r);
+    } else {
+      if(debug_enabled) std::cout << "pushing to pq1: " << r << "\n";
+      _pq1.push(r);
+    }
+  }
+
+};
+
+
+template <typename Policy, typename PQ1, typename PQ2>
+inline typename Policy::__dd_type
+replace_adj_swap_sweep_v3(const typename Policy::dd_type& dd, 
+                          replace_func<Policy> m,
+                          exec_policy ep,
+                          size_t pq1_mem,
+                          size_t max_pq1_size,
+                          size_t pq2_mem,
+                          size_t max_pq2_size,
+                          size_t sorter_mem) {
+  //ok so:
+  //layers above xi might push to sorter instead of pq
+  //when we reach level xj first run stuff for xj, then handle all reqs in sorter
+  //these will be in the "correct level" case always
+  //when done reset sorter for next swap
+
+  //setup input
+    node_ifstream<> in(dd);
+    node v = in.pull();
+    
+  //setup output
+  shared_levelized_file<arc> out_arcs;
+  arc_ofstream aw(out_arcs);   
+  out_arcs->max_1level_cut = 0;
+  
+  //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
+    level_info_ifstream<> info_in(dd);
+    //top of adj swap, bot of adj swap,  fresh layer below bottom (need to load PQ with these)
+    std::vector<typename Policy::label_type> swap_starts, swap_end, swap_extra; 
+    while (info_in.can_pull()){
+      level_info l = info_in.pull();
+      if (debug_enabled) std::cout << "found level " << l << "\n";
+      if (m(l.label()) > l.label()) {
+        swap_starts.push_back(l.label());
+        swap_end.push_back(m(l.label()));
+        swap_extra.push_back(m(l.label()) + 1);
+      }
+    }
+
+    const generator<typename Policy::label_type> level_gen = make_generator(swap_starts.begin(), swap_starts.end());
+    const generator<typename Policy::label_type> end_gen = make_generator(swap_end.begin(), swap_end.end());
+    //const generator<typename Policy::label_type> extra_gen = make_generator(swap_extra.begin(), swap_extra.end());
+    optional<typename Policy::label_type> next_swap = level_gen();
+    optional<typename Policy::label_type> next_target = end_gen();
+    //optional<typename Policy::label_type> next_extra = extra_gen();
+
+    //setup PQs
+    PQ1 pq1({dd}, pq1_mem , max_pq1_size, stats_replace.lpq);
+    PQ2 pq2(pq2_mem, max_pq2_size);
+
+    //setup sorter
+    //dummied memory for now..
+    using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+    sorter_t sorter(sorter_mem, max_pq1_size);
+    
+    //decorator to sometimes push to sorter instead
+    adj_swap_pq_decorator_v3<PQ1, sorter_t> apq(pq1, sorter);
+
+    cor_req_t<0> init_req;
+    if(v.uid().label() == next_swap){
+      //push 2-ary to children
+      if(debug_enabled) std::cout << "root is part of a swap\n";
+      init_req = {{v.low(), v.high()},{},{ptr_uint64::nil(),next_target.value() +1}};
+      
+    } else {
+      //just push 1-ary
+      if(debug_enabled) std::cout << "root is NOT part of a swap\n";
+      init_req = {{v.uid(), ptr_uint64::nil()},{},{ptr_uint64::nil()}};
+    }
+    apq.push(init_req);
+
+    while(!apq.empty()){
+      apq.setup_next_level();
+      //TODO: something abot the way we update the max cut is wrong -> unless i write *2 here it fails!!
+      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, apq.size()*2);
+      const typename Policy::label_type label = apq.current_level();
+      if(debug_enabled) std::cout << "starting work for level" << label <<"\n";
+
+      if(label == next_swap){ 
+        if (debug_enabled) std::cout << "found top of next adjacent swap: " << label << "\n";
+        //we just pushing 2 ary reqs
+         while(!apq.empty_level()){
+          const cor_req_t<0> req = apq.pull();
+          if (debug_enabled) std::cout << "found req " << req << "\n";
+          const ptr_uint64 t_uid(req.data.level, 0);
+          ptr_uint64 tseek = std::min(req.target.first(), t_uid);
+          while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+          const cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, next_target.value() +1 }};
+          apq.push(n_req);
+        }
+
+      } else if (label == next_target) {
+        if (debug_enabled) std::cout << "found next target level: " << label << "\n";
+        //SHOULD
+        //(1) handle level xj as correctify but
+        //    (a) never in correct layer case!
+        //    (b) when pushing reqs, if level is min, push to pq3 instead (handled by the new policy)
+        //    (c) out_label should be next_swap aka current level -1 (handled by label_indicator)
+        correctify_single_level<Policy>(in, aw, apq, pq2, v,  label_indicator::DEC);
+        //(2) handle the extra level as correctify but
+        //    (a) always in correct layer case!
+        //    (b) pulls requests from sorter
+        //    (c) out_label should be current level -1 aka next_target
+        sorter.sort();
+        typename Policy::label_type id = 0;
+        while(sorter.can_pull()){
+          const cor_req_t<0> extra_r = sorter.top();
+          if (extra_r.target[0] == extra_r.target[1]) {
+            if (debug_enabled)std::cout << "skip surpressible node! \n";
+            apq.pop();
+            const cor_req_t<0> r1 = {{extra_r.target[0],node::pointer_type::nil()}, {}, {extra_r.data.source}};
+            if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+            apq.push(r1);
+            continue;
+          }
+ 
+          const typename Policy::uid_type out_uid(next_target.value(), id);
+          id++;
+          pusher<Policy>(apq, aw, out_uid.as_ptr(false), {extra_r.target[0], node::pointer_type::nil()}, node::pointer_type::nil().level());
+          pusher<Policy>(apq, aw, out_uid.as_ptr(true),  {extra_r.target[1], node::pointer_type::nil()}, node::pointer_type::nil().level());
+
+        // forward incoming
+        //TODO find a way to use internal pusher here?
+        while (sorter.has_top() && sorter.top().target == extra_r.target){
+          const cor_req_t<0> r1 = sorter.pull();
+          if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
+           if (r1.data.source.level() != ptr_uint64::nil().level()) {
+            if (debug_enabled) std::cout << "has pushed internal: " << arc{r1.data.source, out_uid} << "\n";
+            aw.push({unflag(r1.data.source), out_uid});
+            //TODO : unfalg here because we use roots sorter class from nested sweeping directly
+            // could define own class to avoid
+           }
+        }
+        //internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, extra_r.target,  extra_r.data.level);
+        //continue;
+
+        }
+        //update level info
+        if (id >= 0 ) {aw.push(level_info(next_target.value(), id+1));}
+        //now update all the values!
+        next_swap = level_gen();
+        next_target = end_gen();
+        sorter.reset();
+
+      } else {
+         if (debug_enabled) std::cout << "found regular level: " << label << "\n";
+         correctify_single_level<Policy>(in, aw, apq, pq2, v,  label_indicator::NORMAL);
+      }
+
+    }
+    if (debug_enabled) std::cout << "finished all levels :D \n";
+    return typename Policy::__dd_type(out_arcs,ep); 
+
+
+
+
+}
+
+
 //new version - using an extra PQ
 // instead of duplicating layers have another pq that holds stuff for the extra layer 
 // i think - really we only need one "bucket" as it will be entirely emptied at the end of each adj swap??"
@@ -760,7 +974,7 @@ class adj_swap_pq_decorator{
 // mempry stuff will be a bit annoying got this as well i guess? - cus only this special case needs an extra PQ?
 //TBA
 
-template <typename Policy, typename PQ1, typename PQ2/*, template <typename, typename> typename sorter_t*/>
+template <typename Policy, typename PQ1, typename PQ2>
 inline typename Policy::__dd_type
 replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd, 
                           replace_func<Policy> m,
@@ -805,7 +1019,6 @@ replace_adj_swap_sweep_v2(const typename Policy::dd_type& dd,
     //TODO - calc mem before and pass
     //DUMMY! should probably be set up pq1, pq3 in a good way -> potentially have the memory allocator thingy do it 
     PQ1 pq1({dd}, (pq1_mem/4)*3 , (max_pq1_size/4)*3, stats_replace.lpq); //give pq1 3/4 of memory available for it..
-    //external_sorter<cor_req_t<0>,request_data_first_lt<cor_req_t<0>>> test(pq1_mem/4, 12, 1 );
     //sorter istedet 
     PQ1 pq3({extra_gen}, (pq1_mem/4) , (max_pq1_size/4), stats_replace.lpq); //give pq3 1/4 of memory available for pq1
     PQ2 pq2(pq2_mem, max_pq2_size);
@@ -1154,8 +1367,8 @@ replace(typename Policy::dd_type dd,
       //uses extra pq for acting like it has more levels.. (so only needs one initializer)
         using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-        return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
-           pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
+        return replace_adj_swap_sweep_v3<Policy, PQ1, PQ2>(dd, m, ep,
+           pq_1_internal_memory/2, max_pq_1_size, pq_2_internal_memory, max_pq_2_size, pq_1_internal_memory/2);
       default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
         adiar_unreachable();
     }
@@ -1175,8 +1388,8 @@ replace(typename Policy::dd_type dd,
       case replace_type::Swap_Adjacent:
         using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-        return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
-           pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
+        return replace_adj_swap_sweep_v3<Policy, PQ1, PQ2>(dd, m, ep,
+           pq_1_internal_memory/2, max_pq_1_size, pq_2_internal_memory, max_pq_2_size,  pq_1_internal_memory/2);
 
       default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
         adiar_unreachable();
@@ -1196,8 +1409,8 @@ replace(typename Policy::dd_type dd,
       case replace_type::Swap_Adjacent:
         using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-        return replace_adj_swap_sweep_v2<Policy, PQ1, PQ2>(dd, m, ep,
-           pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
+        return replace_adj_swap_sweep_v3<Policy, PQ1, PQ2>(dd, m, ep,
+           pq_1_internal_memory/2, max_pq_1_size, pq_2_internal_memory, max_pq_2_size,  pq_1_internal_memory/2);
       default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
         adiar_unreachable();
     }
