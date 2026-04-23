@@ -120,10 +120,10 @@ namespace adiar {
 
     //Arithmetic operations
 
-
+    bvec
+    bvec_add(const bvec& x, const bvec& y);
 }
 
-//TODO: Test overview both existing and missing, test bvec_equal, use bvec_equal instead of bitwise assertions
 //TODO: bvec_truncate(new_bitlen); use _bvec_bitwise_op(...new_bitlen...) to truncate
 //TODO: Implement arithmetic operations
 //TODO: Add variables, bvec_var(ITER begin, ITER end, bitlen)

@@ -241,5 +241,76 @@ go_bandit([]() {
         AssertThat(bvec_equal(bvec(raw1),bvec(raw2)), Is().False());
       });
     });
+    describe("bvec_add", []() {
+      it("computes (char) 5 + (char) 3 = (char) 8", [&]() {
+        bvec a = bvec_const((char)5);
+        bvec b = bvec_const((char)3);
+        // 00000101 +
+        // 00000011 =
+        // 00001000
+        std::vector<bdd> raw_expected = {bdd_false(),bdd_false(),bdd_false(),bdd_true()};
+        bvec expected = bvec(raw_expected);
+        bvec res = bvec_add(a,b);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8));
+        AssertThat(res.size(), Is().EqualTo(4));
+      });
+
+      it("computes (int) 5 + (char) 3 = (int) 8", [&]() {
+        bvec a = bvec_const((int)5);
+        bvec b = bvec_const((char)3);
+        // 00000000000000000000000000000101 +
+        //                         00000011 =
+        // 00000000000000000000000000001000
+        std::vector<bdd> raw_expected = {bdd_false(),bdd_false(),bdd_false(),bdd_true()};
+        bvec expected = bvec(raw_expected);
+        bvec res = bvec_add(a,b);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(32));
+        AssertThat(res.size(), Is().EqualTo(4));
+      });
+
+      it("computes (int) 0 + (char) 3 = (int) 3", [&]() {
+        bvec a = bvec_const((int)0);
+        bvec b = bvec_const((char)3);
+        // 00000000000000000000000000000000 +
+        //                         00000011 =
+        // 00000000000000000000000000000011
+        std::vector<bdd> raw_expected = {bdd_true(),bdd_true()};
+        bvec expected = bvec(raw_expected);
+        bvec res = bvec_add(a,b);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(32));
+        AssertThat(res.size(), Is().EqualTo(2));
+      });
+
+      it("computes (char) 0 + (int) 3 = (int) 3", [&]() {
+        bvec a = bvec_const((char)0);
+        bvec b = bvec_const((int)3);
+        //                         00000000 +
+        // 00000000000000000000000000000011 =
+        // 00000000000000000000000000000011
+        std::vector<bdd> raw_expected = {bdd_true(),bdd_true()};
+        bvec expected = bvec(raw_expected);
+        bvec res = bvec_add(a,b);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(32));
+        AssertThat(res.size(), Is().EqualTo(2));
+      });
+
+      it("computes (char) 255 + (char) 1 = (char) 0", [&]() {
+        bvec a = bvec_const((char)255);
+        bvec b = bvec_const((char)1);
+        // 11111111 +
+        // 00000001 =
+        // 00000000
+        std::vector<bdd> raw_expected = {};
+        bvec expected = bvec(raw_expected);
+        bvec res = bvec_add(a,b);
+        AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8));
+        AssertThat(res.size(), Is().EqualTo(0));
+      });
+    });
   });
 });

@@ -31,7 +31,8 @@ namespace adiar {
     bvec::bvec(const std::vector<bdd>& bits, size_t bitlen) 
     : _bits(bits), _bitlen(bitlen)
     {
-        while (this->_bits.size() > 0 && !this->_bits.back()) {
+        //Truncates to bitlen and removes any prefix of false
+        while (this->_bits.size() > 0 && (!this->_bits.back() || this->_bitlen < this->_bits.size())) {
             this->_bits.pop_back();
         }
     }
@@ -194,5 +195,23 @@ namespace adiar {
     }
 
     //Arithmetic operations
+
+    bvec
+    bvec_add(const bvec& x, const bvec& y) {
+        bdd carry = bdd_false();
+        const size_t bitlen = std::max(x.bitlen(),y.bitlen());
+        std::vector<bdd> res;
+        const size_t size = std::max(x.size(),y.size())+1;
+        res.reserve(size);
+        for (size_t i = 0; i<size; ++i) {
+            const bdd xors = bdd_xor(bdd_xor(x.at(i), y.at(i)), carry);
+            carry = bdd_or(bdd_and(carry, bdd_or(x.at(i),y.at(i))), bdd_and(x.at(i),y.at(i)));
+            res.push_back(xors);
+        }
+        // This assumes that the vector constructor truncates size above bitlen and false prefix.
+        res.push_back(carry);
+        // Maybe we should check that we cannot increase size above bitlen?
+        return bvec(res, bitlen);
+    }
 
 }
