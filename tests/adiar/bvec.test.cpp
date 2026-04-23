@@ -252,8 +252,8 @@ go_bandit([]() {
         bvec expected = bvec(raw_expected);
         bvec res = bvec_add(a,b);
         AssertThat(res, Is().EqualTo(expected)); 
-        AssertThat(res.bitlen(), Is().EqualTo(8));
-        AssertThat(res.size(), Is().EqualTo(4));
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(4u));
       });
 
       it("computes (int) 5 + (char) 3 = (int) 8", [&]() {
@@ -266,8 +266,8 @@ go_bandit([]() {
         bvec expected = bvec(raw_expected);
         bvec res = bvec_add(a,b);
         AssertThat(res, Is().EqualTo(expected)); 
-        AssertThat(res.bitlen(), Is().EqualTo(32));
-        AssertThat(res.size(), Is().EqualTo(4));
+        AssertThat(res.bitlen(), Is().EqualTo(32u));
+        AssertThat(res.size(), Is().EqualTo(4u));
       });
 
       it("computes (int) 0 + (char) 3 = (int) 3", [&]() {
@@ -280,8 +280,8 @@ go_bandit([]() {
         bvec expected = bvec(raw_expected);
         bvec res = bvec_add(a,b);
         AssertThat(res, Is().EqualTo(expected)); 
-        AssertThat(res.bitlen(), Is().EqualTo(32));
-        AssertThat(res.size(), Is().EqualTo(2));
+        AssertThat(res.bitlen(), Is().EqualTo(32u));
+        AssertThat(res.size(), Is().EqualTo(2u));
       });
 
       it("computes (char) 0 + (int) 3 = (int) 3", [&]() {
@@ -294,8 +294,8 @@ go_bandit([]() {
         bvec expected = bvec(raw_expected);
         bvec res = bvec_add(a,b);
         AssertThat(res, Is().EqualTo(expected)); 
-        AssertThat(res.bitlen(), Is().EqualTo(32));
-        AssertThat(res.size(), Is().EqualTo(2));
+        AssertThat(res.bitlen(), Is().EqualTo(32u));
+        AssertThat(res.size(), Is().EqualTo(2u));
       });
 
       it("computes (char) 255 + (char) 1 = (char) 0", [&]() {
@@ -308,6 +308,8 @@ go_bandit([]() {
         bvec expected = bvec(raw_expected);
         bvec res = bvec_add(a,b);
         AssertThat(res, Is().EqualTo(expected)); 
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(0u));
       });
     });
     describe("bvec_truncate", []() {
