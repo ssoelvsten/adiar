@@ -100,15 +100,6 @@ namespace adiar {
     
     // Bitwise operations
 
-    //Helper function for bitwise operations
-    template<typename BDD_OP>
-    bvec 
-    _bvec_bitwise_op(size_t size, size_t bitlen, const BDD_OP& op);
-    
-    template<typename BDD_OP>
-    bvec 
-    _bvec_bitwise_op(const bvec& x, const bvec& y, const BDD_OP& op);
-    
     bvec 
     bvec_and(const bvec& x, const bvec& y);
     
