@@ -882,7 +882,7 @@ go_bandit([]() {
             //     / \ / \                    //     / \   / \
             //     | F F |                    //    4  |   5  \
             //      \   /                     //   / \ |  / \  |
-            //       \ /                      //  1   0  0  1  0
+            //       \ /                      //  T   F  F  T  F
             //        4         ---- x2...1?
             //       / \
             //       T F
@@ -943,7 +943,6 @@ go_bandit([]() {
                                                                return x; };
             AssertThat(replace__infer_type<bdd_policy>(bdd_9, m) == replace_type::Swap_Adjacent, Is().True());
             bdd out = bdd_replace(bdd_9, m);
-
             node_test_ifstream out_nodes(out);
             //for readability: predefined node uids..
             node::pointer_type n7_uid(7,node::max_id);
