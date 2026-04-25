@@ -77,28 +77,27 @@ namespace adiar::internal
   /// \brief Decorator on the levelized priority queue to also keep track of the number of arcs to
   ///        each terminal.
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  template <size_t look_ahead, memory_mode mem_mode>
+  template <size_t look_ahead, memory_mode mem_mode, typename arc_type, typename lt_op, size_t LvlInput>
   class reduce_priority_queue
-    : public levelized_arc_priority_queue<reduce_arc, reduce_queue_lt, look_ahead, mem_mode>
+    : public levelized_arc_priority_queue<arc_type, lt_op, look_ahead, mem_mode, LvlInput>
   {
   private:
     using inner_lpq =
-      levelized_arc_priority_queue<reduce_arc, reduce_queue_lt, look_ahead, mem_mode>;
-
+      levelized_arc_priority_queue<arc_type, lt_op, look_ahead, mem_mode, LvlInput>;
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Number of terminals (of each type) placed within the priority queue.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     size_t _terminals[2] = { 0u, 0u };
 
   public:
-    reduce_priority_queue(std::array<typename inner_lpq::level_input_type, 1>&& files,
+    reduce_priority_queue(std::array<typename inner_lpq::level_input_type, LvlInput>&& files,
                           size_t memory_given,
                           size_t max_size,
                           statistics::levelized_priority_queue_t& stats)
       : inner_lpq(std::move(files), memory_given, max_size, stats)
     {}
 
-    reduce_priority_queue(std::array<typename inner_lpq::level_input_type, 1>&& files,
+    reduce_priority_queue(std::array<typename inner_lpq::level_input_type, LvlInput>&& files,
                           size_t memory_given,
                           size_t max_size)
       : reduce_priority_queue(std::move(files), memory_given, max_size, stats_reduce.lpq)
@@ -107,8 +106,17 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Push an arc into the priority queue.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void
+    void 
     push(const arc& a)
+    {
+      _terminals[false] += a.target().is_false();
+      _terminals[true] += a.target().is_true();
+
+      inner_lpq::push(a);
+    }
+
+    void 
+    push(const typename inner_lpq::value_type& a)
     {
       _terminals[false] += a.target().is_false();
       _terminals[true] += a.target().is_true();
@@ -119,10 +127,10 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Obtain the top arc on the current level and remove it.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    arc
+    typename inner_lpq::value_type
     pull()
     {
-      arc a = inner_lpq::pull();
+      typename inner_lpq::value_type a = inner_lpq::pull();
 
       _terminals[false] -= a.target().is_false();
       _terminals[true] -= a.target().is_true();
@@ -218,7 +226,7 @@ namespace adiar::internal
   /// \brief Merging priority queue with terminal_arc stream.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename pq_t, typename arc_ifstream_t>
-  inline arc
+  inline typename pq_t::value_type
   __reduce_get_next(pq_t& reduce_pq, arc_ifstream_t& arcs)
   {
     if (!reduce_pq.can_pull()
@@ -651,7 +659,7 @@ namespace adiar::internal
       aux_available_memory - pq_memory - iofstream<mapping>::memory_usage();
 
     const size_t pq_memory_fits =
-      reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(pq_memory);
+      reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, reduce_arc, reduce_queue_lt, 1>::memory_fits(pq_memory);
 
     const bool internal_only =
       ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
@@ -666,19 +674,19 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_reduce.lpq.unbucketed += 1u;
 #endif
-      return __reduce<Policy, reduce_priority_queue<0, memory_mode::Internal>>(
+      return __reduce<Policy, reduce_priority_queue<0, memory_mode::Internal, reduce_arc, reduce_queue_lt,1>>(
         policy, in_file, pq_memory, sorters_memory);
     } else if (!external_only && max_pq_size <= pq_memory_fits) {
 #ifdef ADIAR_STATS
       stats_reduce.lpq.internal += 1u;
 #endif
-      return __reduce<Policy, reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>>(
+      return __reduce<Policy, reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, reduce_arc, reduce_queue_lt,1>>(
         policy, in_file, pq_memory, sorters_memory);
     } else {
 #ifdef ADIAR_STATS
       stats_reduce.lpq.external += 1u;
 #endif
-      return __reduce<Policy, reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>>(
+      return __reduce<Policy, reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::External, reduce_arc, reduce_queue_lt,1>>(
         policy, in_file, pq_memory, sorters_memory);
     }
   }
@@ -690,6 +698,13 @@ namespace adiar::internal
   class default_reduce_policy : public DdPolicy
   {
   public:
+    using map_type = mapping;
+    using arc_type = reduce_arc;
+    using node_type = typename DdPolicy::node_type;
+
+    using pq_order = reduce_queue_lt;
+    using red2_order = reduce_node_children_lt;
+    using uid_order = reduce_uid_lt;
     constexpr inline typename DdPolicy::label_type
     map_level(typename DdPolicy::label_type x) const
     {

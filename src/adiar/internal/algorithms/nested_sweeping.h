@@ -350,7 +350,7 @@ namespace adiar::internal
       /// \brief Default priority queue for the Outer Up Sweep.
       //////////////////////////////////////////////////////////////////////////////////////////////
       template <size_t LookAhead, memory_mode MemoryMode>
-      using up__pq_t = reduce_priority_queue<LookAhead, MemoryMode>;
+      using up__pq_t = reduce_priority_queue<LookAhead, MemoryMode, reduce_arc, reduce_queue_lt, 1>;
 
       //////////////////////////////////////////////////////////////////////////////////////////////
       /// \brief Decorator for the Reduce priority queue that either forwards to itself or to a
