@@ -312,6 +312,7 @@ namespace adiar
     case replace_type::Non_Monotone:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
+    case replace_type::Jump_Up:
 #ifdef ADIAR_STATS
       internal::stats_replace.nested_sweeps += 1u;
 #endif
