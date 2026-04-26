@@ -449,6 +449,7 @@ go_bandit([]() {
             */
             const mapping_type m = [](const int x) { if (x == 0) return 3;
                                                      return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_1,m), Is().EqualTo(replace_type::Jump_Down));                                       
             __bdd res = bdd_replace(bdd_1, m);
 
             arc_test_ifstream out_arcs(res);
@@ -496,6 +497,7 @@ go_bandit([]() {
             */
             const mapping_type m = [](const int x) { if (x == 0) return 3;
                                                      return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_1_ext,m), Is().EqualTo(replace_type::Jump_Down));                                         
             __bdd res = bdd_replace(bdd_1_ext, m);
 
             arc_test_ifstream out_arcs(res);
@@ -561,6 +563,7 @@ go_bandit([]() {
             const mapping_type m = [](const int x) {if (x == 0) return 3;
                                                     if (x == 4) return 6;
                                                     return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_1_ext,m), Is().EqualTo(replace_type::Jump_Down)); 
             __bdd res = bdd_replace(bdd_1_ext, m);
 
             arc_test_ifstream out_arcs(res);
@@ -630,6 +633,7 @@ go_bandit([]() {
             */
             const mapping_type m = [](const int x) { if (x == 0) return 5;
                                                      else return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_1,m), Is().EqualTo(replace_type::Jump_Down)); 
             __bdd res = bdd_replace(bdd_1, m);
 
             arc_test_ifstream out_arcs(res);
@@ -686,6 +690,7 @@ go_bandit([]() {
             */
             const mapping_type m = [](const int x) { if (x == 0) return 3;
                                                      else return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_3,m), Is().EqualTo(replace_type::Jump_Down)); 
             __bdd res = bdd_replace(bdd_3, m);
 
             arc_test_ifstream out_arcs(res);
@@ -749,6 +754,7 @@ go_bandit([]() {
             */
             const mapping_type m = [](const int x) { if (x == 0) return 2;
                                                      else return x; };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_5,m), Is().EqualTo(replace_type::Jump_Down)); 
             __bdd res = bdd_replace(bdd_5, m);
 
             arc_test_ifstream out_arcs(res);
@@ -790,9 +796,9 @@ go_bandit([]() {
             AssertThat(out_arcs.can_pull_terminal(), Is().False());
           });
 
-          it("jumps down and relables levels [bdd_2]", [&]() {
+          it("reverses levels  levels [bdd_2]", [&]() {
             const mapping_type m = [](const int x) { return 4 - x; };
-            //technically also "swaps" levels but not detected as such since the levels that are mapped to are currently empty
+            AssertThat(replace__infer_type<bdd_policy>(bdd_2,m), Is().EqualTo(replace_type::Non_Monotone)); 
             const bdd out = bdd_replace(bdd_2, m);
 
             node_test_ifstream out_nodes(out);
@@ -1002,6 +1008,7 @@ go_bandit([]() {
           const replace_func<bdd_policy> m = [](const int x) { if (x == 1) {return 2;}
                                                                      if (x == 2) {return 1;}
                                                                     return x; };
+          AssertThat(replace__infer_type<bdd_policy>(bdd_10,m), Is().EqualTo(replace_type::Swap_Adjacent)); 
           bdd out = bdd_replace(bdd_10,m);
           node_test_ifstream out_nodes(out);
           node::pointer_type n5_uid(3,node::max_id);
@@ -1038,27 +1045,44 @@ go_bandit([]() {
             //   F   T   F               //       / \   / \
             //                                   F   T T   F
             */
-            const mapping_type m = [](const int x) { if (x == 5) return 1;
-                                                           else return x; };
-            bdd out = bdd_replace(bdd_1_ext, m);
+            const mapping_type m = [](const int x) {if (x == 5) {return 1;} else {return x;} };
+            AssertThat(replace__infer_type<bdd_policy>(bdd_1_ext, m), Is().EqualTo(replace_type::Jump_Up));
+            bdd out = bdd_replace(bdd_1_ext, m, replace_type::Jump_Up);
+            bdd out_ns = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
             
-            //expected res tree
-            shared_levelized_file<bdd::node_type> er_file;
-            {  
-              const node n7 = node(4, bdd::max_id, terminal_T, terminal_F);
-              const node n6 = node(4, bdd::max_id - 1, terminal_F, terminal_T);
-              const node n5 = node(2, bdd::max_id, n7.uid(), terminal_F);
-              const node n4 = node(2, bdd::max_id -1, n6.uid(), terminal_T);
-              const node n3 = node(1, bdd::max_id, n4.uid(), n5.uid());
-              const node n2 = node(1, bdd::max_id -1, n6.uid(), n7.uid());
-              const node n1 = node(0, bdd::max_id, n2.uid(), n3.uid());
+            //bdd_printdot(out, "result.dot");
+            //bdd_printdot(out_ns, "result_ns.dot");
 
-              node_ofstream nw(er_file);
-              nw << n7 << n6 << n5 << n4 << n3 << n2 << n1;
-            }
-            const bdd expected_res(er_file);
-            AssertThat(out, Is().EqualTo(expected_res));
+            AssertThat(bdd_equal(out, out_ns), Is().True());
           });
+
+          it("performs multiple jumps [standard]", [&](){
+            //workign with (x1 /\ x2) \/ (x3 /\ x5) \/ (x6 /\ x7)
+            //build bdd
+            shared_levelized_file<bdd::node_type> st_nf;
+            { // Garbage collect early and free write-lock
+              const node n7 = node(7, bdd::max_id, terminal_F, terminal_T);
+              const node n6 = node(6, bdd::max_id, terminal_F, n7.uid());
+              const node n5 = node(5, bdd::max_id, n6.uid(), terminal_T);
+              const node n3 = node(3, bdd::max_id, n6.uid(), n5.uid());
+              const node n2 = node(2, bdd::max_id, n3.uid(), terminal_T);
+              const node n1 = node(1, bdd::max_id, n3.uid(), n2.uid());
+
+              node_ofstream nw(st_nf);
+              nw << n7 << n6 << n5  << n3 << n2 << n1 ;
+            }
+            const bdd standard(st_nf);
+            const mapping_type m = [](const int x) { if (x == 3) {return 0;}
+                                                           if (x == 7) {return 4;}
+                                                           else return x; };
+            AssertThat(replace__infer_type<bdd_policy>(standard,m), Is().EqualTo(replace_type::Jump_Up));
+            bdd out = bdd_replace(standard, m,replace_type::Jump_Up);
+            bdd out_ns = bdd_replace(standard, m,replace_type::Non_Monotone);
+            bdd_printdot(out, "result2.dot");
+            bdd_printdot(out_ns, "result2_ns.dot");
+            AssertThat(bdd_equal(out, out_ns), Is().True());
+          });
+
         });
         describe( "Non-monotonic test cases", [&]() {
           //true non-monotone case
@@ -1129,10 +1153,10 @@ go_bandit([]() {
             const mapping_type m = [](const int x) { if (x == 0) return 3;
                                                      if (x == 3) return 0;
                                                      else return x; };
+            //TODO: if swap case implemented move this test - and change assert
+            AssertThat(replace__infer_type<bdd_policy>(bdd_10,m), Is().EqualTo(replace_type::Non_Monotone));
             bdd res =  bdd_replace(bdd_7, m);
             AssertThat(res, Is().EqualTo(bdd_expected));
-            //TODO: why is this an unsupported type
-            //AssertThat(res, Is().EqualTo(bdd_7));
           });
         });
 
@@ -1146,12 +1170,10 @@ go_bandit([]() {
             //      / \
             //      F T
             */
-            const mapping_type m = [](const int x) { if (x == 0) return 3;
-            return x; };
+            const mapping_type m = [](const int x) { if (x == 0) return 3; return x; };
             bdd expected_res = bdd_replace(bdd_1, m);
             bdd res = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
             AssertThat(res, Is().EqualTo(expected_res));
-
         });
 
         it("Non-monotonic - Jump down with subtree children" , [&]() {
