@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <sys/types.h>
 #include <utility>
 #include <vector>
 
@@ -33,7 +34,6 @@
 #include <adiar/internal/io/node_file.h>
 #include <adiar/internal/io/node_ifstream.h>
 #include <adiar/internal/io/node_ofstream.h>
-//#include <adiar/internal/algorithms/reorder.h>
 
 namespace adiar::internal
 {
@@ -99,9 +99,10 @@ namespace adiar::internal
     bool shift     = true;
     bool monotone  = true;
     bool jump_down = true;
+    bool jump_up = true;
     bool adj_swap  = true;
 
-    typename Policy::label_type last_jump = 0;
+    typename Policy::label_type last_jump = Policy::pointer_type::nil().level();
     typename Policy::label_type adj_node  = 0;
 
     label_type prev_before = Policy::max_label + 1;
@@ -135,16 +136,15 @@ namespace adiar::internal
       if(next_before != next_after){ //level is moved check
         //JUMP_DOWN checks
         jump_down &= (next_before < next_after ); //levels are only moved down
-        jump_down &= (last_jump <= next_before); // Maybe should allow overlaps?
+        jump_down &= (last_jump == Policy::pointer_type::nil().level() || last_jump < next_before); //check overlap: if moved, then you should be below last jump target
         //Jump_Up check
-        //jump_up &= (next_before > next_after ); //levels are only moved up
-        //jump_up &= (last_jump >= next_after);
-        last_jump = next_after;
+        jump_up &= (next_before > next_after ); //levels are only moved up
+        jump_up &= (last_jump == Policy::pointer_type::nil().level() || last_jump < next_after); //check overlap: if moved, then you should be above last jump target
+        last_jump = (jump_down) ? next_after : next_before;
 
-        //Adjacent swap checks - currently only detects when both adjacent variables
-        //are to be swapped -- might however work when adjacent level is empty...
-        const int32_t next_diff32 =
-          static_cast<int32_t>(next_after) - static_cast<int32_t>(next_before);
+        //Adjacent swap checks - currently only detects when both adjacent variables exist in bdd
+        //otherwise it's considered a jump down
+        const int32_t next_diff32 = static_cast<int32_t>(next_after) - static_cast<int32_t>(next_before);
         if(next_diff32 == 1) {
           adj_node = next_before;
         } else if (next_diff32 == -1){
@@ -160,11 +160,10 @@ namespace adiar::internal
     }
 
     if (!monotone) {
-      if (jump_down) {//std::cout << "\n detected jump_down\n" ;
-         return replace_type::Jump_Down;}
-      if (adj_swap) {//std::cout << "\n detected adjacent swap\n" ;
-         return replace_type::Swap_Adjacent;}
-      return replace_type::Non_Monotone; } //DUMMY! - missing handling of adj_swap, swap and jump_up
+      if (jump_up) { return replace_type::Jump_Up;}
+      if (jump_down) { return replace_type::Jump_Down;}
+      if (adj_swap) {return replace_type::Swap_Adjacent;}
+      return replace_type::Non_Monotone; } //TODO: missing handling swap
     if (!shift) { return replace_type::Monotone; }
     if (!identity) { return replace_type::Shift; }
     return replace_type::Identity;
@@ -337,7 +336,6 @@ namespace adiar::internal
     } else {
       //Non-terminal: push request from current
       const cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
-      //if (debug_enabled) std::cout<< "pushing req to pq1: " << lreq << "\n";
       pq.push(lreq);
     }
   }
@@ -657,15 +655,13 @@ namespace adiar::internal
       if (cur_label == next_jump_down) {
       // CASE jump down start 
         if (debug_enabled) std::cout << "found jump down level " << cur_label << "\n";
-
-        const label_t mapped = m(cur_label);
         //push reqs
         while(!pq1.empty_level()) {
           const cor_req_t<0> req = pq1.pull();
           const ptr_uint64 t_uid(req.data.level, 0);
           const ptr_uint64 tseek = std::min(req.target.first(), t_uid);
           while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
-          const cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, mapped}};
+          const cor_req_t<0> n_req = {{v.low(), v.high()},{},{req.data.source, m(cur_label)}};
           if (debug_enabled) std::cout << "pushing req to PQ1 " << n_req << "\n";
           pq1.push(n_req);
         }
@@ -684,7 +680,7 @@ namespace adiar::internal
 
 template<typename PQ1, typename sorter_t>
 class adj_swap_pq_decorator{
-  //decorator very like up_pq_decorator but pushes to sorter when level is min
+  //decorator very like up_pq_decorator but pushes to sorter when level is min in req
   public:
     using value_type = typename PQ1::value_type;
     using value_comp_type = typename PQ1::value_comp_type;
@@ -898,7 +894,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
 //the initial doubling means that we do an extra sweep - could be done with affine shift instead to avoid (TODO?)
 //shiftign back again is doen on the fly as arcs are output
   template <typename Policy, typename PQ1, typename PQ2>
-  inline typename Policy::__dd_type
+  typename Policy::__dd_type
   replace_adj_swap_sweep_double(const typename Policy::dd_type& dd, 
                           replace_func<Policy> m,
                           exec_policy ep,
@@ -1097,6 +1093,639 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
     return typename Policy::__dd_type(out_arcs,ep); 
 }
 
+//------------------------------------------------- JUMP UP special case -------------------------------------------------
+//jump_up -> bottom-up sweep like reduce, but doubling edges to remeber both jump-up variables sub-trees in parents
+
+/////reduce types extended with payload
+struct jump_up_mapping{
+  node::uid_type old_uid;
+  node::pointer_type new_uid;
+  assignment payload = assignment::None; 
+
+  std::string 
+  to_string() const {
+    std::stringstream stream;
+    const std::string payload = (this->payload == assignment::None) ? "NONE" : ((this->payload == assignment::True) ? "T" : "⊥");
+    stream << "( " << old_uid << ", " << new_uid << ", " << payload << ")";
+     return stream.str();
+  }
+};
+
+struct  jump_up_arc : public arc {
+  // fields
+    assignment payload;
+    arc::label_type xi;
+  public:
+    //constructors... i need like a million?
+    jump_up_arc(const arc& a, const assignment p , const arc::label_type xi) : 
+    arc(a), payload(p), xi(xi) {}
+
+    //defaults
+    jump_up_arc() = default;
+    jump_up_arc(const arc& a): arc(a) {payload = assignment::None; xi = 0;}
+    jump_up_arc(const jump_up_arc&) = default;
+    jump_up_arc& operator=(const jump_up_arc& a) = default;
+  
+  //level for pq
+  arc::label_type level() const {
+    //if source above jump target (xi), let level be xi st. it's handled at level xi
+    return std::max(source().label(), xi);
+  }
+  //printing to include payload..?
+  std::string
+    to_string() const
+    {
+      std::stringstream stream;
+
+      const std::string arrow =
+        !this->source().is_node() || this->source().out_idx() ? " ---> " : " - -> ";
+      
+      const std::string payload = (this->payload == assignment::None) ? "NONE" : ((this->payload == assignment::True) ? "T" : "⊥");
+
+      stream << this->source() << arrow << this->target() << ", p: " << payload ;
+
+      return stream.str();
+    }
+};
+
+struct jump_up_node : public node {
+  //fields we need i think
+  assignment _payload = assignment::None;
+
+  //otherwise just constructor stuff?
+  jump_up_node() = default;
+  jump_up_node(const jump_up_node&) = default;
+  jump_up_node(const node& n, const assignment payload )
+    : node(n), _payload(payload)
+  {}
+  jump_up_node&
+  operator=(const jump_up_node& n) = default;
+};
+
+/////Comparators for new types
+struct jump_up_queue_lt //for pq
+  {
+    bool
+    operator()(const jump_up_arc& a, const jump_up_arc& b)
+    {
+      // We want: sort by source then payload then low/high child
+      // should this take into account the weird xi stuff? no right? thats just for pq
+      if (a.source().level() >  b.source().level()) {return true;} //if one source is greater it should be first
+      if (a.source().level() <  b.source().level()) {return false;} //if one source is greater it should be first
+      if (a.source().id() > b.source().id()) {return true;}
+      if (a.source().id() < b.source().id()) {return false;}
+      //if we get to here the sources must have same uids..
+      //so now- we decide: no payload < false payload < true payload (follows ternary type ints)
+      if (a.payload < b.payload ) {return true;}
+      if (a.payload > b.payload ) {return false;}
+      //if we get here thay also have same payload..
+      //sort on arc type
+      return a.out_idx() > b.out_idx();
+    }
+  };
+
+ 
+  struct jump_reduce_uid_lt
+  {
+    bool
+    operator()(const jump_up_mapping& a, const jump_up_mapping& b)
+    {
+      //grouping payloads
+      if (a.old_uid == b.old_uid) {return a.payload < b.payload;} //we want false first
+      return a.old_uid > b.old_uid;
+    }
+  };
+////helpers
+inline jump_up_node
+j_node_of(const jump_up_arc& low, const jump_up_arc& high){
+  //this is just big copy paste of regular node_of except it packs payload
+  //also checks that the two arcs have the same payload (or one is none)
+  adiar_assert(essential(low.source()) == essential(high.source()), "Source are the same origin");
+
+  adiar_assert(low.out_idx() == 0u, "Out-index is correct on low arc");
+  adiar_assert(high.out_idx() == 1u, "Out-index is correct on high arc");
+
+  adiar_assert(!low.target().is_node() || low.target().out_idx() == 0u,
+                "Out-index is empty in low target");
+  adiar_assert(!high.target().is_node() || high.target().out_idx() == 0u,
+                "Out-index is empty in high target");
+
+  adiar_assert(low.source().is_flagged() == false, "Source is not flagged on low arc");
+  adiar_assert(high.source().is_flagged() == false, "Source is not flagged on high arc");
+
+  adiar_assert(low.payload == assignment::None || high.payload == assignment::None || low.payload == high.payload, "the arcs have same payload");
+  adiar_assert(essential(low.source()) == low.source()
+                && essential(high.source()) == low.source());
+  node res = node(node::uid_type(low.source()), low.target(), high.target());
+  assignment act_payload = (low.payload == assignment::None) ? high.payload : low.payload;
+  return jump_up_node(res, act_payload);
+}
+
+template <typename pq_t, typename arc_ifstream_t>
+inline jump_up_arc
+  _jump_get_next(pq_t& reduce_pq, arc_ifstream_t& arcs){
+    if (!reduce_pq.can_pull()
+        || (arcs.can_pull_terminal() && arcs.peek_terminal().source() > reduce_pq.top().source())) {
+      return jump_up_arc(arcs.pull_terminal(), assignment::None, 0); //maybe dangerous..
+    } else {
+      return reduce_pq.pull();
+    }
+  }
+
+
+
+template <typename Policy, typename pq_t, template <typename, typename> typename sorter_t>
+typename Policy::dd_type 
+replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
+                      replace_func<Policy> m,
+                      [[maybe_unused]] exec_policy ep, 
+                      size_t pq_mem, 
+                      size_t max_pq_size,
+                      size_t sorters_mem){
+  std::cout << "entered jump_up special case\n";
+  //setting up input
+  arc_ifstream<> arcs(dd);
+  level_info_ifstream<> levels(dd); 
+  
+  //setting up output
+  shared_levelized_file<typename Policy::node_type> out_file = __reduce_init_output<Policy>();
+  node_ofstream out(out_file);
+
+  //finding jump_starts and targets
+  std::vector<typename Policy::label_type> jump_starts, jump_targets;
+  {
+    level_info_ifstream<> levels1(dd);
+    while(levels1.can_pull()){
+      level_info li = levels1.pull();
+      if(li.level() > m(li.level())) {
+        jump_starts.push_back(li.level());
+        jump_targets.push_back(m(li.level()));
+      }
+    }
+  }
+  //making generators..
+  generator<typename Policy::label_type> level_gen = make_generator(jump_starts.begin(), jump_starts.end());
+  generator<typename Policy::label_type> target_gen_for_pq = make_generator(jump_targets.begin(), jump_targets.end());
+  generator<typename Policy::label_type> target_gen_for_me = make_generator(jump_targets.begin(), jump_targets.end());
+  optional<typename Policy::label_type> xj = level_gen();
+  optional<typename Policy::label_type> xi = target_gen_for_me();
+
+
+  //setting up pq
+  pq_t pq({dd, target_gen_for_pq}, pq_mem, max_pq_size, stats_replace.lpq);
+
+  while(!pq.empty() || arcs.can_pull_terminal()){
+    if (debug_enabled) std::cout << "still more arcs to process!\n";
+    //find next level (max seen in pq or arc file)
+    typename Policy::label_type level;
+    if(!arcs.can_pull_terminal() || (!pq.empty() && pq.has_current_level() && pq.current_level() >= arcs.peek_terminal().source().level())){
+      //max is from pq
+      level = pq.current_level();
+      if (debug_enabled) std::cout << "chose level " << level << "from pq\n";
+    } else {
+      level = arcs.peek_terminal().source().level();
+      if (debug_enabled) std::cout << "chose level " << level << "from arc file\n";
+    }
+
+    //per level temp files
+    //TODO: kinda double to define here if on a regular level.. 
+    iofstream<jump_up_mapping> red1_mapping;
+    size_t unreduced_width = (level == xi) ? max_pq_size : levels.pull().width() *2; 
+    //TODO: find a fix for this - for some reason the internal sorter doesn't wanna initialize with size one
+    // if *2 not here it just refuses to push 
+    //NOTE: level we're moving to (xi) has no width before
+    //i should think -> at most twice the max level cut number of edges but maybe it's more?
+    std::cout << "width of current layer " << unreduced_width << "\n";
+    sorter_t<jump_up_node, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
+    sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
+
+    //case distinction on level
+    if (level > xj) {
+      //////////////////////////////////////// non-involved level ////////////////////////////////////////
+      //just perform regular reduce work..
+      //TODO: could potentially just be fast reduce?
+      if (debug_enabled) std::cout << "found regular level " << level << "\n";
+      //const size_t unreduced_width = levels.pull().width();
+      __reduce_level<Policy, sorter_t, pq_t>(arcs, level, level, pq, out, sorters_mem, unreduced_width);
+    } else if (level == xj) {
+      //////////////////////////////////////// jump start level ////////////////////////////////////////
+      //reduce but
+      //(1) output no nodes
+      //(2) make 2 F2 mappings, one for each payload
+      //(3) when forwarding, for each incoming push 2 arcs, one for each payload for that source
+      //(4) in resulting bdd -> no nodes on this level so update cuts accordingly..
+      if (debug_enabled) std::cout << "found jump level " << level << "\n";
+      while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == level)
+              || pq.can_pull()) {
+        const jump_up_arc e_high = _jump_get_next(pq, arcs);
+        const jump_up_arc e_low  = _jump_get_next(pq, arcs);
+        const jump_up_node n = j_node_of(e_low, e_high);
+        if (debug_enabled) std::cout << "pulled arcs: " << e_high.to_string() << ", " << e_low.to_string() << ", to build " << n << "\n";
+
+        //red rule 1 (kill suppresible)
+        if (n.low() == n.high()){
+          if (!red1_mapping.is_open()) { red1_mapping.open(); }
+          red1_mapping.write({ n.uid(), n.low() });
+        } else {
+          child_grouping.push(n);
+        }
+      }
+
+      // Count number of arcs that cross this level
+      cuts_t local_1level_cut   = { { 0u, 0u, 0u, 0u } };
+      cuts_t tainted_1level_cut = { { 0u, 0u, 0u, 0u } };
+
+      __reduce_cut_add(local_1level_cut,
+                      pq.size_without_terminals(),
+                      pq.terminals(false) + arcs.unread_terminals(false),
+                      pq.terminals(true) + arcs.unread_terminals(true));
+
+      //red rule 2 (merge duplicates)
+      child_grouping.sort(); //group duplicates 
+      node seen_node = node(node::uid_type(), ptr_uint64::nil(), ptr_uint64::nil());
+      while (child_grouping.can_pull()){
+        //for each non-dupe pulled we want to push two mappings - one for \bot, one for \top
+        //DOUBLE CHECK: should we also do it for dupe nodes??
+        const node next_node = child_grouping.pull();
+        if (seen_node.low() != unflag(next_node.low()) || seen_node.high() != unflag(next_node.high())) {
+          seen_node = next_node;
+          red2_mapping.push({ next_node.uid(), next_node.low(), assignment::False });
+          red2_mapping.push({ next_node.uid(), next_node.high(), assignment::True });
+          if (debug_enabled) std::cout << "pushed F2 mapping: (" << next_node.uid() << "-->" << next_node.low() << ", p: ⊥)\n";
+          if (debug_enabled) std::cout << "pushed F2 mapping: (" << next_node.uid() << "-->" << next_node.high() << ", p: T)\n";
+          //notice: outputting no nodes, so no updated to cuts
+        }
+      }
+
+      //forwarding
+      red2_mapping.sort();
+
+      //handling F1 specially...
+      jump_up_mapping next_red1  = { node::uid_type(), node::uid_type() }; // <-- dummy value
+      bool has_next_red1 = red1_mapping.is_open() && red1_mapping.size() > 0;
+      if (has_next_red1) {
+        red1_mapping.seek_begin();
+        next_red1 = red1_mapping.next();
+      }
+
+      while (has_next_red1 || red2_mapping.can_pull()) {
+        const bool is_red1_current = !(red2_mapping.can_pull()) || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
+        if (is_red1_current) {
+          //then handle like normal -> we skipping xi node
+          const jump_up_mapping current_map = next_red1;
+          while (arcs.can_pull_internal() && current_map.old_uid == arcs.peek_internal().target()) {
+               const ptr_uint64 s = arcs.pull_internal().source();
+               const ptr_uint64 t = flag(current_map.new_uid);
+               jump_up_arc n_req = {jump_up_arc({s, t}, assignment::None, xi.value())};
+               if (debug_enabled) std::cout << "pushing req " << n_req << "\n";
+               pq.push(n_req);
+            }
+        } else {
+          // for each ingoing : pull 2 mappings and push 2 reqs
+          const jump_up_mapping map1 = red2_mapping.pull();
+          const jump_up_mapping map2 = red2_mapping.pull();
+          if (debug_enabled) std::cout << "found mappings: " << map1.to_string()  << ", "<< map2.to_string() <<"\n";
+
+          adiar_assert(map1.old_uid == map2.old_uid, "pulled mappings not for same old uid!");
+          
+          while (arcs.can_pull_internal() && map1.old_uid == arcs.peek_internal().target()) {
+              const ptr_uint64 s = arcs.pull_internal().source();
+              if (debug_enabled) std::cout << "found matching req starting at " << s << "\n";
+              const jump_up_arc n1 = {{s,map1.new_uid}, map1.payload, xi.value()};
+              const jump_up_arc n2 = {{s,map2.new_uid}, map2.payload, xi.value()};
+              if (debug_enabled) std::cout << "pushing requests: " << n1.to_string() << " and " << n2.to_string() << "\n";
+              pq.push(n1);
+              pq.push(n2);
+            }
+        }
+        //update next_red1 if any..
+        if(is_red1_current) {
+          has_next_red1 = red1_mapping.has_next(); 
+          if (has_next_red1) {next_red1 = red1_mapping.next();}
+        }
+      }
+      red1_mapping.close();
+      //updating cuts?? (think no update happens?)
+      out.unsafe_max_1level_cut(local_1level_cut);
+      out.unsafe_inc_1level_cut(tainted_1level_cut);
+      //epilogue - does a bunch of checks + setup of levelized pq
+      const bool terminal_value = next_red1.new_uid.is_terminal() && next_red1.new_uid.value();
+      __reduce_level__epilogue<>(arcs, pq, out, terminal_value);
+
+    } else if (level > xi) {
+      //////////////////////////////////////// in-between level ////////////////////////////////////////
+      //reduce but
+      //(1) build nodes from payload pairs, if non-payload arc pulled -> use it twice
+      //(2) when forwarding, for each incoming push 2 arcs, one for each payload for that source
+      if (debug_enabled) std::cout << "found in-between level " << level << "\n";
+
+      while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == level)
+              || pq.can_pull()) {
+        const jump_up_arc e_1 = _jump_get_next(pq, arcs);
+        const jump_up_arc e_2 = _jump_get_next(pq, arcs);
+        if (e_1.payload == e_2.payload) {
+          //we chilling build node and push if non supressible
+          if (debug_enabled) std::cout << "pulled arcs: " << e_1.to_string() << ", " << e_2.to_string();
+          const jump_up_node n = j_node_of(e_2, e_1);
+          if (debug_enabled) std::cout << ", to build " << n << "\n" ;
+          //check red 1
+          if (n.low() == n.high()){
+            if (!red1_mapping.is_open()) { red1_mapping.open(); }
+            red1_mapping.write({ n.uid(), n.low() });
+          } else {
+            child_grouping.push(n);
+          }
+        } else {
+          //diff payloads means either one of them is none, or there is an additional none to pull
+          const jump_up_arc e_3 = _jump_get_next(pq, arcs);
+          //case distinction to figure out what is low and high...
+          adiar_assert(e_1.out_idx(), "somehow first pulled is not a high edge??");
+          if (debug_enabled) std::cout << "pulled arcs: " << e_1.to_string() << ", " << e_2.to_string() << ", " << e_3.to_string() << "\n" ;
+          jump_up_node n1, n2;
+          if (e_2.out_idx()) {
+            //then third pulled must be none
+            if (debug_enabled) std::cout << "we conclude that third is none and thus low edge\n";
+            n1 = j_node_of(e_3, e_1);
+            n2 = j_node_of(e_3, e_2);
+          } else {
+            //first pulled must be none?
+            if (debug_enabled) std::cout << "we conclude that first is none and thus second and third low edge\n";
+            n1 = j_node_of(e_2, e_1);
+            n2 = j_node_of(e_3, e_1);
+          }
+          if (debug_enabled) std::cout << "built nodes: " << n1 << ", " << n2 << "\n" ;
+          //check red 1
+          if (n1.low() == n1.high()){
+            if (!red1_mapping.is_open()) { red1_mapping.open(); }
+            red1_mapping.write({ n1.uid(), n1.low() , n1._payload});
+          } else {
+            child_grouping.push(n1);
+          }
+          if (n2.low() == n2.high()){
+            if (!red1_mapping.is_open()) { red1_mapping.open(); }
+            red1_mapping.write({ n2.uid(), n2.low(), n1._payload });
+          } else {
+            child_grouping.push(n2);
+          }
+        }
+      }
+      /*
+      const jump_up_arc dummy = jump_up_arc({node::pointer_type::nil(), node::pointer_type::nil()},assignment::False, 0);
+      jump_up_arc e_extra = dummy; //dummy
+      while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == level)
+              || pq.can_pull()) {
+          const jump_up_arc e_high = (e_extra.payload != assignment::False && e_extra.out_idx()) ? e_extra : _jump_get_next(pq, arcs);  
+          const jump_up_arc e_low = (e_extra.payload != assignment::False && !e_extra.out_idx()) ? e_extra : _jump_get_next(pq, arcs);  
+          if (debug_enabled) std::cout << "pulled arcs: " << e_high.to_string() << ", " << e_low.to_string() << ", " ;
+          const jump_up_node n = j_node_of(e_low, e_high);
+          if (debug_enabled) std::cout << "to build " << n << "\n";
+
+          //update e_extra if necessary
+          if(e_high.payload == assignment::None && e_low.payload != assignment::None){
+            if (e_extra == e_high) {std::cout << "extra reset \n" ; e_extra = dummy;}
+            else {if (debug_enabled) std::cout << "extra set to high \n" ;e_extra = e_high;}
+            }
+          if (e_low.payload == assignment::None && e_high.payload != assignment::None){
+            if (e_extra == e_low) {std::cout << "extra reset \n" ; e_extra = dummy;}
+            else {if (debug_enabled) std::cout << "extra set to low \n" ; e_extra = e_low;}}
+          
+          //red rule 1 (kill suppresible)
+          if (n.low() == n.high()){
+            if (!red1_mapping.is_open()) { red1_mapping.open(); }
+            red1_mapping.write({ n.uid(), n.low() });
+          } else {
+            child_grouping.push(n);
+          }
+      }*/
+      // cut stuff:
+      cuts_t local_1level_cut   = { { 0u, 0u, 0u, 0u } };
+      cuts_t tainted_1level_cut = { { 0u, 0u, 0u, 0u } };
+      __reduce_cut_add(local_1level_cut,
+                     pq.size_without_terminals(),
+                     pq.terminals(false) + arcs.unread_terminals(false),
+                     pq.terminals(true) + arcs.unread_terminals(true));
+      
+      //red rule 2 (merge duplicates)
+      child_grouping.sort();
+      typename Policy::id_type out_id = Policy::max_id;
+      node seen_node = node(node::uid_type(), ptr_uint64::nil(), ptr_uint64::nil());
+      while (child_grouping.can_pull()) {
+        const jump_up_node next_node = child_grouping.pull();
+        std::cout << "found node " << next_node << "\n";
+        if (seen_node.low() != unflag(next_node.low()) || seen_node.high() != unflag(next_node.high())) {
+          adiar_assert(0 <= out_id, "Should still have more ids left");
+          seen_node = node(level, out_id--, unflag(next_node.low()), unflag(next_node.high()));
+          std::cout << "pushing node to out " << seen_node << "\n";
+          out.unsafe_push(seen_node); //needs to be unsafe donno why
+          
+          //now that we adding nodes - update cuts
+          __reduce_cut_add(next_node.low().is_flagged() ? tainted_1level_cut : local_1level_cut,
+                        seen_node.low());
+          __reduce_cut_add(next_node.high().is_flagged() ? tainted_1level_cut : local_1level_cut,
+                        seen_node.high());
+
+        } 
+        std::cout << "new F2 mapping: " << next_node.uid() << " -> " << seen_node.uid() << "\n";
+        red2_mapping.push({ next_node.uid(), seen_node.uid(), next_node._payload });
+      }
+
+      //update level info:
+      const size_t reduced_width = Policy::max_id - out_id;
+      if (reduced_width > 0) { out.unsafe_push(level_info(level, reduced_width)); }
+
+      //forwarding
+      //very like xj level but we dont know that pairs will be in F2 so slightly more ugly..
+      red2_mapping.sort();
+
+      jump_up_mapping next_red1 = { node::uid_type(), node::uid_type() };
+      bool has_next_red1 = red1_mapping.is_open() && red1_mapping.size() > 0;
+      if (has_next_red1) {red1_mapping.seek_begin(); next_red1 = red1_mapping.next();}
+
+       while (has_next_red1 || red2_mapping.can_pull()) {
+        //bools for target flagging?
+        bool first_is_f1, second_is_f1;
+        //pull pair of mappings - potentially not both in F2
+        //this is really ugly
+        bool is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
+        first_is_f1 = is_red1_current;
+        const jump_up_mapping map1 = is_red1_current ? next_red1 : red2_mapping.pull();
+        if (is_red1_current){
+            has_next_red1 = red1_mapping.has_next();
+            if (has_next_red1) {next_red1 = red1_mapping.next();}
+        }
+        is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
+        second_is_f1 = is_red1_current;
+        const jump_up_mapping map2 = is_red1_current ? next_red1 : red2_mapping.pull();
+        if (debug_enabled) std::cout << "found mappings: " << map1.to_string() << ", " << map2.to_string() << "\n";
+
+        adiar_assert(map1.old_uid == map2.old_uid, "pulled pair uids dont match!");
+
+        while (arcs.can_pull_internal() && map1.old_uid == arcs.peek_internal().target()) {
+          const ptr_uint64 s = arcs.pull_internal().source();
+          std::cout << "found matching req starting in :" << s << "\n";
+          const jump_up_arc n1 = {{s,(first_is_f1) ? flag(map1.new_uid) : map1.new_uid}, map1.payload, xi.value()};
+          const jump_up_arc n2 = {{s,(second_is_f1) ? flag(map2.new_uid) : map2.new_uid}, map2.payload, xi.value()};
+          std::cout << "pushing requests: " << n1.to_string() << " and " << n2.to_string() << "\n";
+          pq.push(n1);
+          pq.push(n2);
+        }
+        //handle special case -> something jumping up to be new root...
+        typename Policy::id_type test = Policy::max_id;
+        if(xi.has_value()  && !pq.has_next_level()) {
+          //this looks suspect but should only happen once so id's are ok?
+          if (debug_enabled) std::cout << "detected that we're in weird case, pushing nil arcs for new top level";
+          const typename Policy::uid_type s(xi.value(), test--);
+          const ptr_uint64 s1 = s.as_ptr(map1.payload == assignment::True);
+          const jump_up_arc n1 = {{s1,((first_is_f1) ? flag(map1.new_uid) : map1.new_uid)}, map1.payload, xi.value()};
+          const jump_up_arc n2 = {{s1,((first_is_f1) ? flag(map2.new_uid) : map2.new_uid)}, map2.payload, xi.value()};
+          if (debug_enabled) std::cout << "built reqs:" << n1.to_string() << ", " << n2.to_string() << "\n";
+          pq.push(n1);
+          pq.push(n2);
+        }
+        if (is_red1_current) {
+          has_next_red1 = red1_mapping.has_next();
+          if (has_next_red1) { next_red1 = red1_mapping.next(); }
+        }
+      }
+      red1_mapping.close();
+
+      //cuts
+      out.unsafe_max_1level_cut(local_1level_cut);
+      out.unsafe_inc_1level_cut(tainted_1level_cut);
+
+      //epilogue
+      const bool terminal_value = next_red1.new_uid.is_terminal() && next_red1.new_uid.value();
+      __reduce_level__epilogue<>(arcs, pq, out, terminal_value);
+    } else {
+      //////////////////////////////////////// jump target level ////////////////////////////////////////
+      //Not really reduce stuff here
+      //should:
+      //(0) i think? only pull arcs from pq (leaf arcs will be handled when we actually reach their source)
+      //(1) pull an arc: if it has no payload just pass it on
+      //(2) if first arc has payload pull another: if payload doesn't match -> build a new output node
+      //(3) if the payload matched then pull 2 more arcs -> output 2 new nodes
+      //(4) after all arcs processed update to next xj, xi
+      std::cout << "found xi level " << level << "\n";
+      const typename Policy::label_type cur_xi = xi.value();
+      typename Policy::id_type out_id = Policy::max_id;
+      xi = target_gen_for_me(); //update xi
+      if (debug_enabled) std::cout <<  "updated xi to be " << xi.value_or(5000) << "\n";
+
+      //temp files
+      while(pq.can_pull()){
+        //special case: moving to root layer..
+        const bool jump_to_root = pq.top().source().level() == cur_xi;
+        const jump_up_arc r1 = pq.pull();
+        if (r1.payload == assignment::None) {
+          if (debug_enabled) std::cout << "found jump-crossing arc " << r1.to_string() <<" we just pass on as req\n";
+          if (!jump_to_root){pq.push(jump_up_arc({r1.source(), r1.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}}
+          
+        else {
+          const jump_up_arc r2 = pq.pull();
+          if (debug_enabled) std::cout << "found arcs " << r1.to_string() << ", " << r2.to_string();
+          if (r1.payload != r2.payload) {
+            //push one node and req case (if not reducible?)
+            if(r1.target() == r2.target()) {
+              //node supressible so just push along req
+              if (debug_enabled) std::cout << " reducible so just pass on req to target\n ";
+              if (!jump_to_root){pq.push(jump_up_arc({r1.source(), r1.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
+            } else {
+              //push node and req
+              const node::uid_type out_uid(cur_xi, out_id--);
+              const jump_up_node res_node = {{out_uid, unflag(r1.target()), unflag(r2.target())}, assignment::None};
+              const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
+              if (debug_enabled) std::cout << " to build " << res_node << ", and req" << n_req.to_string() << "\n";
+              child_grouping.push(res_node);
+              if (!jump_to_root){pq.push(n_req);}
+            }
+          } else {
+            //payloads match mean there are 2 more matching reqs with same source, so we pull these
+            const jump_up_arc r3 = pq.pull();
+            const jump_up_arc r4 = pq.pull();
+            if (debug_enabled) std::cout << ", " << r3.to_string() << ", " << r4.to_string() << "\n";
+            //asserting pairwise not same payload
+            adiar_assert(r1.payload != r3.payload, "r1 and r3 match :c");
+            adiar_assert(r2.payload != r4.payload, "r2 and r4 match :c");
+            //handling first pair..
+            if(r1.target() == r3.target()) { 
+              if (debug_enabled) std::cout << "  first supressible.. just pushing req \n";
+              //node supressible so just push along req
+               if (!jump_to_root){pq.push(jump_up_arc({r1.source(), r1.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
+            } else {
+              const node::uid_type out_uid(cur_xi, out_id--);
+              const jump_up_node res_node = {{out_uid, unflag(r1.target()), unflag(r3.target())}, assignment::None};
+              const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
+              if (debug_enabled) std::cout << "  build first: " << res_node << ", and req" << n_req << "\n";
+              child_grouping.push(res_node);
+               if (!jump_to_root){pq.push(n_req);}
+            }
+            //handling second pair..
+            if(r2.target() == r4.target()) { 
+              //node supressible so just push along req
+              if (debug_enabled) std::cout << "  second supressible.. just pushing req \n";
+              if (!jump_to_root){pq.push(jump_up_arc({r2.source(), r2.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
+            } else {
+              const node::uid_type out_uid(cur_xi, out_id--);
+              const jump_up_node res_node = {{out_uid, unflag(r2.target()), unflag(r4.target())}, assignment::None};
+              const jump_up_arc n_req = {{r2.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
+              if (debug_enabled) std::cout << "  build second: " << res_node << ", and req" << n_req << "\n";
+              child_grouping.push(res_node);
+               if (!jump_to_root){pq.push(n_req);}
+            }
+          }
+        }
+      }
+      // Count number of arcs that cross this level
+      //NOTE: i have no idea is this is right...
+      cuts_t local_1level_cut   = { { 0u, 0u, 0u, 0u } };
+      cuts_t tainted_1level_cut = { { 0u, 0u, 0u, 0u } };
+
+      __reduce_cut_add(local_1level_cut,
+                      pq.size_without_terminals(),
+                      pq.terminals(false) + arcs.unread_terminals(false),
+                      pq.terminals(true) + arcs.unread_terminals(true));
+
+      // red rule 2
+      child_grouping.sort();
+      node seen_node = node(node::uid_type(), ptr_uint64::nil(), ptr_uint64::nil());
+      while (child_grouping.can_pull()) {
+        node next_node = child_grouping.pull();
+        if(seen_node.low() != unflag(next_node.low()) || seen_node.high() != unflag(next_node.high())) {
+          seen_node = next_node;
+          //not dupliate! we output
+          out.unsafe_push(next_node);
+          //update cut
+          __reduce_cut_add(next_node.low().is_flagged() ? tainted_1level_cut : local_1level_cut,
+                         seen_node.low());
+          __reduce_cut_add(next_node.high().is_flagged() ? tainted_1level_cut : local_1level_cut,
+                         seen_node.high());
+        }
+      }
+      //we dont need to forward since we already did while building nodes...
+
+      //end stuff
+      // Update with new possible maximum 1-level cut (the one below the current level)
+      out.unsafe_max_1level_cut(local_1level_cut);
+      // Add the tainted edges
+      out.unsafe_inc_1level_cut(tainted_1level_cut);
+
+      const bool terminal_value = false; //NOTE: again no clue
+      __reduce_level__epilogue<>(arcs, pq, out, terminal_value);
+
+      //update xj
+      xj = level_gen();
+      if (debug_enabled) std::cout <<  "updated xj to be " << xj.value_or(5000) << "\n";
+      //update lvl info
+      const size_t reduced_width = Policy::max_id - out_id;
+      if (reduced_width > 0) { out.unsafe_push(level_info(level, reduced_width)); }
+
+    }
+  }
+  if (debug_enabled) std::cout << "exited big loop";
+  return typename Policy::dd_type(out_file);
+}
+
+
 //--------------------- setup of PQs for Non-monotone single sweeps (not nested sweeping stuff...) ------------------------------
 //calculating memory stuff for the PQs and sorters used in the special cases 
 //idea
@@ -1203,18 +1832,13 @@ replace(typename Policy::dd_type dd,
       const size_t pq2_memory_fits = cor_priority_queue_2_t<memory_mode::Internal>::memory_fits(pq1_memory );
       const size_t sorter_memory_fits = default_sorter_t::memory_fits(sorter_memory);
 
-      //a guess but seems right -> worst case everythign is pushed to an extra layer for some swap
-      const size_t sorter_bound = dd->max_1level_cut.size() ;
       const size_t pq_1_bound =  __cor_ilevel_upper_bound<Policy, get_2level_cut, 2u>(dd);
       const size_t pq_2_bound =  __cor_ilevel_upper_bound<Policy, get_1level_cut, 0u>(dd);
-
-
-      const size_t sorter_max =  ep.template get<exec_policy::memory>() == exec_policy::memory::Internal
-        ? std::min({ pq1_memory_fits, sorter_memory_fits, sorter_bound })
-        : sorter_bound;
+      const size_t sorter_bound = pq_1_bound ; //this might be too high?
 
       const size_t max_pq_1_size = internal_only ? std::min(pq1_memory_fits, pq_1_bound) : pq_1_bound;
       const size_t max_pq_2_size = internal_only ? std::min(pq2_memory_fits, pq_2_bound) : pq_2_bound;
+      const size_t sorter_max =  internal_only ? std::min({ sorter_memory_fits, sorter_bound }) : sorter_bound;
 
       if (!external_only && max_pq_1_size <= no_lookahead_bound(2)) {
   #ifdef ADIAR_STATS
@@ -1249,7 +1873,47 @@ replace(typename Policy::dd_type dd,
       }
       //break;
     }
-    default: //Non-Monotonic, jump-up, swap, and all Monotonic cases
+    case replace_type::Jump_Up : {
+      //has one pq and some sorters
+      const size_t aux_available_memory = memory_available()
+      // Input streams
+      - arc_ifstream<>::memory_usage()
+      - level_info_ifstream<>::memory_usage()
+      // Output streams
+      - node_ofstream::memory_usage();
+
+      //transpose dd
+      const shared_levelized_file<arc>& t_dd = transpose(dd);
+      const size_t pq_memory = aux_available_memory / 2;
+      const size_t sorters_memory = aux_available_memory - pq_memory - iofstream<jump_up_mapping>::memory_usage();
+      if(debug_enabled) std::cout << "sorters have memory " << sorters_memory << "\n";
+
+      const size_t pq_memory_fits = reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, jump_up_arc, jump_up_queue_lt, 2>::memory_fits(pq_memory);
+      const size_t pq_bound = (t_dd->max_1level_cut) *2u;
+
+      const size_t max_pq_size = internal_only ? std::min(pq_memory_fits, pq_bound) : pq_bound;
+
+      if (!external_only && max_pq_size <= no_lookahead_bound(1)) {
+#ifdef ADIAR_STATS
+      stats_replace.lpq.unbucketed += 1u;
+#endif        
+      using PQ = reduce_priority_queue<0, memory_mode::Internal, jump_up_arc, jump_up_queue_lt, 2>;
+      return replace_jump_up_sweep<Policy, PQ, internal_sorter>(t_dd, m, ep, pq_memory, max_pq_size, sorters_memory);
+      } else if (!external_only && max_pq_size <= pq_memory_fits) {
+#ifdef ADIAR_STATS
+      stats_replace.lpq.internal += 1u;
+#endif 
+        using PQ = reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal, jump_up_arc, jump_up_queue_lt, 2>;
+        return replace_jump_up_sweep<Policy, PQ, internal_sorter>(t_dd, m, ep, pq_memory, max_pq_size, sorters_memory);
+      } else {
+#ifdef ADIAR_STATS
+      stats_replace.lpq.external += 1u;
+#endif 
+        using PQ = reduce_priority_queue<ADIAR_LPQ_LOOKAHEAD, memory_mode::External, jump_up_arc, jump_up_queue_lt, 2>;
+        return replace_jump_up_sweep<Policy, PQ, external_sorter>(t_dd, m, ep, pq_memory, max_pq_size, sorters_memory);
+      }
+    }
+    default: //Non-Monotonic,  swap, and all Monotonic cases
       adiar_unreachable();
 
   }
@@ -1283,8 +1947,7 @@ replace(typename Policy::dd_type dd,
 }
 
 
-  ///JUMP_UP special case
-  //TBA
+
   //TODO: SWAP special case
 
 
@@ -1528,11 +2191,19 @@ public:
       stats_replace.nested_sweeps += 1u;
 #endif
       return replace_nested_sweep<Policy>(dd,m,ep);
+
     case replace_type::Jump_Down:
 #ifdef ADIAR_STATS
       stats_replace.jump_down_scans += 1u;
 #endif
     return replace<Policy>(dd,m,inferred_type, ep);
+
+    case replace_type::Jump_Up: //NOTE: running from here -> bdd is transposed first
+#ifdef ADIAR_STATS
+      stats_replace.jump_up_scans += 1u;
+#endif
+    return replace<Policy>(dd,m,inferred_type, ep);
+
     case replace_type::Swap_Adjacent:
 #ifdef ADIAR_STATS
       stats_replace.adj_swap_scans += 1u;
@@ -1586,7 +2257,12 @@ public:
     case replace_type::Auto:
       adiar_unreachable();
       // LCOV_EXCL_STOP
-
+    
+    case replace_type::Jump_Up:  
+#ifdef ADIAR_STATS
+      stats_replace.jump_up_scans += 1u;
+#endif   
+    return replace_nested_sweep<Policy>(std::move(__dd), m,ep);
     case replace_type::Non_Monotone:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
@@ -1595,7 +2271,7 @@ public:
 #endif
       //NOTE: jump_down , swap_adj not built for input arc files currently
       return replace_nested_sweep<Policy>(std::move(__dd), m,ep);
-
+    
     case replace_type::Monotone:
     case replace_type::Shift:
 #ifdef ADIAR_STATS
