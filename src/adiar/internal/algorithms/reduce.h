@@ -698,13 +698,6 @@ namespace adiar::internal
   class default_reduce_policy : public DdPolicy
   {
   public:
-    using map_type = mapping;
-    using arc_type = reduce_arc;
-    using node_type = typename DdPolicy::node_type;
-
-    using pq_order = reduce_queue_lt;
-    using red2_order = reduce_node_children_lt;
-    using uid_order = reduce_uid_lt;
     constexpr inline typename DdPolicy::label_type
     map_level(typename DdPolicy::label_type x) const
     {
