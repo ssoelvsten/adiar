@@ -44,7 +44,7 @@ namespace adiar
     /* (Single-sweep version of 'Non_Monotone'): Variable remapping, only moving some variables up
                                                  without crossing other variables that are moving.
     */
-    // Jump_Up = 6, // TODO
+    Jump_Up = 6, // TODO
 
     /* (Single-sweep version of 'Non_Monotone'): Variable remapping, only moving some variables down
                                                  without crossing other variables that are moving.
