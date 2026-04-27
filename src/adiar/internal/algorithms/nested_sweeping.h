@@ -997,7 +997,6 @@ namespace adiar::internal
           stats.inner_down.pq_runs += 1u;
 #endif
         }
-
         const size_t inner_pq_memory = use_random_access
           ? inner_memory - inner_stream_memory - inner_ra_memory
           : minimum_inner_pq_memory;
@@ -1021,14 +1020,15 @@ namespace adiar::internal
           internal_only ? std::min(inner_pq_fits, inner_pq_bound) : inner_pq_bound;
 
         // TODO (bdd_compose): ask 'Policy' implementation for the initalizer list
-        // DONE! policy_impl extended with method supplying the initializer list!!
+        // DONE! policy_impl extended with method supplying the initializer list - is also needed for replace
 
           if (!external_only
             && inner_pq_max_size <= no_lookahead_bound(OuterRoots::value_type::cardinality)){
-
             adiar_assert(inner_pq_max_size <= inner_pq_fits,
                         "'no_lookahead' implies it should (in practice) satisfy the '<='");
-
+#ifdef ADIAR_STATS
+          lpq_stats.unbucketed += 1u;
+#endif
             using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal>;
             InnerPriorityQueue inner_pq(policy_impl.template priority_queue_initializer_list<InnerPriorityQueue>(outer_file),
                                         inner_pq_memory,
