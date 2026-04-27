@@ -314,6 +314,7 @@ namespace adiar::internal
          ptr_uint64 source, 
          const tuple<typename Policy::pointer_type> target, 
          const typename Policy::label_type level) {
+    adiar_assert(!(target[0].is_nil() && target[1].is_nil()), "both targets cannot be nil!");
 
     if (target[0].is_nil() && target[1].is_terminal()){
         const arc a =  {source, target[1]};
@@ -1154,12 +1155,27 @@ struct jump_up_node : public node {
 
   //otherwise just constructor stuff?
   jump_up_node() = default;
-  jump_up_node(const jump_up_node&) = default;
+  jump_up_node(const jump_up_node& n) = default;
   jump_up_node(const node& n, const assignment payload )
     : node(n), _payload(payload)
   {}
   jump_up_node&
   operator=(const jump_up_node& n) = default;
+};
+
+struct jump_up_node_ws : public node {
+  //fields we need i think
+  assignment _payload = assignment::None;
+  node::pointer_type _source;
+
+  //otherwise just constructor stuff?
+  jump_up_node_ws() = default;
+  jump_up_node_ws(const jump_up_node_ws& n) = default;
+  jump_up_node_ws(const node& n, const assignment payload, const node::pointer_type source )
+    : node(n), _payload(payload), _source(source)
+  {}
+  jump_up_node_ws&
+  operator=(const jump_up_node_ws& n) = default;
 };
 
 /////Comparators for new types
@@ -1287,25 +1303,13 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       if (debug_enabled) std::cout << "chose level " << level << "from arc file\n";
     }
 
-    //per level temp files
-    //TODO: kinda double to define here if on a regular level.. 
-    iofstream<jump_up_mapping> red1_mapping;
-    size_t unreduced_width = (level == xi) ? max_pq_size : levels.pull().width() *2; 
-    //TODO: find a fix for this - for some reason the internal sorter doesn't wanna initialize with size one
-    // if *2 not here it just refuses to push 
-    //NOTE: level we're moving to (xi) has no width before
-    //i should think -> at most twice the max level cut number of edges but maybe it's more?
-    std::cout << "width of current layer " << unreduced_width << "\n";
-    sorter_t<jump_up_node, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
-    sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
-
     //case distinction on level
     if (level > xj) {
       //////////////////////////////////////// non-involved level ////////////////////////////////////////
       //just perform regular reduce work..
       //TODO: could potentially just be fast reduce?
       if (debug_enabled) std::cout << "found regular level " << level << "\n";
-      //const size_t unreduced_width = levels.pull().width();
+      const size_t unreduced_width = levels.pull().width() *2; //TODO: figure out why this fails if no *2
       __reduce_level<Policy, sorter_t, pq_t>(arcs, level, level, pq, out, sorters_mem, unreduced_width);
     } else if (level == xj) {
       //////////////////////////////////////// jump start level ////////////////////////////////////////
@@ -1315,6 +1319,14 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //(3) when forwarding, for each incoming push 2 arcs, one for each payload for that source
       //(4) in resulting bdd -> no nodes on this level so update cuts accordingly..
       if (debug_enabled) std::cout << "found jump level " << level << "\n";
+
+      //temp files
+      iofstream<jump_up_mapping> red1_mapping;
+      size_t unreduced_width = (level == xi) ? max_pq_size : levels.pull().width() *2; 
+      std::cout << "width of current layer " << unreduced_width << "\n";
+      sorter_t<jump_up_node, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
+      sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
+
       while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == level)
               || pq.can_pull()) {
         const jump_up_arc e_high = _jump_get_next(pq, arcs);
@@ -1419,6 +1431,13 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //(2) when forwarding, for each incoming push 2 arcs, one for each payload for that source
       if (debug_enabled) std::cout << "found in-between level " << level << "\n";
 
+      //temp files
+      iofstream<jump_up_mapping> red1_mapping;
+      size_t unreduced_width = (level == xi) ? max_pq_size : levels.pull().width() *2; 
+      std::cout << "width of current layer " << unreduced_width << "\n";
+      sorter_t<jump_up_node, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
+      sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
+
       while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == level)
               || pq.can_pull()) {
         const jump_up_arc e_1 = _jump_get_next(pq, arcs);
@@ -1432,8 +1451,10 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
           if (n.low() == n.high()){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
             red1_mapping.write({ n.uid(), n.low() });
+            if (debug_enabled) std::cout << "new F1 mapping" << n << "\n";
           } else {
             child_grouping.push(n);
+            if (debug_enabled) std::cout << "pushed node" << n << "\n";
           }
         } else {
           //diff payloads means either one of them is none, or there is an additional none to pull
@@ -1458,45 +1479,22 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
           if (n1.low() == n1.high()){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
             red1_mapping.write({ n1.uid(), n1.low() , n1._payload});
+            if (debug_enabled) std::cout << "new F1 mapping" << n1 << "\n";
           } else {
             child_grouping.push(n1);
+            if (debug_enabled) std::cout << "pushed node" << n1 << "\n";
           }
           if (n2.low() == n2.high()){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
             red1_mapping.write({ n2.uid(), n2.low(), n1._payload });
+            if (debug_enabled) std::cout << "new F1 mapping" << n2 << "\n";
           } else {
             child_grouping.push(n2);
+            if (debug_enabled) std::cout << "pushed node" << n2 << "\n";
           }
         }
       }
-      /*
-      const jump_up_arc dummy = jump_up_arc({node::pointer_type::nil(), node::pointer_type::nil()},assignment::False, 0);
-      jump_up_arc e_extra = dummy; //dummy
-      while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == level)
-              || pq.can_pull()) {
-          const jump_up_arc e_high = (e_extra.payload != assignment::False && e_extra.out_idx()) ? e_extra : _jump_get_next(pq, arcs);  
-          const jump_up_arc e_low = (e_extra.payload != assignment::False && !e_extra.out_idx()) ? e_extra : _jump_get_next(pq, arcs);  
-          if (debug_enabled) std::cout << "pulled arcs: " << e_high.to_string() << ", " << e_low.to_string() << ", " ;
-          const jump_up_node n = j_node_of(e_low, e_high);
-          if (debug_enabled) std::cout << "to build " << n << "\n";
 
-          //update e_extra if necessary
-          if(e_high.payload == assignment::None && e_low.payload != assignment::None){
-            if (e_extra == e_high) {std::cout << "extra reset \n" ; e_extra = dummy;}
-            else {if (debug_enabled) std::cout << "extra set to high \n" ;e_extra = e_high;}
-            }
-          if (e_low.payload == assignment::None && e_high.payload != assignment::None){
-            if (e_extra == e_low) {std::cout << "extra reset \n" ; e_extra = dummy;}
-            else {if (debug_enabled) std::cout << "extra set to low \n" ; e_extra = e_low;}}
-          
-          //red rule 1 (kill suppresible)
-          if (n.low() == n.high()){
-            if (!red1_mapping.is_open()) { red1_mapping.open(); }
-            red1_mapping.write({ n.uid(), n.low() });
-          } else {
-            child_grouping.push(n);
-          }
-      }*/
       // cut stuff:
       cuts_t local_1level_cut   = { { 0u, 0u, 0u, 0u } };
       cuts_t tainted_1level_cut = { { 0u, 0u, 0u, 0u } };
@@ -1535,11 +1533,29 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
 
       //forwarding
       //very like xj level but we dont know that pairs will be in F2 so slightly more ugly..
+      //actually: we might pull non-pair involved mapping if a node is merged at this level?
       red2_mapping.sort();
+
+      
 
       jump_up_mapping next_red1 = { node::uid_type(), node::uid_type() };
       bool has_next_red1 = red1_mapping.is_open() && red1_mapping.size() > 0;
       if (has_next_red1) {red1_mapping.seek_begin(); next_red1 = red1_mapping.next();}
+
+
+      //attempt 2..
+      /*while (has_next_red1 || red2_mapping.can_pull()) {
+        //pull a mapping, if it has payload none - then it must be from a supressible node?
+        // and then -> do we know for a fact that it wont have a partner, cus then just handle like normal..
+        bool is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
+        const jump_up_mapping map1 = is_red1_current ? next_red1 : red2_mapping.pull();
+        if (map1.payload == assignment::None){
+          //then just one req per incoming trust me bro
+        } else {
+          //what we did before
+        }
+      }*/
+
 
        while (has_next_red1 || red2_mapping.can_pull()) {
         //bools for target flagging?
@@ -1612,6 +1628,13 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       if (debug_enabled) std::cout <<  "updated xi to be " << xi.value_or(5000) << "\n";
 
       //temp files
+      iofstream<jump_up_mapping> red1_mapping;
+      size_t unreduced_width = max_pq_size; 
+      std::cout << "width of current layer " << unreduced_width << "\n";
+      sorter_t<jump_up_node_ws, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
+      //sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
+
+      //temp files
       while(pq.can_pull()){
         //special case: moving to root layer..
         const bool jump_to_root = pq.top().source().level() == cur_xi;
@@ -1632,11 +1655,11 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
             } else {
               //push node and req
               const node::uid_type out_uid(cur_xi, out_id--);
-              const jump_up_node res_node = {{out_uid, unflag(r1.target()), unflag(r2.target())}, assignment::None};
-              const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
-              if (debug_enabled) std::cout << " to build " << res_node << ", and req" << n_req.to_string() << "\n";
+              const jump_up_node_ws res_node = {{out_uid, unflag(r1.target()), unflag(r2.target())}, assignment::None,r1.source()};
+              //const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
+              if (debug_enabled) std::cout << " to build " << res_node << /*", and req" << n_req.to_string() <<*/ "\n";
               child_grouping.push(res_node);
-              if (!jump_to_root){pq.push(n_req);}
+              //if (!jump_to_root){pq.push(n_req);}
             }
           } else {
             //payloads match mean there are 2 more matching reqs with same source, so we pull these
@@ -1653,11 +1676,11 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
                if (!jump_to_root){pq.push(jump_up_arc({r1.source(), r1.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
             } else {
               const node::uid_type out_uid(cur_xi, out_id--);
-              const jump_up_node res_node = {{out_uid, unflag(r1.target()), unflag(r3.target())}, assignment::None};
-              const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
-              if (debug_enabled) std::cout << "  build first: " << res_node << ", and req" << n_req << "\n";
+              const jump_up_node_ws res_node = {{out_uid, unflag(r1.target()), unflag(r3.target())}, assignment::None, r1.source()};
+              //const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
+              if (debug_enabled) std::cout << "  build first: " << res_node << /*", and req" << n_req << */"\n";
               child_grouping.push(res_node);
-               if (!jump_to_root){pq.push(n_req);}
+              //if (!jump_to_root){pq.push(n_req);}
             }
             //handling second pair..
             if(r2.target() == r4.target()) { 
@@ -1666,12 +1689,13 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
               if (!jump_to_root){pq.push(jump_up_arc({r2.source(), r2.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
             } else {
               const node::uid_type out_uid(cur_xi, out_id--);
-              const jump_up_node res_node = {{out_uid, unflag(r2.target()), unflag(r4.target())}, assignment::None};
-              const jump_up_arc n_req = {{r2.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
-              if (debug_enabled) std::cout << "  build second: " << res_node << ", and req" << n_req << "\n";
+              const jump_up_node_ws res_node = {{out_uid, unflag(r2.target()), unflag(r4.target())}, assignment::None, r2.source()};
+              //const jump_up_arc n_req = {{r2.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
+              if (debug_enabled) std::cout << "  build second: " << res_node <</* ", and req" << n_req << */"\n";
               child_grouping.push(res_node);
-               if (!jump_to_root){pq.push(n_req);}
+              //if (!jump_to_root){pq.push(n_req);}
             }
+
           }
         }
       }
@@ -1688,18 +1712,24 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       // red rule 2
       child_grouping.sort();
       node seen_node = node(node::uid_type(), ptr_uint64::nil(), ptr_uint64::nil());
+      auto id = Policy::max_id;
+      typename Policy::uid_type seen_uid;
+      
       while (child_grouping.can_pull()) {
-        node next_node = child_grouping.pull();
+        jump_up_node_ws next_node = child_grouping.pull();
+        /*typename Policy::uid_type new_uid(next_node.uid().level(), id);*/
         if(seen_node.low() != unflag(next_node.low()) || seen_node.high() != unflag(next_node.high())) {
           seen_node = next_node;
+          seen_uid = typename Policy::uid_type(next_node.uid().level(), id--);
           //not dupliate! we output
-          out.unsafe_push(next_node);
+          out.unsafe_push({seen_uid, next_node.low(), next_node.high()});
           //update cut
           __reduce_cut_add(next_node.low().is_flagged() ? tainted_1level_cut : local_1level_cut,
                          seen_node.low());
           __reduce_cut_add(next_node.high().is_flagged() ? tainted_1level_cut : local_1level_cut,
                          seen_node.high());
         }
+        if (!(next_node._source.level() == cur_xi)) {pq.push({{next_node._source, seen_uid}, assignment::None, (xi.has_value() ? xi.value() : 0)});}
       }
       //we dont need to forward since we already did while building nodes...
 
@@ -1953,6 +1983,99 @@ replace(typename Policy::dd_type dd,
 
 ///-------------------------------------------------NON_MONOTONE--------------------------------------------------------------------
 
+  // random_access version of correctify?
+  template <typename NodeRandomAccess, typename Policy, typename PQ>
+  typename Policy::__dd_type
+  cor_ra(const exec_policy& ep, NodeRandomAccess& in_nodes, PQ& pq) {
+    // so just like normal correctify but we have all the children via random access
+    //assume -> already set up pq with requests? and input already set up?
+
+    // Set up output
+    shared_levelized_file<arc> out_arcs;
+    arc_ofstream aw(out_arcs);
+    out_arcs->max_1level_cut = 0;
+
+    while(!pq.empty()){
+      pq.setup_next_level();
+      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq.size());
+      typename Policy::label_type label = pq.current_level();
+      typename Policy::id_type id             = 0;
+      if(debug_enabled) std::cout << "starting level " << label << "\n";
+      in_nodes.setup_next_level(label);
+      
+
+      // --- Helpers ------------------------------------------------------------
+      auto update_label_and_id = [&](const ptr_uint64& tseek) {
+        id = (label == tseek.label()) ? (id + 1) : 0; 
+        label = tseek.label() ;
+        if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
+      };
+
+      while(!pq.empty_level()){
+        cor_req_t<0> r = pq.top();
+        if (debug_enabled)  std::cout << "found req " << r << "\n";
+        const ptr_uint64 level_uid(r.data.level, 0);
+        const ptr_uint64 tseek = std::min(r.target.first(), level_uid);
+
+        if (r.target.first().level() >= r.data.level){
+          if (r.target[0] == r.target[1]) {
+            pq.pop();
+            cor_req_t<0> nr = {{r.target[0], node::pointer_type::nil()}, {}, {r.data.source}};
+            pq.push(nr);
+            continue;
+          }
+          update_label_and_id(tseek);
+          const typename Policy::uid_type out_uid(label, id);
+          pusher<Policy>(pq, aw, out_uid.as_ptr(false), {r.target[0],node::pointer_type::nil()}, node::pointer_type::nil().level());
+          pusher<Policy>(pq, aw, out_uid.as_ptr(true),  {r.target[1],node::pointer_type::nil()}, node::pointer_type::nil().level());
+
+          internal_pusher<Policy, PQ, 0>(pq, aw, out_uid, r.target,  r.data.level);
+          continue;
+        }
+
+        //children
+        const typename Policy::children_type test1 = {r.target.first(), r.target.first()};
+        const typename Policy::children_type test2 = {r.target.second(), r.target.second()};
+        const typename Policy::children_type children_fst = (!r.target.first().is_terminal()) ? in_nodes.at(r.target.first()).children() : test1;
+        const typename Policy::children_type children_snd = (!r.target.second().is_terminal() && !r.target.second().is_nil() && r.target.second().level() == label) ? in_nodes.at(r.target.second()).children() : test2;
+        if(debug_enabled) std::cout << "made children... \n";
+        //wrong layer case
+        update_label_and_id(tseek);
+        //build node of min for req_for
+        if (!r.target.first().is_terminal()){
+          const typename Policy::node_type v = node(r.target.first().level(), r.target.first().id(), children_fst[0], children_fst[1]);
+          tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, children_snd[0], children_snd[1]);
+          tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+          tuple<typename Policy::pointer_type> rhigh = reqs[1];
+          const typename Policy::uid_type out_uid(label, id);
+
+          // Forward outgoing
+          pusher<Policy, PQ>(pq, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          pusher<Policy, PQ>(pq, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+
+          // Forward incoming
+          internal_pusher<Policy, PQ, 0>(pq, aw, out_uid, r.target,  r.data.level);
+        } else {
+          //first is leaf so second is leaf or nil..
+          const typename Policy::node_type v = node(0, 0, children_fst[0], children_fst[1]); //dummy wont be used?
+          tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, node::pointer_type::nil(), node::pointer_type::nil());
+          tuple<typename Policy::pointer_type> rlow = reqs[0]; 
+          tuple<typename Policy::pointer_type> rhigh = reqs[1];
+          const typename Policy::uid_type out_uid(label, id);
+          pusher<Policy, PQ>(pq, aw, out_uid.as_ptr(false), rlow, r.data.level);
+          pusher<Policy, PQ>(pq, aw, out_uid.as_ptr(true), rhigh, r.data.level);
+
+          // Forward incoming
+          internal_pusher<Policy, PQ, 0>(pq, aw, out_uid, r.target,  r.data.level);
+        }
+
+      }
+      if (id >= 0) { aw.push(level_info(label, id+1)); }
+    }
+    return typename Policy::__dd_type(out_arcs,ep);
+  }
+
+
   //calculate from BDD levels and m what levels should be sweeped - maybe shouldn't be in this file??
   template<typename Policy>
   std::vector<typename Policy::label_type>
@@ -2015,7 +2138,8 @@ public:
 
     //DUMMY - RA not supported so just give max
     static size_t
-    ra_memory(const shared_levelized_file<node>& /*outer_file*/) {return std::numeric_limits<size_t>::max();}
+    ra_memory(const shared_levelized_file<node>& outer_file) 
+    {return node_raccess::memory_usage(outer_file);}
 
     static size_t
     pq_bound(const shared_levelized_file<node>& outer_file, const size_t /*outer_roots*/) {
@@ -2065,12 +2189,15 @@ public:
 
     template <typename inner_pq_t>
     __bdd
-    sweep_ra(const exec_policy& /*ep*/,
-             const shared_levelized_file<node>& /*outer_file*/,
-             inner_pq_t& /*inner_pq*/,
+    sweep_ra(const exec_policy& ep,
+             const shared_levelized_file<node>& outer_file,
+             inner_pq_t& pq,
              const size_t /*inner_remaining_memory*/)
     {   
-        throw invalid_argument("Non-monotonic variable replacement does not support random access");
+        //throw invalid_argument("Non-monotonic variable replacement does not support random access");
+        if (debug_enabled) std::cout << "running ra sweep";
+        node_raccess in_nodes(outer_file);
+        return cor_ra<node_raccess, Policy, inner_pq_t>(ep, in_nodes, pq);
     }
 
     bool
@@ -2120,7 +2247,7 @@ public:
       return res;
     }
 
-  static constexpr bool final_canonical = true;
+  static constexpr bool final_canonical = true; //should make canonical before output?
   static constexpr bool fast_reduce     = true; //should not reduce until final
   static constexpr bool skip_term_reqs = false; //terminal-only requests should still be passed to inner sweep!
 
