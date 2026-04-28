@@ -603,8 +603,6 @@ namespace adiar::internal
 
     //finding jump_down levels and targets
     //TODO move to seperate function pls.. NOTE: neccesary?
-    if (debug_enabled) std::cout << "generating generators for jump down\n";
-
     //vecs to fill
     std::vector<label_t> jump_starts, jump_targets;
     {
@@ -722,7 +720,7 @@ class adj_swap_pq_decorator{
   //pushing
   void push(const cor_req_t<0> r){
     if (r.data.level <= r.target.first().level()){
-      std::cout << "pushing to sorter: " << r << "\n";
+      if(debug_enabled) std::cout << "pushing to sorter: " << r << "\n";
       _sorter.push(r);
     } else {
       if(debug_enabled) std::cout << "pushing to pq1: " << r << "\n";
@@ -1095,7 +1093,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
 }
 
 //------------------------------------------------- JUMP UP special case -------------------------------------------------
-//jump_up -> bottom-up sweep like reduce, but doubling edges to remeber both jump-up variables sub-trees in parents
+//jump_up -> bottom-up sweep like reduce, but doubling edges to remeber both jump-up variable's sub-trees in parents
 
 /////reduce types extended with payload
 struct jump_up_mapping{
@@ -1150,7 +1148,6 @@ struct  jump_up_arc : public arc {
 };
 
 struct jump_up_node : public node {
-  //fields we need i think
   assignment _payload = assignment::None;
 
   //otherwise just constructor stuff?
@@ -1163,8 +1160,8 @@ struct jump_up_node : public node {
   operator=(const jump_up_node& n) = default;
 };
 
+//specifically for keeping canonicity when making nodes on jump target level 
 struct jump_up_node_ws : public node {
-  //fields we need i think
   assignment _payload = assignment::None;
   node::pointer_type _source;
 
@@ -1258,7 +1255,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
                       size_t pq_mem, 
                       size_t max_pq_size,
                       size_t sorters_mem){
-  std::cout << "entered jump_up special case\n";
+  if (debug_enabled) std::cout << "entered jump_up special case\n";
   //setting up input
   arc_ifstream<> arcs(dd);
   level_info_ifstream<> levels(dd); 
@@ -1323,7 +1320,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //temp files
       iofstream<jump_up_mapping> red1_mapping;
       size_t unreduced_width = (level == xi) ? max_pq_size : levels.pull().width() *2; 
-      std::cout << "width of current layer " << unreduced_width << "\n";
+      if (debug_enabled) std::cout << "width of current layer " << unreduced_width << "\n";
       sorter_t<jump_up_node, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
       sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
 
@@ -1335,7 +1332,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
         if (debug_enabled) std::cout << "pulled arcs: " << e_high.to_string() << ", " << e_low.to_string() << ", to build " << n << "\n";
 
         //red rule 1 (kill suppresible)
-        if (n.low() == n.high()){
+        if (unflag(n.low()) == unflag(n.high())){
           if (!red1_mapping.is_open()) { red1_mapping.open(); }
           red1_mapping.write({ n.uid(), n.low() });
         } else {
@@ -1434,7 +1431,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //temp files
       iofstream<jump_up_mapping> red1_mapping;
       size_t unreduced_width = (level == xi) ? max_pq_size : levels.pull().width() *2; 
-      std::cout << "width of current layer " << unreduced_width << "\n";
+      if (debug_enabled) std::cout << "width of current layer " << unreduced_width << "\n";
       sorter_t<jump_up_node, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
       sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
 
@@ -1448,9 +1445,9 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
           const jump_up_node n = j_node_of(e_2, e_1);
           if (debug_enabled) std::cout << ", to build " << n << "\n" ;
           //check red 1
-          if (n.low() == n.high()){
+          if (unflag(n.low()) == unflag(n.high())){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
-            red1_mapping.write({ n.uid(), n.low() });
+            red1_mapping.write({ n.uid(), n.low(), e_1.payload });
             if (debug_enabled) std::cout << "new F1 mapping" << n << "\n";
           } else {
             child_grouping.push(n);
@@ -1476,7 +1473,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
           }
           if (debug_enabled) std::cout << "built nodes: " << n1 << ", " << n2 << "\n" ;
           //check red 1
-          if (n1.low() == n1.high()){
+          if (unflag(n1.low()) == unflag(n1.high())){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
             red1_mapping.write({ n1.uid(), n1.low() , n1._payload});
             if (debug_enabled) std::cout << "new F1 mapping" << n1 << "\n";
@@ -1484,9 +1481,9 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
             child_grouping.push(n1);
             if (debug_enabled) std::cout << "pushed node" << n1 << "\n";
           }
-          if (n2.low() == n2.high()){
+          if (unflag(n2.low()) == unflag(n2.high())){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
-            red1_mapping.write({ n2.uid(), n2.low(), n1._payload });
+            red1_mapping.write({ n2.uid(), n2.low(), n2._payload });
             if (debug_enabled) std::cout << "new F1 mapping" << n2 << "\n";
           } else {
             child_grouping.push(n2);
@@ -1509,11 +1506,11 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       node seen_node = node(node::uid_type(), ptr_uint64::nil(), ptr_uint64::nil());
       while (child_grouping.can_pull()) {
         const jump_up_node next_node = child_grouping.pull();
-        std::cout << "found node " << next_node << "\n";
+        if (debug_enabled) std::cout << "found node " << next_node << "\n";
         if (seen_node.low() != unflag(next_node.low()) || seen_node.high() != unflag(next_node.high())) {
           adiar_assert(0 <= out_id, "Should still have more ids left");
           seen_node = node(level, out_id--, unflag(next_node.low()), unflag(next_node.high()));
-          std::cout << "pushing node to out " << seen_node << "\n";
+          if (debug_enabled) std::cout << "pushing node to out " << seen_node << "\n";
           out.unsafe_push(seen_node); //needs to be unsafe donno why
           
           //now that we adding nodes - update cuts
@@ -1523,7 +1520,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
                         seen_node.high());
 
         } 
-        std::cout << "new F2 mapping: " << next_node.uid() << " -> " << seen_node.uid() << "\n";
+        if (debug_enabled) std::cout << "new F2 mapping: " << next_node.uid() << " -> " << seen_node.uid() << "\n";
         red2_mapping.push({ next_node.uid(), seen_node.uid(), next_node._payload });
       }
 
@@ -1537,67 +1534,64 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       red2_mapping.sort();
 
       
-
       jump_up_mapping next_red1 = { node::uid_type(), node::uid_type() };
       bool has_next_red1 = red1_mapping.is_open() && red1_mapping.size() > 0;
       if (has_next_red1) {red1_mapping.seek_begin(); next_red1 = red1_mapping.next();}
 
 
       //attempt 2..
-      /*while (has_next_red1 || red2_mapping.can_pull()) {
+      while (has_next_red1 || red2_mapping.can_pull()) {
+        bool first_is_f1, second_is_f1;
         //pull a mapping, if it has payload none - then it must be from a supressible node?
         // and then -> do we know for a fact that it wont have a partner, cus then just handle like normal..
         bool is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
+        first_is_f1 = is_red1_current ;
         const jump_up_mapping map1 = is_red1_current ? next_red1 : red2_mapping.pull();
         if (map1.payload == assignment::None){
           //then just one req per incoming trust me bro
+          //so handle like regular reduce -> pull arcs push one req
+          while(arcs.can_pull_internal() && map1.old_uid == arcs.peek_internal().target()){
+            const ptr_uint64 s = arcs.pull_internal().source();
+            const ptr_uint64 t = is_red1_current ? flag(map1.new_uid) : static_cast<ptr_uint64>(map1.new_uid);
+            pq.push(jump_up_arc({s, t}, map1.payload, xi.value()));
+          }
         } else {
           //what we did before
-        }
-      }*/
-
-
-       while (has_next_red1 || red2_mapping.can_pull()) {
-        //bools for target flagging?
-        bool first_is_f1, second_is_f1;
-        //pull pair of mappings - potentially not both in F2
-        //this is really ugly
-        bool is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
-        first_is_f1 = is_red1_current;
-        const jump_up_mapping map1 = is_red1_current ? next_red1 : red2_mapping.pull();
-        if (is_red1_current){
+          //pull the partner mapping and push twice for each arc
+          if (is_red1_current){
             has_next_red1 = red1_mapping.has_next();
             if (has_next_red1) {next_red1 = red1_mapping.next();}
-        }
-        is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
-        second_is_f1 = is_red1_current;
-        const jump_up_mapping map2 = is_red1_current ? next_red1 : red2_mapping.pull();
-        if (debug_enabled) std::cout << "found mappings: " << map1.to_string() << ", " << map2.to_string() << "\n";
+          }
+          is_red1_current = !red2_mapping.can_pull() || (has_next_red1 && next_red1.old_uid > red2_mapping.top().old_uid);
+          second_is_f1 = is_red1_current;
+          const jump_up_mapping map2 = is_red1_current ? next_red1 : red2_mapping.pull();
+          if (debug_enabled) std::cout << "found mappings: " << map1.to_string() << ", " << map2.to_string() << "\n";
+          adiar_assert(map1.old_uid == map2.old_uid, "pulled pair uids dont match!");
 
-        adiar_assert(map1.old_uid == map2.old_uid, "pulled pair uids dont match!");
-
-        while (arcs.can_pull_internal() && map1.old_uid == arcs.peek_internal().target()) {
-          const ptr_uint64 s = arcs.pull_internal().source();
-          std::cout << "found matching req starting in :" << s << "\n";
-          const jump_up_arc n1 = {{s,(first_is_f1) ? flag(map1.new_uid) : map1.new_uid}, map1.payload, xi.value()};
-          const jump_up_arc n2 = {{s,(second_is_f1) ? flag(map2.new_uid) : map2.new_uid}, map2.payload, xi.value()};
-          std::cout << "pushing requests: " << n1.to_string() << " and " << n2.to_string() << "\n";
-          pq.push(n1);
-          pq.push(n2);
+          while (arcs.can_pull_internal() && map1.old_uid == arcs.peek_internal().target()) {
+            const ptr_uint64 s = arcs.pull_internal().source();
+            if (debug_enabled) std::cout << "found matching req starting in :" << s << "\n";
+            const jump_up_arc n1 = {{s,(first_is_f1) ? flag(map1.new_uid) : map1.new_uid}, map1.payload, xi.value()};
+            const jump_up_arc n2 = {{s,(second_is_f1) ? flag(map2.new_uid) : map2.new_uid}, map2.payload, xi.value()};
+            if (debug_enabled) std::cout << "pushing requests: " << n1.to_string() << " and " << n2.to_string() << "\n";
+            pq.push(n1);
+            pq.push(n2);
+          }
+          //handle special case -> something jumping up to be new root...
+          typename Policy::id_type test = Policy::max_id;
+          if(xi.has_value()  && !pq.has_next_level()) {
+            //this looks suspect but should only happen once so id's are ok?
+            if (debug_enabled) std::cout << "detected that we're in weird case, pushing nil arcs for new top level";
+            const typename Policy::uid_type s(xi.value(), test--);
+            const ptr_uint64 s1 = s.as_ptr(map1.payload == assignment::True);
+            const jump_up_arc n1 = {{s1,((first_is_f1) ? flag(map1.new_uid) : map1.new_uid)}, map1.payload, xi.value()};
+            const jump_up_arc n2 = {{s1,((first_is_f1) ? flag(map2.new_uid) : map2.new_uid)}, map2.payload, xi.value()};
+            if (debug_enabled) std::cout << "built reqs:" << n1.to_string() << ", " << n2.to_string() << "\n";
+            pq.push(n1);
+            pq.push(n2);
+          }
         }
-        //handle special case -> something jumping up to be new root...
-        typename Policy::id_type test = Policy::max_id;
-        if(xi.has_value()  && !pq.has_next_level()) {
-          //this looks suspect but should only happen once so id's are ok?
-          if (debug_enabled) std::cout << "detected that we're in weird case, pushing nil arcs for new top level";
-          const typename Policy::uid_type s(xi.value(), test--);
-          const ptr_uint64 s1 = s.as_ptr(map1.payload == assignment::True);
-          const jump_up_arc n1 = {{s1,((first_is_f1) ? flag(map1.new_uid) : map1.new_uid)}, map1.payload, xi.value()};
-          const jump_up_arc n2 = {{s1,((first_is_f1) ? flag(map2.new_uid) : map2.new_uid)}, map2.payload, xi.value()};
-          if (debug_enabled) std::cout << "built reqs:" << n1.to_string() << ", " << n2.to_string() << "\n";
-          pq.push(n1);
-          pq.push(n2);
-        }
+        //updating red1 things
         if (is_red1_current) {
           has_next_red1 = red1_mapping.has_next();
           if (has_next_red1) { next_red1 = red1_mapping.next(); }
@@ -1612,6 +1606,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //epilogue
       const bool terminal_value = next_red1.new_uid.is_terminal() && next_red1.new_uid.value();
       __reduce_level__epilogue<>(arcs, pq, out, terminal_value);
+
     } else {
       //////////////////////////////////////// jump target level ////////////////////////////////////////
       //Not really reduce stuff here
@@ -1621,7 +1616,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //(2) if first arc has payload pull another: if payload doesn't match -> build a new output node
       //(3) if the payload matched then pull 2 more arcs -> output 2 new nodes
       //(4) after all arcs processed update to next xj, xi
-      std::cout << "found xi level " << level << "\n";
+      if (debug_enabled) std::cout << "found xi level " << level << "\n";
       const typename Policy::label_type cur_xi = xi.value();
       typename Policy::id_type out_id = Policy::max_id;
       xi = target_gen_for_me(); //update xi
@@ -1630,7 +1625,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //temp files
       iofstream<jump_up_mapping> red1_mapping;
       size_t unreduced_width = max_pq_size; 
-      std::cout << "width of current layer " << unreduced_width << "\n";
+      if (debug_enabled) std::cout << "width of current layer " << unreduced_width << "\n";
       sorter_t<jump_up_node_ws, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
       //sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
 
@@ -1648,7 +1643,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
           if (debug_enabled) std::cout << "found arcs " << r1.to_string() << ", " << r2.to_string();
           if (r1.payload != r2.payload) {
             //push one node and req case (if not reducible?)
-            if(r1.target() == r2.target()) {
+            if(unflag(r1.target()) == unflag(r2.target())) {
               //node supressible so just push along req
               if (debug_enabled) std::cout << " reducible so just pass on req to target\n ";
               if (!jump_to_root){pq.push(jump_up_arc({r1.source(), r1.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
@@ -1670,7 +1665,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
             adiar_assert(r1.payload != r3.payload, "r1 and r3 match :c");
             adiar_assert(r2.payload != r4.payload, "r2 and r4 match :c");
             //handling first pair..
-            if(r1.target() == r3.target()) { 
+            if(unflag(r1.target()) == unflag(r3.target())) { 
               if (debug_enabled) std::cout << "  first supressible.. just pushing req \n";
               //node supressible so just push along req
                if (!jump_to_root){pq.push(jump_up_arc({r1.source(), r1.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
@@ -1683,7 +1678,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
               //if (!jump_to_root){pq.push(n_req);}
             }
             //handling second pair..
-            if(r2.target() == r4.target()) { 
+            if(unflag(r2.target()) == unflag(r4.target())) { 
               //node supressible so just push along req
               if (debug_enabled) std::cout << "  second supressible.. just pushing req \n";
               if (!jump_to_root){pq.push(jump_up_arc({r2.source(), r2.target()}, assignment::None, (xi.has_value() ? xi.value() : 0)));}
@@ -2090,7 +2085,6 @@ replace(typename Policy::dd_type dd,
     while(level_info_file.can_pull()) {
       lvl_info = level_info_file.pull();
       bdd::label_type mapped = m(lvl_info.level());
-      //std::cout << "levels from map order" << l << "\n";
       if (mapped > min_seen) sweep_levels.push_back(lvl_info.level());
       else min_seen = mapped;
     }
