@@ -594,7 +594,7 @@ namespace adiar::internal
 
     //setup input
     node_ifstream<> in(dd);
-    node v = in.pull(); // NOTE: is it always non-empty?
+    node v = in.pull(); //there must be at least 2 nodes else couldn't be this case
 
     //setup output
     shared_levelized_file<arc> out_arcs;
@@ -851,20 +851,18 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
           pusher<Policy>(apq, aw, out_uid.as_ptr(false), {extra_r.target[0], node::pointer_type::nil()}, node::pointer_type::nil().level());
           pusher<Policy>(apq, aw, out_uid.as_ptr(true),  {extra_r.target[1], node::pointer_type::nil()}, node::pointer_type::nil().level());
 
-        // forward incoming
-        //TODO find a way to use internal pusher here?
-        while (sorter.has_top() && sorter.top().target == extra_r.target){
-          const cor_req_t<0> r1 = sorter.pull();
-          if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
-           if (r1.data.source.level() != ptr_uint64::nil().level()) {
-            if (debug_enabled) std::cout << "has pushed internal: " << arc{r1.data.source, out_uid} << "\n";
-            aw.push({unflag(r1.data.source), out_uid});
-            //TODO : unfalg here because we use roots sorter class from nested sweeping directly
-            // could define own class to avoid
-           }
-        }
-        //internal_pusher<Policy, PQ1, 0>(pq1, aw, out_uid, extra_r.target,  extra_r.data.level);
-        //continue;
+          // forward incoming
+          //TODO find a way to use internal pusher here?
+          while (sorter.has_top() && sorter.top().target == extra_r.target){
+            const cor_req_t<0> r1 = sorter.pull();
+            if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
+            if (r1.data.source.level() != ptr_uint64::nil().level()) {
+              if (debug_enabled) std::cout << "has pushed internal: " << arc{r1.data.source, out_uid} << "\n";
+              aw.push({unflag(r1.data.source), out_uid});
+              //TODO : unfalg here because we use roots sorter class from nested sweeping directly
+              // could define own class to avoid
+            }
+          }
 
         }
         //update level info
@@ -1135,14 +1133,10 @@ struct  jump_up_arc : public arc {
     to_string() const
     {
       std::stringstream stream;
-
       const std::string arrow =
         !this->source().is_node() || this->source().out_idx() ? " ---> " : " - -> ";
-      
       const std::string payload = (this->payload == assignment::None) ? "NONE" : ((this->payload == assignment::True) ? "T" : "⊥");
-
       stream << this->source() << arrow << this->target() << ", p: " << payload ;
-
       return stream.str();
     }
 };
@@ -1150,7 +1144,7 @@ struct  jump_up_arc : public arc {
 struct jump_up_node : public node {
   assignment _payload = assignment::None;
 
-  //otherwise just constructor stuff?
+  //defaults
   jump_up_node() = default;
   jump_up_node(const jump_up_node& n) = default;
   jump_up_node(const node& n, const assignment payload )
@@ -1165,7 +1159,7 @@ struct jump_up_node_ws : public node {
   assignment _payload = assignment::None;
   node::pointer_type _source;
 
-  //otherwise just constructor stuff?
+  //defaults
   jump_up_node_ws() = default;
   jump_up_node_ws(const jump_up_node_ws& n) = default;
   jump_up_node_ws(const node& n, const assignment payload, const node::pointer_type source )
@@ -1623,11 +1617,9 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       if (debug_enabled) std::cout <<  "updated xi to be " << xi.value_or(5000) << "\n";
 
       //temp files
-      iofstream<jump_up_mapping> red1_mapping;
       size_t unreduced_width = max_pq_size; 
       if (debug_enabled) std::cout << "width of current layer " << unreduced_width << "\n";
-      sorter_t<jump_up_node_ws, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 2);
-      //sorter_t<jump_up_mapping, jump_reduce_uid_lt> red2_mapping(sorters_mem, unreduced_width, 2);
+      sorter_t<jump_up_node_ws, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 1);
 
       //temp files
       while(pq.can_pull()){
@@ -1651,10 +1643,8 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
               //push node and req
               const node::uid_type out_uid(cur_xi, out_id--);
               const jump_up_node_ws res_node = {{out_uid, unflag(r1.target()), unflag(r2.target())}, assignment::None,r1.source()};
-              //const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
               if (debug_enabled) std::cout << " to build " << res_node << /*", and req" << n_req.to_string() <<*/ "\n";
               child_grouping.push(res_node);
-              //if (!jump_to_root){pq.push(n_req);}
             }
           } else {
             //payloads match mean there are 2 more matching reqs with same source, so we pull these
@@ -1672,10 +1662,8 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
             } else {
               const node::uid_type out_uid(cur_xi, out_id--);
               const jump_up_node_ws res_node = {{out_uid, unflag(r1.target()), unflag(r3.target())}, assignment::None, r1.source()};
-              //const jump_up_arc n_req = {{r1.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
               if (debug_enabled) std::cout << "  build first: " << res_node << /*", and req" << n_req << */"\n";
               child_grouping.push(res_node);
-              //if (!jump_to_root){pq.push(n_req);}
             }
             //handling second pair..
             if(unflag(r2.target()) == unflag(r4.target())) { 
@@ -1685,12 +1673,9 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
             } else {
               const node::uid_type out_uid(cur_xi, out_id--);
               const jump_up_node_ws res_node = {{out_uid, unflag(r2.target()), unflag(r4.target())}, assignment::None, r2.source()};
-              //const jump_up_arc n_req = {{r2.source(), out_uid }, assignment::None, (xi.has_value() ? xi.value() : 0)};
               if (debug_enabled) std::cout << "  build second: " << res_node <</* ", and req" << n_req << */"\n";
               child_grouping.push(res_node);
-              //if (!jump_to_root){pq.push(n_req);}
             }
-
           }
         }
       }
@@ -1712,7 +1697,6 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       
       while (child_grouping.can_pull()) {
         jump_up_node_ws next_node = child_grouping.pull();
-        /*typename Policy::uid_type new_uid(next_node.uid().level(), id);*/
         if(seen_node.low() != unflag(next_node.low()) || seen_node.high() != unflag(next_node.high())) {
           seen_node = next_node;
           seen_uid = typename Policy::uid_type(next_node.uid().level(), id--);
@@ -1743,7 +1727,6 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       //update lvl info
       const size_t reduced_width = Policy::max_id - out_id;
       if (reduced_width > 0) { out.unsafe_push(level_info(level, reduced_width)); }
-
     }
   }
   if (debug_enabled) std::cout << "exited big loop";
@@ -1835,7 +1818,6 @@ replace(typename Policy::dd_type dd,
         return replace_jump_down_sweep<Policy,PQ1,PQ2>(dd,  m,  ep, 
         pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
       }
-      //break;
     }
 
     case replace_type::Swap_Adjacent : {
@@ -1899,6 +1881,7 @@ replace(typename Policy::dd_type dd,
       //break;
     }
     case replace_type::Jump_Up : {
+      //------------------------------------------- jump up  -------------------------------------------------
       //has one pq and some sorters
       const size_t aux_available_memory = memory_available()
       // Input streams
@@ -1908,6 +1891,7 @@ replace(typename Policy::dd_type dd,
       - node_ofstream::memory_usage();
 
       //transpose dd
+      
       const shared_levelized_file<arc>& t_dd = transpose(dd);
       const size_t pq_memory = aux_available_memory / 2;
       const size_t sorters_memory = aux_available_memory - pq_memory - iofstream<jump_up_mapping>::memory_usage();
@@ -1944,7 +1928,14 @@ replace(typename Policy::dd_type dd,
   }
 }
 
-//-------------------------------------------------- full correctify sweep --------------------------------------------------
+
+
+  //TODO: SWAP special case
+
+
+///-------------------------------------------------NON_MONOTONE--------------------------------------------------------------------
+
+//-------------------------------------------------- full correctify sweep (2 pqs) --------------------------------------------------
   template <typename Policy, typename PQ1, typename PQ2, typename In>
   inline typename Policy::__dd_type
   replace_cor_scan_level(const In& in, 
@@ -1953,14 +1944,14 @@ replace(typename Policy::dd_type dd,
                          exec_policy ep)               
   {
   //repeatedly runs correctify for single levels -> to be used for inner sweeps in nested sweeping
-     // Set up output
-    shared_levelized_file<arc> out_arcs;
-    arc_ofstream aw(out_arcs);
-    out_arcs->max_1level_cut = 0;
-
     // Set up input
     node_ifstream<> in_nodes(in);
     node v = in_nodes.pull();
+
+    // Set up output
+    shared_levelized_file<arc> out_arcs;
+    arc_ofstream aw(out_arcs);
+    out_arcs->max_1level_cut = 0;
 
     while(!pq1.empty()){
       pq1.setup_next_level();
@@ -1971,19 +1962,13 @@ replace(typename Policy::dd_type dd,
      return typename Policy::__dd_type(out_arcs,ep);
 }
 
-
-
-  //TODO: SWAP special case
-
-
-///-------------------------------------------------NON_MONOTONE--------------------------------------------------------------------
-
-  // random_access version of correctify?
+//-------------------------------------------------- full correctify sweep (ra) --------------------------------------------------
+  // random_access version of correctify
   template <typename NodeRandomAccess, typename Policy, typename PQ>
   typename Policy::__dd_type
   cor_ra(const exec_policy& ep, NodeRandomAccess& in_nodes, PQ& pq) {
     // so just like normal correctify but we have all the children via random access
-    //assume -> already set up pq with requests? and input already set up?
+    //assume -> already set up pq with requests and input already set up
 
     // Set up output
     shared_levelized_file<arc> out_arcs;
@@ -2014,11 +1999,13 @@ replace(typename Policy::dd_type dd,
 
         if (r.target.first().level() >= r.data.level){
           if (r.target[0] == r.target[1]) {
+            //supressible node
             pq.pop();
             cor_req_t<0> nr = {{r.target[0], node::pointer_type::nil()}, {}, {r.data.source}};
             pq.push(nr);
             continue;
           }
+          //forwarding
           update_label_and_id(tseek);
           const typename Policy::uid_type out_uid(label, id);
           pusher<Policy>(pq, aw, out_uid.as_ptr(false), {r.target[0],node::pointer_type::nil()}, node::pointer_type::nil().level());
@@ -2029,10 +2016,14 @@ replace(typename Policy::dd_type dd,
         }
 
         //children
+        // if node then actually get children, else just pair with the target twice 
+        // unlike prod2u -> reqs can be leaf, nil and leaf,leaf so we have to handle this
         const typename Policy::children_type test1 = {r.target.first(), r.target.first()};
         const typename Policy::children_type test2 = {r.target.second(), r.target.second()};
+        //never nil, nil so first must be eitehr leaf or node
         const typename Policy::children_type children_fst = (!r.target.first().is_terminal()) ? in_nodes.at(r.target.first()).children() : test1;
-        const typename Policy::children_type children_snd = (!r.target.second().is_terminal() && !r.target.second().is_nil() && r.target.second().level() == label) ? in_nodes.at(r.target.second()).children() : test2;
+        //second can be nil or node or leaf  
+        const typename Policy::children_type children_snd = (r.target.second().is_node() && r.target.second().level() == label) ? in_nodes.at(r.target.second()).children() : test2;
         if(debug_enabled) std::cout << "made children... \n";
         //wrong layer case
         update_label_and_id(tseek);
@@ -2052,7 +2043,7 @@ replace(typename Policy::dd_type dd,
           internal_pusher<Policy, PQ, 0>(pq, aw, out_uid, r.target,  r.data.level);
         } else {
           //first is leaf so second is leaf or nil..
-          const typename Policy::node_type v = node(0, 0, children_fst[0], children_fst[1]); //dummy wont be used?
+          const typename Policy::node_type v = node(0, 0, children_fst[0], children_fst[1]); //dummy wont be used
           tuple<tuple<typename Policy::pointer_type>> reqs = reqFor<Policy>(r.target, v, node::pointer_type::nil(), node::pointer_type::nil());
           tuple<typename Policy::pointer_type> rlow = reqs[0]; 
           tuple<typename Policy::pointer_type> rhigh = reqs[1];
@@ -2071,7 +2062,8 @@ replace(typename Policy::dd_type dd,
   }
 
 
-  //calculate from BDD levels and m what levels should be sweeped - maybe shouldn't be in this file??
+  //calculate from BDD levels and m what levels should be sweeped 
+  //from the bottom, should sweep in those levels which mapped value is larger than smallest seen
   template<typename Policy>
   std::vector<typename Policy::label_type>
   levels_from_map(const replace_func<Policy>& m, const typename Policy::dd_type& dd)
@@ -2091,14 +2083,15 @@ replace(typename Policy::dd_type dd,
     return sweep_levels;
   }
 
+
 //Policy for use in nested sweeping 
 template <typename Policy>
 class nested_sweeping_replace : public Policy
 {
 private:
-    const replace_func<Policy> _m;
+    const replace_func<Policy> _m;                                
     const generator<typename Policy::label_type> _nesting_levels; // generator for levels to sweep on
-    const generator<typename Policy::label_type> _targets;  //target for sweeps
+    const generator<typename Policy::label_type> _targets;        //target for sweeps - to init pq with
     optional<typename Policy::label_type> _next_level; //next level to sweep on
 
 public:
@@ -2110,7 +2103,7 @@ public:
     using pq_t = cor_lvl_priority_queue_t<LookAhead, MemoryMode, 2u>; //inner pq expects inputs from 2 files
 
 public:
-    nested_sweeping_replace(const internal::replace_func<Policy> m, 
+    nested_sweeping_replace(const replace_func<Policy> m, 
                             generator<typename Policy::label_type> nl,
                             generator<typename Policy::label_type> t) 
     : _m(m), 
@@ -2130,7 +2123,6 @@ public:
       return (inner_memory / (data_structures_in_pq_1 + data_structures_in_pq_2))* data_structures_in_pq_1;
     }
 
-    //DUMMY - RA not supported so just give max
     static size_t
     ra_memory(const shared_levelized_file<node>& outer_file) 
     {return node_raccess::memory_usage(outer_file);}
@@ -2143,7 +2135,7 @@ public:
 
     //labels mapped according to given map
     constexpr inline bdd::label_type
-    map_level(bdd::label_type x) const {return _m(x);}
+    map_level(typename Policy::label_type x) const { return _m(x);}
 
     //heavily based on sweep_pq from the prod2u sweeping policy
     //main differences:
@@ -2188,7 +2180,6 @@ public:
              inner_pq_t& pq,
              const size_t /*inner_remaining_memory*/)
     {   
-        //throw invalid_argument("Non-monotonic variable replacement does not support random access");
         if (debug_enabled) std::cout << "running ra sweep";
         node_raccess in_nodes(outer_file);
         return cor_ra<node_raccess, Policy, inner_pq_t>(ep, in_nodes, pq);
@@ -2247,6 +2238,7 @@ public:
 
 };
 
+
   // nested sweeping entry
   template <typename Policy>
   typename Policy::__dd_type
@@ -2275,7 +2267,7 @@ public:
     const bdd res = nested_sweep<>(ep, dd, inner_impl);
     if (debug_enabled) std::cout << "Replace nested-sweeping complete! \n";
     return res;
-    }
+  }
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // "Public" interface
 
@@ -2379,14 +2371,10 @@ public:
       adiar_unreachable();
       // LCOV_EXCL_STOP
     
-    case replace_type::Jump_Up:  
-#ifdef ADIAR_STATS
-      stats_replace.jump_up_scans += 1u;
-#endif   
-    return replace_nested_sweep<Policy>(std::move(__dd), m,ep);
     case replace_type::Non_Monotone:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
+    case replace_type::Jump_Up
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
 #endif
