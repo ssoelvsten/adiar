@@ -7,6 +7,7 @@
 #include "adiar/internal/algorithms/nested_sweeping.h"
 #include "adiar/internal/data_structures/levelized_priority_queue.h"
 #include "adiar/internal/data_structures/sorter.h"
+#include "adiar/internal/data_structures/vector.h"
 #include "adiar/internal/data_types/level_info.h"
 #include "adiar/internal/data_types/ptr.h"
 #include "adiar/internal/data_types/request.h"
@@ -103,10 +104,14 @@ namespace adiar::internal
     bool adj_swap  = true;
 
     typename Policy::label_type last_jump = Policy::pointer_type::nil().level();
-    typename Policy::label_type adj_node  = 0;
+    //typename Policy::label_type adj_node  = 0;
 
     label_type prev_before = Policy::max_label + 1;
     label_type prev_after  = Policy::max_label + 1;
+
+    label_type seen_swap_before = Policy::max_label + 1;
+    label_type seen_swap_after  = Policy::max_label + 1;
+    bool seen_set = false;
 
     signed_label_type prev_diff = 0;
 
@@ -144,17 +149,19 @@ namespace adiar::internal
 
         //Adjacent swap checks - currently only detects when both adjacent variables exist in bdd
         //otherwise it's considered a jump down
-        const int32_t next_diff32 = static_cast<int32_t>(next_after) - static_cast<int32_t>(next_before);
-        if(next_diff32 == 1) {
-          adj_node = next_before;
-        } else if (next_diff32 == -1){
-            adj_swap &= adj_node == next_after;
-        } else {
+        if (seen_set && (next_before == seen_swap_after) && (next_after == seen_swap_before)){
+          seen_set = false;
+        } else if (seen_set) {
           adj_swap = false;
+        } else {
+          seen_swap_before = next_before;
+          seen_swap_after = next_after;
+          seen_set = true;
         }
-        // Todo: swap 
-      }
+        
+      } else if (seen_set) {adj_swap = false;}
 
+      // Todo: swap 
       prev_before = next_before;
       prev_after  = next_after;
     }
@@ -602,7 +609,7 @@ namespace adiar::internal
     out_arcs->max_1level_cut = 0;
 
     //finding jump_down levels and targets
-    //TODO move to seperate function pls.. NOTE: neccesary?
+    //TODO maybe move vec building to seperate function?
     //vecs to fill
     std::vector<label_t> jump_starts, jump_targets;
     {
@@ -760,14 +767,13 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
   //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
     level_info_ifstream<> info_in(dd);
     //top of adj swap, bot of adj swap,  fresh layer below bottom (need to load PQ with these)
-    std::vector<typename Policy::label_type> swap_starts, swap_end, swap_extra; 
+    std::vector<typename Policy::label_type> swap_starts, swap_end; 
     while (info_in.can_pull()){
       level_info l = info_in.pull();
       if (debug_enabled) std::cout << "found level " << l << "\n";
       if (m(l.label()) > l.label()) {
         swap_starts.push_back(l.label());
         swap_end.push_back(m(l.label()));
-        swap_extra.push_back(m(l.label()) + 1);
       }
     }
 
@@ -1735,6 +1741,8 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
 
 
 //--------------------- setup of PQs for Non-monotone single sweeps (not nested sweeping stuff...) ------------------------------
+
+
 //calculating memory stuff for the PQs and sorters used in the special cases 
 //idea
 // shared entry-point takes replace type and depending on it runs right special case after setting up PQs
@@ -1891,8 +1899,8 @@ replace(typename Policy::dd_type dd,
       - node_ofstream::memory_usage();
 
       //transpose dd
-      
       const shared_levelized_file<arc>& t_dd = transpose(dd);
+
       const size_t pq_memory = aux_available_memory / 2;
       const size_t sorters_memory = aux_available_memory - pq_memory - iofstream<jump_up_mapping>::memory_usage();
       if(debug_enabled) std::cout << "sorters have memory " << sorters_memory << "\n";
@@ -1934,6 +1942,8 @@ replace(typename Policy::dd_type dd,
 
 
 ///-------------------------------------------------NON_MONOTONE--------------------------------------------------------------------
+
+
 
 //-------------------------------------------------- full correctify sweep (2 pqs) --------------------------------------------------
   template <typename Policy, typename PQ1, typename PQ2, typename In>
@@ -2089,6 +2099,9 @@ template <typename Policy>
 class nested_sweeping_replace : public Policy
 {
 private:
+    bool use_list;
+    int index;
+    const vector<memory_mode::Internal, typename Policy::label_type> m_arr;
     const replace_func<Policy> _m;                                
     const generator<typename Policy::label_type> _nesting_levels; // generator for levels to sweep on
     const generator<typename Policy::label_type> _targets;        //target for sweeps - to init pq with
@@ -2110,6 +2123,19 @@ public:
       _nesting_levels(nl),
       _targets(t)
     {
+      use_list = false;
+      _next_level = _nesting_levels();
+    };
+
+    nested_sweeping_replace(const vector<memory_mode::Internal, typename Policy::label_type> m_arr, 
+                            generator<typename Policy::label_type> nl,
+                            generator<typename Policy::label_type> t) 
+    : m_arr(m_arr), 
+      _nesting_levels(nl),
+      _targets(t)
+    {
+      use_list = true;
+      index = 0;
       _next_level = _nesting_levels();
     };
 
@@ -2135,7 +2161,12 @@ public:
 
     //labels mapped according to given map
     constexpr inline bdd::label_type
-    map_level(typename Policy::label_type x) const { return _m(x);}
+    map_level(typename Policy::label_type x) { 
+      if (use_list){
+        return m_arr[index];
+        index = index + 1;
+      }
+      return _m(x);}
 
     //heavily based on sweep_pq from the prod2u sweeping policy
     //main differences:
@@ -2164,12 +2195,12 @@ public:
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
         PQ2 pq2(inner_remaining_memory, max_pq_2_size);
         // (2) run correctify sweep
-        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(outer_file, inner_pq, pq2,ep);
+        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(outer_file, inner_pq, pq2, ep);
       } else {
         using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
         PQ2 pq2(inner_remaining_memory, max_pq_2_size);
         // (2) run correctify sweep
-        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(outer_file, inner_pq, pq2,ep);
+        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(outer_file, inner_pq, pq2, ep);
       }
     }
 
@@ -2219,7 +2250,8 @@ public:
     {
         //only run for nodes where we want to update level
         if(debug_enabled) std::cout << "runs req from node with " << n << "\n";
-        return request_t({n.low(), n.high()}, {}, { parent, _m(n.label()) });
+        typename Policy::label_type new_lvl = (use_list) ? m_arr[index] : _m(n.label());
+        return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
     }
 
     //method for supplying the level_inputs for initializing inner PQ
@@ -2303,8 +2335,19 @@ public:
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
 #endif
+      std::cout << "begun replace\n";
       return replace_nested_sweep<Policy>(dd,m,ep);
-
+    
+    case replace_type::Non_Monotone_Test: {
+      //split the map
+      //auto map_lists = map_adj_split(m);
+      if(false /*map_lists[0].size() > 1*/){
+        //TODO: more sophisticated check here
+        return replace_nested_sweep<Policy>(dd,m,ep);
+      } else {
+        return replace_nested_sweep<Policy>(dd,m,ep);
+      }
+    }
     case replace_type::Jump_Down:
 #ifdef ADIAR_STATS
       stats_replace.jump_down_scans += 1u;
@@ -2374,7 +2417,7 @@ public:
     case replace_type::Non_Monotone:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
-    case replace_type::Jump_Up
+    case replace_type::Jump_Up:
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
 #endif

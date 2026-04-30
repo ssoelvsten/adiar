@@ -33,6 +33,8 @@ namespace adiar
     /** Derives the `replace_type` via a small pre-processing step. */
     Auto = -1,
 
+    /*testing for initial adj_swaps*/
+    Non_Monotone_Test = 9, 
     /** Any variable remapping without any guarantees on `m`. */
     Non_Monotone = 8, // TODO
 
