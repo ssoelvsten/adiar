@@ -537,7 +537,7 @@ namespace adiar::internal
         ///
         /// \see request request_with_data
         ////////////////////////////////////////////////////////////////////////////////////////////
-        template<bool skip_terms>
+        template<bool skip_terms = true>
         void
         push(const typename OuterRoots::value_type& e)
         {
