@@ -1,3 +1,4 @@
+#include "adiar/exception.h"
 #include <adiar/bdd.h>
 #include <adiar/bdd/bdd_policy.h>
 #include <adiar/types.h>
@@ -310,6 +311,7 @@ namespace adiar
       // LCOV_EXCL_STOP
 
     case replace_type::Non_Monotone:
+    case replace_type::Non_Monotone_Test:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
     case replace_type::Jump_Up:
@@ -382,16 +384,32 @@ namespace adiar
               const bdd& relation,
               const function<optional<bdd::label_type>(bdd::label_type)>& m,
               replace_type m_type)
-  {
-    const bdd tmp_1 =
-      bdd_replace(ep, states, [&m](bdd::label_type x) { return m(x).value(); }, m_type);
+  { 
+    const replace_type inferred_type = m_type == replace_type::Auto
+      ? internal::replace__infer_type<bdd_policy>(relation, m)
+      : m_type;
+    
+    switch(inferred_type) {
+      case replace_type::Non_Monotone :
+      case replace_type::Non_Monotone_Test :
+      case replace_type::Swap_Adjacent :
+      case replace_type::Jump_Down :
+      case replace_type::Jump_Up :
+        throw invalid_argument("relprev given non-monotone substituion");
+      case replace_type::Shift :
+      case replace_type::Identity :
+      case replace_type::Monotone : {
+        const bdd tmp_1 = bdd_replace(ep, states, [&m](bdd::label_type x) { return m(x).value(); }, m_type);
 
-    __bdd tmp_2 = bdd_relprod__and(ep, std::move(tmp_1), relation, m);
+        __bdd tmp_2 = bdd_relprod__and(ep, std::move(tmp_1), relation, m);
 
-    const bdd tmp_3 =
-      bdd_exists(ep, std::move(tmp_2), [&m](bdd::label_type x) { return !m(x).has_value(); });
+        const bdd tmp_3 = bdd_exists(ep, std::move(tmp_2), [&m](bdd::label_type x) { return !m(x).has_value(); });
+        return tmp_3;
+      }
+      case replace_type::Auto :
+        adiar_unreachable();
+    }
 
-    return tmp_3;
   }
 
   bdd
