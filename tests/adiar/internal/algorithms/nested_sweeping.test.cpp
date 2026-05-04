@@ -2107,7 +2107,7 @@ go_bandit([]() {
 
     describe("nested_sweeping::aux algorithms", []() {
       describe("__reduce_level__fast(..., label, ...)", []() {
-        using pq_t = reduce_priority_queue<1, memory_mode::Internal>;
+        using pq_t = reduce_priority_queue<1, memory_mode::Internal, reduce_arc, reduce_queue_lt, 1>;
 
         it("does not suppress an entire level of redundant nodes", []() {
           /*
@@ -3258,7 +3258,7 @@ go_bandit([]() {
       });
 
       describe("__reduce_level__fast(..., in_label, out_label, ...)", []() {
-        using pq_t = reduce_priority_queue<1, memory_mode::Internal>;
+        using pq_t = reduce_priority_queue<1, memory_mode::Internal, reduce_arc, reduce_queue_lt, 1>;
 
         it("does not canonically sort output [bottom level]", []() {
           /*
