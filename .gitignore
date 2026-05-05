@@ -42,5 +42,6 @@ callgrind.out.*
 *\.#*
 
 ################################################################################
-# VISUAL STUDIO CODE
+# VISUAL STUDIO (CODE)
 .vscode/
+.vs/
