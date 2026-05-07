@@ -318,7 +318,7 @@ namespace adiar::internal
   inline void 
   pusher(pq_t& pq, 
          arc_ofstream& out_stream, 
-         ptr_uint64 source, 
+         const ptr_uint64 source, 
          const tuple<typename Policy::pointer_type> target, 
          const typename Policy::label_type level) {
     adiar_assert(!(target[0].is_nil() && target[1].is_nil()), "both targets cannot be nil!");
@@ -344,6 +344,7 @@ namespace adiar::internal
     } else {
       //Non-terminal: push request from current
       const cor_req_t<0> lreq({target[0],target[1]},{},{source, level});
+      //std::cout << "pushing req " << lreq << "\n";
       pq.push(lreq);
     }
   }
@@ -360,7 +361,7 @@ namespace adiar::internal
       const cor_req_t<nc>& r1 = pq.top(); 
       if (r1.target != target || r1.data.level != level) break;
 
-      pq.pop(); //non-levelized has no pull so simulate with pop..
+      pq.pop(); //non-levelized has no pull so we pop
       if (debug_enabled) std::cout << "has popped: " << r1 << "\n";
 
       if (r1.data.source.level() != ptr_uint64::nil().level()) {//push to out!
@@ -373,9 +374,10 @@ namespace adiar::internal
 
   template<typename Policy>
   tuple<tuple<typename Policy::pointer_type>>
-  reqFor(tuple<typename Policy::pointer_type> t, node v , 
-         typename Policy::pointer_type low,
-         typename Policy::pointer_type high) {
+  reqFor(const tuple<typename Policy::pointer_type> t, 
+         const node v , 
+         const typename Policy::pointer_type low,
+         const typename Policy::pointer_type high) {
     if (debug_enabled) std::cout << "running reqFor with " << t << "\n";
     const bdd::pointer_type tl = t[0];
     const bdd::pointer_type th = t[1];
@@ -444,7 +446,7 @@ namespace adiar::internal
 
   template<typename Policy>
   typename Policy::label_type
-  create_label(label_indicator li, typename Policy::label_type label){
+  create_label(const label_indicator li, const typename Policy::label_type label){
     switch (li) {
       case label_indicator::NORMAL: return label;
       case label_indicator::SHIFT_BACK: return label/2;
@@ -456,7 +458,7 @@ namespace adiar::internal
 
 
   template <typename Policy, typename In, typename Out, typename PQ1, typename PQ2>
-  void
+  inline void
   correctify_single_level(In& in, Out& aw,
                           PQ1& pq1, PQ2& pq2,
                           typename Policy::node_type& v,
@@ -490,6 +492,7 @@ namespace adiar::internal
 
     while (!pq1.empty_level() || pq2.has_top()) {
       const cor_req_t<1> r = getNext(pq1, pq2); //pull next req
+      std::cout << "pulled req" << r << "\n";
       const ptr_uint64 tseek = compute_tseek(r);  //updating tseek, v
 
       //CASE found correct layer!
@@ -738,24 +741,26 @@ class adj_swap_pq_decorator{
 };
 
 
+
 template <typename Policy, typename PQ1, typename PQ2, typename sorter_t>
 inline typename Policy::__dd_type
-replace_adj_swap_sweep(const typename Policy::dd_type& dd, 
-                          replace_func<Policy> m,
-                          exec_policy ep,
-                          size_t pq1_mem,
-                          size_t max_pq1_size,
-                          size_t pq2_mem,
-                          size_t max_pq2_size,
-                          size_t sorter_mem,
-                          size_t sorter_max) {
+replace_adj_swap_sweep_1(const typename Policy::dd_type& dd, 
+                         const vector<memory_mode::Internal, typename Policy::label_type>& swap_starts,
+                         const vector<memory_mode::Internal, typename Policy::label_type>& swap_ends,
+                         const exec_policy& ep,
+                         const size_t pq1_mem,
+                         const size_t max_pq1_size,
+                         const size_t pq2_mem,
+                         const size_t max_pq2_size,
+                         const size_t sorter_mem,
+                         const size_t sorter_max){
   //ok so:
   //layers above xi might push to sorter instead of pq
   //when we reach level xj first run stuff for xj, then handle all reqs in sorter
   //these will be in the "correct level" case always
   //when done reset sorter for next swap
-
-  //setup input
+   //setup input
+   std::cout << "makes it to actual adj_swap_sweep\n";
     node_ifstream<> in(dd);
     node v = in.pull();
     
@@ -764,23 +769,12 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
   arc_ofstream aw(out_arcs);   
   out_arcs->max_1level_cut = 0;
   
-  //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
-    level_info_ifstream<> info_in(dd);
-    //top of adj swap, bot of adj swap,  fresh layer below bottom (need to load PQ with these)
-    std::vector<typename Policy::label_type> swap_starts, swap_end; 
-    while (info_in.can_pull()){
-      level_info l = info_in.pull();
-      if (debug_enabled) std::cout << "found level " << l << "\n";
-      if (m(l.label()) > l.label()) {
-        swap_starts.push_back(l.label());
-        swap_end.push_back(m(l.label()));
-      }
-    }
-
-    const generator<typename Policy::label_type> level_gen = make_generator(swap_starts.begin(), swap_starts.end());
-    const generator<typename Policy::label_type> end_gen = make_generator(swap_end.begin(), swap_end.end());
-    optional<typename Policy::label_type> next_swap = level_gen();
-    optional<typename Policy::label_type> next_target = end_gen();
+  //seyup generators from lists
+  const generator<typename Policy::label_type> level_gen = make_generator(swap_starts.begin(), swap_starts.end());
+  const generator<typename Policy::label_type> end_gen = make_generator(swap_ends.begin(), swap_ends.end());
+  optional<typename Policy::label_type> next_swap = level_gen();
+  optional<typename Policy::label_type> next_target = end_gen();
+  std::cout << "has made generators??\n";
 
 
     //setup PQs
@@ -864,7 +858,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
             if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
             if (r1.data.source.level() != ptr_uint64::nil().level()) {
               if (debug_enabled) std::cout << "has pushed internal: " << arc{r1.data.source, out_uid} << "\n";
-              aw.push({unflag(r1.data.source), out_uid});
+              aw.push_internal({unflag(r1.data.source), out_uid});
               //TODO : unfalg here because we use roots sorter class from nested sweeping directly
               // could define own class to avoid
             }
@@ -886,10 +880,49 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
     }
     if (debug_enabled) std::cout << "finished all levels :D \n";
     return typename Policy::__dd_type(out_arcs,ep); 
+}
 
 
+template <typename Policy, typename PQ1, typename PQ2, typename sorter_t>
+inline typename Policy::__dd_type
+replace_adj_swap_sweep(const typename Policy::dd_type& dd, 
+                       const replace_func<Policy> m,
+                       const exec_policy ep,
+                       const size_t pq1_mem,
+                       const size_t max_pq1_size,
+                       const size_t pq2_mem,
+                       const size_t max_pq2_size,
+                       const size_t sorter_mem,
+                       const size_t sorter_max) {
+      
+    std::cout << "started adj_swap_stuff??\n ";
+    //TODO: store numebr of levels in level info file to avoid having to count them initially
+    //and or : TODO have a constructor for adiar vectors that take a std:vector as input
+    int number_of_levels = 0;
+    {level_info_ifstream<> level_counter(dd);
+      while (level_counter.can_pull()){
+        level_counter.pull();
+        number_of_levels = number_of_levels +1;
+      }
+    }
 
+    std::cout << "counted " << number_of_levels << "levels\n";
+    //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
+    vector<memory_mode::Internal, typename Policy::label_type> swap_starts(number_of_levels), swap_end(number_of_levels); 
+    { level_info_ifstream<> info_in(dd);
+      //top of adj swap, bot of adj swap,  fresh layer below bottom (need to load PQ with these)
+      while (info_in.can_pull()){
+        level_info l = info_in.pull();
+        if (debug_enabled) std::cout << "found level " << l << "\n";
+        if (m(l.label()) > l.label()) {
+          swap_starts.push_back(l.label());
+          swap_end.push_back(m(l.label()));
+        }
+      }
+    }
+    std::cout << "sucessfully made swap_start and ends\n";
 
+    return replace_adj_swap_sweep_1<Policy,PQ1, PQ2, sorter_t>(dd, swap_starts, swap_end, ep, pq1_mem,  max_pq1_size,  pq2_mem,  max_pq2_size,  sorter_mem,  sorter_max);
 }
 
 //NOTE TO SELF
@@ -1250,11 +1283,11 @@ inline jump_up_arc
 template <typename Policy, typename pq_t, template <typename, typename> typename sorter_t>
 typename Policy::dd_type 
 replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
-                      replace_func<Policy> m,
-                      [[maybe_unused]] exec_policy ep, 
-                      size_t pq_mem, 
-                      size_t max_pq_size,
-                      size_t sorters_mem){
+                      const replace_func<Policy>& m,
+                      [[maybe_unused]] const exec_policy& ep, 
+                      const size_t pq_mem, 
+                      const size_t max_pq_size,
+                      const size_t sorters_mem){
   if (debug_enabled) std::cout << "entered jump_up special case\n";
   //setting up input
   arc_ifstream<> arcs(dd);
@@ -1699,7 +1732,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       child_grouping.sort();
       node seen_node = node(node::uid_type(), ptr_uint64::nil(), ptr_uint64::nil());
       auto id = Policy::max_id;
-      typename Policy::uid_type seen_uid;
+      typename Policy::uid_type seen_uid(0,0);
       
       while (child_grouping.can_pull()) {
         jump_up_node_ws next_node = child_grouping.pull();
@@ -1742,12 +1775,6 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
 
 //--------------------- setup of PQs for Non-monotone single sweeps (not nested sweeping stuff...) ------------------------------
 
-
-//calculating memory stuff for the PQs and sorters used in the special cases 
-//idea
-// shared entry-point takes replace type and depending on it runs right special case after setting up PQs
-// NOTE: could potentially be cleaner to do this in the public entry pont for replace
-// but since only non-monotone cases need PQs we do it here for now
 template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
   size_t
   __cor_ilevel_upper_bound(const In& in)
@@ -1756,12 +1783,86 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
     return to_size(max_cut_all * max_cut_all + ConstSizeInc);
   }
 
+  template<typename Policy>
+  typename Policy::__dd_type
+  replace_adj_swap(const typename Policy::dd_type& dd, 
+        const vector<memory_mode::Internal, typename Policy::label_type>& swap_starts,
+        const vector<memory_mode::Internal, typename Policy::label_type>& swap_ends, 
+        const exec_policy& ep) {
+      
+    const bool internal_only = ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
+    const bool external_only = ep.template get<exec_policy::memory>() == exec_policy::memory::External;
+    
+    const size_t aux_available_memory = memory_available()- node_ifstream<>::memory_usage() - arc_ofstream::memory_usage();
+    using pq1_t = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
+    using default_sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_data_first_lt<cor_req_t<0>>>;
+    
+    constexpr size_t data_structures_in_pq1 = pq1_t::data_structures;
+    constexpr size_t data_structures_in_sorter = default_sorter_t::data_structures;
+    constexpr size_t data_structures_in_pq_2 = cor_priority_queue_2_t<memory_mode::Internal>::data_structures;
+
+    const size_t pq1_memory = aux_available_memory / (data_structures_in_pq1 + data_structures_in_sorter + data_structures_in_pq_2) * data_structures_in_pq1;
+    const size_t sorter_memory = (aux_available_memory - pq1_memory) / (data_structures_in_sorter + data_structures_in_pq_2) * data_structures_in_sorter;
+    const size_t pq2_memory = aux_available_memory - pq1_memory - sorter_memory;
+    
+    const size_t pq1_memory_fits = pq1_t::memory_fits(pq1_memory );
+    const size_t pq2_memory_fits = cor_priority_queue_2_t<memory_mode::Internal>::memory_fits(pq1_memory );
+    const size_t sorter_memory_fits = default_sorter_t::memory_fits(sorter_memory);
+
+    const size_t pq_1_bound =  __cor_ilevel_upper_bound<Policy, get_2level_cut, 2u>(dd);
+    const size_t pq_2_bound =  __cor_ilevel_upper_bound<Policy, get_1level_cut, 0u>(dd);
+    const size_t sorter_bound = pq_1_bound ; //this might be too high?
+
+    const size_t max_pq_1_size = internal_only ? std::min(pq1_memory_fits, pq_1_bound) : pq_1_bound;
+    const size_t max_pq_2_size = internal_only ? std::min(pq2_memory_fits, pq_2_bound) : pq_2_bound;
+    const size_t sorter_max =  internal_only ? std::min({ sorter_memory_fits, sorter_bound }) : sorter_bound;
+
+    if (!external_only && max_pq_1_size <= no_lookahead_bound(2)) {
+#ifdef ADIAR_STATS
+      stats_replace.lpq.unbucketed += 1u;
+#endif
+        //internal, no lookahead
+        using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,1u>;
+        using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
+        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+        return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, swap_starts, swap_ends, ep, 
+          pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
+    } 
+    else if (!external_only && max_pq_1_size <= pq1_memory_fits 
+                            && sorter_max <= sorter_memory_fits
+                            && max_pq_2_size <= pq2_memory_fits) {
+      //internal with lookahead
+#ifdef ADIAR_STATS
+      stats_replace.lpq.internal += 1u;
+#endif
+      using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
+      using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
+      using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+      return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, swap_starts, swap_ends, ep, 
+          pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
+    } else {
+      //external case
+      using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,1u>;
+      using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
+      using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+      return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, swap_starts, swap_ends, ep, 
+          pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
+    }
+  }
+
+//calculating memory stuff for the PQs and sorters used in the special cases 
+//idea
+// shared entry-point takes replace type and depending on it runs right special case after setting up PQs
+// NOTE: could potentially be cleaner to do this in the public entry pont for replace
+// but since only non-monotone cases need PQs we do it here for now
+
+
 template<typename Policy>
 typename Policy::__dd_type //special cases can return arc format
-replace(typename Policy::dd_type dd, 
-        replace_func<Policy> m,
-        replace_type t, 
-        exec_policy ep){
+replace(const typename Policy::dd_type& dd, 
+        const replace_func<Policy>& m,
+        const replace_type t, 
+        const exec_policy& ep){
   //should setup PQs used for special cases 
   // jump-down -> 2 pqs one levelized, one not (same as are used for correctify)
   // adj_swap -> 2 pqs one levelized one not + one sorter for extra levels
@@ -1948,10 +2049,10 @@ replace(typename Policy::dd_type dd,
 //-------------------------------------------------- full correctify sweep (2 pqs) --------------------------------------------------
   template <typename Policy, typename PQ1, typename PQ2, typename In>
   inline typename Policy::__dd_type
-  replace_cor_scan_level(const In& in, 
+  replace_cor_scan_level(const exec_policy& ep,
+                         const In& in, 
                          PQ1& pq1,    //we assume that pq1 have been preloaded when given here  
-                         PQ2& pq2,
-                         exec_policy ep)               
+                         PQ2& pq2)               
   {
   //repeatedly runs correctify for single levels -> to be used for inner sweeps in nested sweeping
     // Set up input
@@ -2071,6 +2172,67 @@ replace(typename Policy::dd_type dd,
     return typename Policy::__dd_type(out_arcs,ep);
   }
 
+  //split map into adj_swap part and rest part
+  template<typename Policy>
+  vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
+  adj_map_split(const typename Policy::dd_type& dd , const replace_func<Policy>& m){
+    //build old, new lists
+    std::cout << "runs adj_map_split\n";
+    std::vector<typename Policy::label_type> old, mapped;
+    {
+      level_info_ifstream<true> level_info_file(dd);
+      while(level_info_file.can_pull()){
+        typename Policy::label_type l = level_info_file.pull().level();
+        old.push_back(l);
+        mapped.push_back(m(l));
+      }
+    }
+
+    //build out lists!
+    vector<memory_mode::Internal, typename Policy::label_type> adj_starts(old.size()), adj_targets(old.size()), sweep_starts(old.size()), sweep_targets(old.size()), mapping_levels(old.size()*2);
+    typename Policy::label_type min_seen = mapped[0];
+    for (typename Policy::label_type i = 0 ; i < old.size() ; i++){
+      std::cout << "loop at" << i << "\n";
+      if (i < old.size()-1 && old[i] == mapped[i+1] && old[i+1] == mapped[i]){
+        //then this is end of an adj swap (cus backwards)
+        adj_targets.push_back(old[i]);
+        mapping_levels.push_back(old[i]);
+      }
+      else if (i > 0 && old[i] == mapped[i-1] && old[i-1] == mapped[i]) {
+        //then this is start of an adj swap (cus backwards)
+        adj_starts.push_back(old[i]);
+        mapping_levels.push_back(old[i]);
+      }
+      else if (old[i] != mapped[i]){
+        mapping_levels.push_back(mapped[i]);
+        if (mapped[i] > min_seen) {sweep_starts.push_back(old[i]); sweep_targets.push_back(mapped[i]);}
+        else {min_seen = mapped[i];}
+      } else {
+        //no change??
+        mapping_levels.push_back(old[i]);
+      }
+
+    }
+    std::cout << "makes it to output part\n";
+    //reversing adj_swap maps to work with top-down sweep
+    std::reverse(adj_starts.begin(), adj_starts.end());
+    std::reverse(adj_targets.begin(), adj_targets.end());
+    vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> res(old.size()*10);
+    res.push_back(adj_starts); res.push_back(adj_targets);
+    std::cout << "pushed adj stuff\n";
+    res.push_back(sweep_starts), res.push_back(sweep_targets);
+    std::cout << "pushed sweep stuff\n";
+    res.push_back(mapping_levels);
+    std::cout << "pushed map levels\n";
+
+    //sanity check on mapping levels...
+    std::cout << "computed mapping levels: \n";
+    for(typename Policy::label_type e : mapping_levels){
+      std:: cout << e << ",";
+    }
+    return res;
+  }
+
 
   //calculate from BDD levels and m what levels should be sweeped 
   //from the bottom, should sweep in those levels which mapped value is larger than smallest seen
@@ -2161,10 +2323,10 @@ public:
 
     //labels mapped according to given map
     constexpr inline bdd::label_type
-    map_level(typename Policy::label_type x) { 
+    map_level(const typename Policy::label_type x) { 
       if (use_list){
-        return m_arr[index];
-        index = index + 1;
+        std::cout << "indexing into array at " << index << " (map lvl) \n";
+        return m_arr[index++];
       }
       return _m(x);}
 
@@ -2195,12 +2357,12 @@ public:
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
         PQ2 pq2(inner_remaining_memory, max_pq_2_size);
         // (2) run correctify sweep
-        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(outer_file, inner_pq, pq2, ep);
+        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(ep, outer_file, inner_pq, pq2);
       } else {
         using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
         PQ2 pq2(inner_remaining_memory, max_pq_2_size);
         // (2) run correctify sweep
-        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(outer_file, inner_pq, pq2, ep);
+        return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(ep, outer_file, inner_pq, pq2);
       }
     }
 
@@ -2250,7 +2412,9 @@ public:
     {
         //only run for nodes where we want to update level
         if(debug_enabled) std::cout << "runs req from node with " << n << "\n";
+        if (use_list) std::cout << "indexing into array at " << index << " (from req) \n";
         typename Policy::label_type new_lvl = (use_list) ? m_arr[index] : _m(n.label());
+        if(debug_enabled) std::cout << "builds req " << request_t({n.low(), n.high()}, {}, { parent, new_lvl }) << "\n";
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
     }
 
@@ -2276,7 +2440,7 @@ public:
   typename Policy::__dd_type
   replace_nested_sweep(const typename Policy::dd_type& dd,
                        const replace_func<Policy>& m,
-                       exec_policy ep) {
+                       const exec_policy& ep) {
     //calculate sweeping levels and their targets from map
     std::vector<typename Policy::label_type> nest_levels = levels_from_map<Policy>(m, dd);
 
@@ -2311,7 +2475,7 @@ public:
   replace(const exec_policy& ep,
           const typename Policy::dd_type& dd,
           const replace_func<Policy>& m,
-          replace_type m_type)
+          const replace_type m_type)
   {
     // Return if nothing needs to be remapped
     if (dd->is_terminal()) {
@@ -2340,10 +2504,17 @@ public:
     
     case replace_type::Non_Monotone_Test: {
       //split the map
-      //auto map_lists = map_adj_split(m);
-      if(false /*map_lists[0].size() > 1*/){
+      vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> map_lists = adj_map_split<Policy>(dd, m);
+      std::cout << "makes it here??\n";
+      if(map_lists[0].size() > 1){
+        std::cout << "goes into if statement\n";
         //TODO: more sophisticated check here
-        return replace_nested_sweep<Policy>(dd,m,ep);
+        __bdd after_swaps = replace_adj_swap<Policy>(dd, map_lists[0], map_lists[1], ep);
+        std::cout << "has made adj swap, moving on to nested sweep?\n";
+        nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
+                                                      make_generator(map_lists[3].begin(), map_lists[3].end()));
+        std::cout << "has made policy?\n";
+        return nested_sweep<>(ep, dd, inner_impl);
       } else {
         return replace_nested_sweep<Policy>(dd,m,ep);
       }
@@ -2354,7 +2525,7 @@ public:
 #endif
     return replace<Policy>(dd,m,inferred_type, ep);
 
-    case replace_type::Jump_Up: //NOTE: running from here -> bdd is transposed first
+    case replace_type::Jump_Up: //NOTE: running from here -> bdd is transposed first to get arc rep
 #ifdef ADIAR_STATS
       stats_replace.jump_up_scans += 1u;
 #endif
