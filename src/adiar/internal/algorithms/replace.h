@@ -492,7 +492,7 @@ namespace adiar::internal
 
     while (!pq1.empty_level() || pq2.has_top()) {
       const cor_req_t<1> r = getNext(pq1, pq2); //pull next req
-      std::cout << "pulled req" << r << "\n";
+      if (debug_enabled) std::cout << "pulled req" << r << "\n";
       const ptr_uint64 tseek = compute_tseek(r);  //updating tseek, v
 
       //CASE found correct layer!
@@ -760,7 +760,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
   //these will be in the "correct level" case always
   //when done reset sorter for next swap
    //setup input
-   std::cout << "makes it to actual adj_swap_sweep\n";
+    if (debug_enabled) std::cout << "makes it to actual adj_swap_sweep\n";
     node_ifstream<> in(dd);
     node v = in.pull();
     
@@ -774,7 +774,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
   const generator<typename Policy::label_type> end_gen = make_generator(swap_ends.begin(), swap_ends.end());
   optional<typename Policy::label_type> next_swap = level_gen();
   optional<typename Policy::label_type> next_target = end_gen();
-  std::cout << "has made generators??\n";
+  if (debug_enabled) std::cout << "has made generators??\n";
 
 
     //setup PQs
@@ -2177,7 +2177,7 @@ replace(const typename Policy::dd_type& dd,
   vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
   adj_map_split(const typename Policy::dd_type& dd , const replace_func<Policy>& m){
     //build old, new lists
-    std::cout << "runs adj_map_split\n";
+    if (debug_enabled) std::cout << "runs adj_map_split\n";
     std::vector<typename Policy::label_type> old, mapped;
     {
       level_info_ifstream<true> level_info_file(dd);
@@ -2192,7 +2192,7 @@ replace(const typename Policy::dd_type& dd,
     vector<memory_mode::Internal, typename Policy::label_type> adj_starts(old.size()), adj_targets(old.size()), sweep_starts(old.size()), sweep_targets(old.size()), mapping_levels(old.size()*2);
     typename Policy::label_type min_seen = mapped[0];
     for (typename Policy::label_type i = 0 ; i < old.size() ; i++){
-      std::cout << "loop at" << i << "\n";
+      if (debug_enabled) std::cout << "loop at" << i << "\n";
       if (i < old.size()-1 && old[i] == mapped[i+1] && old[i+1] == mapped[i]){
         //then this is end of an adj swap (cus backwards)
         adj_targets.push_back(old[i]);
@@ -2213,20 +2213,20 @@ replace(const typename Policy::dd_type& dd,
       }
 
     }
-    std::cout << "makes it to output part\n";
+    if (debug_enabled) std::cout << "makes it to output part\n";
     //reversing adj_swap maps to work with top-down sweep
     std::reverse(adj_starts.begin(), adj_starts.end());
     std::reverse(adj_targets.begin(), adj_targets.end());
     vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> res(old.size()*10);
     res.push_back(adj_starts); res.push_back(adj_targets);
-    std::cout << "pushed adj stuff\n";
+    if (debug_enabled) std::cout << "pushed adj stuff\n";
     res.push_back(sweep_starts), res.push_back(sweep_targets);
-    std::cout << "pushed sweep stuff\n";
+    if (debug_enabled) std::cout << "pushed sweep stuff\n";
     res.push_back(mapping_levels);
-    std::cout << "pushed map levels\n";
+    if (debug_enabled) std::cout << "pushed map levels\n";
 
     //sanity check on mapping levels...
-    std::cout << "computed mapping levels: \n";
+    if (debug_enabled) std::cout << "computed mapping levels: \n";
     for(typename Policy::label_type e : mapping_levels){
       std:: cout << e << ",";
     }
@@ -2325,7 +2325,7 @@ public:
     constexpr inline bdd::label_type
     map_level(const typename Policy::label_type x) { 
       if (use_list){
-        std::cout << "indexing into array at " << index << " (map lvl) \n";
+        if (debug_enabled) std::cout << "indexing into array at " << index << " (map lvl) \n";
         return m_arr[index++];
       }
       return _m(x);}
@@ -2412,7 +2412,7 @@ public:
     {
         //only run for nodes where we want to update level
         if(debug_enabled) std::cout << "runs req from node with " << n << "\n";
-        if (use_list) std::cout << "indexing into array at " << index << " (from req) \n";
+        if (use_list && debug_enabled) std::cout << "indexing into array at " << index << " (from req) \n";
         typename Policy::label_type new_lvl = (use_list) ? m_arr[index] : _m(n.label());
         if(debug_enabled) std::cout << "builds req " << request_t({n.low(), n.high()}, {}, { parent, new_lvl }) << "\n";
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
@@ -2499,21 +2499,17 @@ public:
 #ifdef ADIAR_STATS
       stats_replace.nested_sweeps += 1u;
 #endif
-      std::cout << "begun replace\n";
+      if(debug_enabled)std::cout << "begun replace\n";
       return replace_nested_sweep<Policy>(dd,m,ep);
     
     case replace_type::Non_Monotone_Test: {
       //split the map
       vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> map_lists = adj_map_split<Policy>(dd, m);
-      std::cout << "makes it here??\n";
       if(map_lists[0].size() > 1){
-        std::cout << "goes into if statement\n";
         //TODO: more sophisticated check here
         __bdd after_swaps = replace_adj_swap<Policy>(dd, map_lists[0], map_lists[1], ep);
-        std::cout << "has made adj swap, moving on to nested sweep?\n";
         nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
                                                       make_generator(map_lists[3].begin(), map_lists[3].end()));
-        std::cout << "has made policy?\n";
         return nested_sweep<>(ep, dd, inner_impl);
       } else {
         return replace_nested_sweep<Policy>(dd,m,ep);
