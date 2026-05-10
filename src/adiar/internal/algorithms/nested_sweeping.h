@@ -140,7 +140,8 @@ namespace adiar::internal
       ///
       /// \see sorter nested_sweep
       //////////////////////////////////////////////////////////////////////////////////////////////
-      template <memory_mode MemoryMode, typename T, typename Comp>
+      //HACKED: should_flag added to avoid flagging in special cases for replace where this class is also used
+      template <memory_mode MemoryMode, typename T, typename Comp, bool should_flag = true>
       class roots_sorter
       {
       public:
@@ -236,7 +237,7 @@ namespace adiar::internal
           _max_source = _max_source.is_nil() ? v.data.source : std::max(_max_source, v.data.source);
 
           value_type v2 = v;
-          v2.data.source = flag(v.data.source);
+          v2.data.source = should_flag ? flag(v.data.source) : v.data.source;
           const value_type v3 = v2;
           _sorter_ptr->push(v3);
 
