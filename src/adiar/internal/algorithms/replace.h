@@ -313,6 +313,60 @@ namespace adiar::internal
                                   std::less<node::label_type>,
                                   0u>;
 
+template<typename PQ1, typename sorter_t, typename Comp>
+class pq_sorter_decorator{
+  //decorator very like up_pq_decorator -> sometimes pushes to sorter depedning on given comp
+  public:
+    using value_type = typename PQ1::value_type;
+    using value_comp_type = typename PQ1::value_comp_type;
+    static constexpr memory_mode mem_mode = PQ1::mem_mode;
+    using level_type = typename value_type::pointer_type::label_type;
+    static constexpr level_type no_label = PQ1::no_label;
+  private:
+    PQ1& _pq1; //ref to pq1
+    sorter_t& _sorter; //ref to sorter
+    Comp _comp;
+
+  //constructor
+  public:
+    pq_sorter_decorator(PQ1& pq1, sorter_t& sorter) :
+    _pq1(pq1), 
+    _sorter(sorter)
+    {_comp = Comp{};}
+
+  size_t terminals(const bool terminal_value) const {return _pq1.terminals(terminal_value);}
+  size_t size() const {return _pq1.size() + _sorter.size();}
+
+  size_t size_without_terminals() const{
+    return size() - terminals(false) - terminals(true);
+  }
+
+  bool empty_level() const          { return  _pq1.empty_level();}
+  bool can_pull() const             { return  _pq1.can_pull();}
+  cor_req_t<0> pull()               { return  _pq1.pull(); }
+  bool has_top() const              { return  _pq1.has_top(); }
+  cor_req_t<0> top()                { return  _pq1.top(); }
+  void pop()                        { return  _pq1.pop(); }
+  bool has_current_level() const    { return  _pq1.has_current_level(); }
+  level_type current_level() const  { return  _pq1.current_level(); }
+  bool empty() const { return size() == 0u;}  
+
+  void setup_next_level(level_type stop_level = no_label)
+    { _pq1.setup_next_level(stop_level);}
+
+  //pushing
+  void push(const cor_req_t<0> r){
+    if (_comp(r.data.level, r.target.first().level())) {
+      if(debug_enabled) std::cout << "pushing to sorter: " << r << "\n";
+      _sorter.push(r);
+    } else {
+      if(debug_enabled) std::cout << "pushing to pq1: " << r << "\n";
+      _pq1.push(r);
+    }
+  }
+
+};
+
 //--------------------------helper functions for non-monotone replace ---------------------          
   template<typename Policy, typename pq_t>
   inline void 
@@ -456,8 +510,7 @@ namespace adiar::internal
     return 0;
   }
 
-
-  template <typename Policy, typename In, typename Out, typename PQ1, typename PQ2>
+  template <typename Policy, typename correct_level_comp = std::greater<>, typename In, typename Out, typename PQ1, typename PQ2>
   inline void
   correctify_single_level(In& in, Out& aw,
                           PQ1& pq1, PQ2& pq2,
@@ -473,6 +526,7 @@ namespace adiar::internal
     //vars
     label_t label = pq1.current_level();
     label_t id = -1; 
+    correct_level_comp comp = correct_level_comp{};
 
     // --- Helpers ------------------------------------------------------------
     auto update_label_and_id = [&](const ptr_uint64& tseek) {
@@ -496,9 +550,8 @@ namespace adiar::internal
       const ptr_uint64 tseek = compute_tseek(r);  //updating tseek, v
 
       //CASE found correct layer!
-      //FIXED: now >= to facilitate adj swap extra layer
-      // as far as i can tell this change should have no impact in any other case 
-      if (r.target.first().level() >= r.data.level) {   
+      //FIXED 2.0 now pass along comparator type in template to allow variance
+      if (comp(r.target.first().level(), r.data.level)){   
         if (debug_enabled) std::cout << "enters copy case\n";
 
         //SUBCASE suppresible node case - push one req
@@ -589,6 +642,7 @@ namespace adiar::internal
 
   //--------------------------------------- JUMP_DOWN special case ---------------------------------------
 
+  //only for empty target levels version
   template <typename Policy, typename PQ1, typename PQ2>
   inline typename Policy::__dd_type
   replace_jump_down_sweep(const typename Policy::dd_type& dd, 
@@ -685,62 +739,138 @@ namespace adiar::internal
     return typename Policy::__dd_type(out_arcs,ep); 
   }
 
-// ------------------------------------- Adj Swap special case -------------------------------------
+  //version accepting inhabited target levels
+  //major differences:
+  //uses a sorter to handle "extra level" if target is inhabited
+  //will shift up all in-between levels by 1 to make room for the jump target. 
+  //takes as input lists instead of a map
+  template <typename Policy, typename PQ1, typename PQ2, typename sorter_t>
+  inline typename Policy::__dd_type
+  replace_jump_down_inhabited_sweep(const typename Policy::dd_type& dd, 
+                          vector<memory_mode::Internal, typename Policy::label_type> jump_starts,
+                          vector<memory_mode::Internal, typename Policy::label_type> jump_targets,
+                          exec_policy ep,
+                          size_t pq1_mem,
+                          size_t max_pq1_size,
+                          size_t pq2_mem,
+                          size_t max_pq2_size,
+                          size_t sorter_mem, 
+                          size_t max_sorter_size) {
+    if (debug_enabled) std::cout << "start jump_down_inhabited special case! \n";
+    //init input
+    node_ifstream<> in(dd);
+    node v = in.pull();
 
-template<typename PQ1, typename sorter_t>
-class adj_swap_pq_decorator{
-  //decorator very like up_pq_decorator but pushes to sorter when level is min in req
-  public:
-    using value_type = typename PQ1::value_type;
-    using value_comp_type = typename PQ1::value_comp_type;
-    static constexpr memory_mode mem_mode = PQ1::mem_mode;
-    using level_type = typename value_type::pointer_type::label_type;
-    static constexpr level_type no_label = PQ1::no_label;
-  private:
-    PQ1& _pq1; //ref to pq1
-    sorter_t& _sorter; //ref to sorter
+    //init output
+    shared_levelized_file<arc> out_arcs;
+    arc_ofstream aw(out_arcs);
+    out_arcs->max_1level_cut = 0;
 
-  //constructor
-  public:
-    adj_swap_pq_decorator(PQ1& pq1, sorter_t& sorter) :
-    _pq1(pq1), 
-    _sorter(sorter)
-    {}
+    //init generators
+    const generator<typename Policy::label_type> jump_start_gen = make_generator(jump_starts.begin(), jump_starts.end());
+    const generator<typename Policy::label_type> jump_target_gen = make_generator(jump_targets.begin(), jump_targets.end());
+    optional<typename Policy::label_type> next_jump_down = jump_start_gen();
+    optional<typename Policy::label_type> next_target = jump_target_gen();
 
-  size_t terminals(const bool terminal_value) const {return _pq1.terminals(terminal_value);}
-  size_t size() const {return _pq1.size() + _sorter.size();}
+    //init PQs and sorter
+    PQ1 pq1({dd}, pq1_mem , max_pq1_size, stats_replace.lpq);
+    PQ2 pq2(pq2_mem, max_pq2_size);
+    sorter_t sorter(sorter_mem, max_sorter_size);
 
-  size_t size_without_terminals() const{
-    return size() - terminals(false) - terminals(true);
-  }
+    //decorator to push to sorter instead when level is unique min of request
+    pq_sorter_decorator<PQ1, sorter_t,std::less<>> dpq(pq1, sorter);
 
-  bool empty_level() const          { return  _pq1.empty_level();}
-  bool can_pull() const             { return  _pq1.can_pull();}
-  cor_req_t<0> pull()               { return  _pq1.pull(); }
-  bool has_top() const              { return  _pq1.has_top(); }
-  cor_req_t<0> top()                { return  _pq1.top(); }
-  void pop()                        { return  _pq1.pop(); }
-  bool has_current_level() const    { return  _pq1.has_current_level(); }
-  level_type current_level() const  { return  _pq1.current_level(); }
-  bool empty() const { return size() == 0u;}  
+    //handling init request
+    cor_req_t<0> init_r;
+    if (v.uid().level() == next_jump_down.value()) {
+      if (debug_enabled) {std::cout << "CASE first level moves down\n";}
+      //push proper req
+       init_r = {{v.low(), v.high()},{},{ptr_uint64::nil(), next_target.value()}};
+       //next_jump_down = jump_start_gen(); - dont thiink we do this here
 
-  void setup_next_level(level_type stop_level = no_label)
-    { _pq1.setup_next_level(stop_level);}
-
-  //pushing
-  void push(const cor_req_t<0> r){
-    if (r.data.level <= r.target.first().level()){
-      if(debug_enabled) std::cout << "pushing to sorter: " << r << "\n";
-      _sorter.push(r);
     } else {
-      if(debug_enabled) std::cout << "pushing to pq1: " << r << "\n";
-      _pq1.push(r);
+      if (debug_enabled) {std::cout << "CASE first level doesn't moves down\n";}
+      //just init copy req
+       init_r = {{v.uid(),node::pointer_type::nil() },{},{ptr_uint64::nil()}};
     }
+    if (debug_enabled) std::cout << "init jump_down req: " << init_r << "\n";
+    dpq.push(init_r);
+
+    while(!dpq.empty()){
+      dpq.setup_next_level();
+      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq1.size());
+      typename Policy::label_type lvl = dpq.current_level();
+
+      if(lvl == next_jump_down){
+        if (debug_enabled ) std::cout << "found next jump_level " << lvl << "\n";
+        //push 2-ary requests 
+        while(!dpq.empty_level()){
+          cor_req_t<0> r = dpq.pull();
+          if (debug_enabled ) std::cout << "found req " << r << "\n";
+          const ptr_uint64 t_uid(r.data.level, 0);
+          ptr_uint64 tseek = std::min(r.target.first(), t_uid);
+          while (v.uid() < tseek && in.can_pull()) { v = in.pull(); }
+          dpq.push({{v.low(), v.high()},{},{r.data.source, next_target.value()}});
+        }
+      } else if (next_jump_down < lvl && lvl < next_target) {
+        if (debug_enabled ) std::cout << "found in-between level " << lvl << "\n";
+        // in-between layer
+        // handle like normal but decrement level
+        correctify_single_level<Policy>(in, aw, dpq, pq2, v, label_indicator::DEC);
+      } else if (lvl == next_target) {
+        if (debug_enabled ) std::cout << "found target level " << lvl << "\n";
+        // jump-target
+        // (1) handle "old version" of level normally (but decrement)
+        // (2) insert new level: always in correct layer case
+        correctify_single_level<Policy>(in, aw, dpq, pq2, v, label_indicator::DEC);
+
+        out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, dpq.size());
+        sorter.sort(); 
+typename Policy::label_type id = 0;
+        if (debug_enabled)std::cout << "starting work for extra level \n";
+        while(sorter.can_pull()){
+          const cor_req_t<0> extra_r = sorter.top();
+          if (debug_enabled)std::cout << "found req " << extra_r << "\n";
+          if (extra_r.target[0] == extra_r.target[1]) {
+            if (debug_enabled)std::cout << "skip surpressible node! \n";
+            sorter.pull(); 
+            const cor_req_t<0> r1 = {{extra_r.target[0],node::pointer_type::nil()}, {}, {extra_r.data.source}};
+            if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+            dpq.push(r1);
+            continue;
+          }
+ 
+          const typename Policy::uid_type out_uid(next_target.value(), id++);
+          pusher<Policy>(dpq, aw, out_uid.as_ptr(false), {extra_r.target[0], node::pointer_type::nil()}, node::pointer_type::nil().level());
+          pusher<Policy>(dpq, aw, out_uid.as_ptr(true),  {extra_r.target[1], node::pointer_type::nil()}, node::pointer_type::nil().level());
+
+          // forward incoming
+          //TODO find a way to use internal pusher here?
+          while (sorter.has_top() && sorter.top().target == extra_r.target){
+            const cor_req_t<0> r1 = sorter.pull();
+            if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
+            if (r1.data.source.level() != ptr_uint64::nil().level()) {
+              if (debug_enabled) std::cout << "has pushed internal: " << arc{unflag(r1.data.source), out_uid} << "\n";
+              aw.push_internal({r1.data.source, out_uid});
+            }
+          }
+        }
+          //update level info and next_start, next_target
+          if(id >= 0) {aw.push(level_info(lvl, id+1));}
+          next_jump_down = jump_start_gen();
+          next_target = jump_target_gen();
+          sorter.reset();
+      } else {
+        //uninvolved layer - just do regular correctify
+        if (debug_enabled ) std::cout << "found uninvolved level " << lvl << "\n";
+        correctify_single_level<Policy>(in, aw, dpq, pq2, v, label_indicator::NORMAL);
+      }
+    }
+    if (debug_enabled) std::cout << "finished big loop!";
+    return typename Policy::__dd_type(out_arcs,ep);
   }
 
-};
-
-
+// ------------------------------------- Adj Swap special case -------------------------------------
 
 template <typename Policy, typename PQ1, typename PQ2, typename sorter_t>
 inline typename Policy::__dd_type
@@ -769,7 +899,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
   arc_ofstream aw(out_arcs);   
   out_arcs->max_1level_cut = 0;
   
-  //seyup generators from lists
+  //setup generators from lists
   const generator<typename Policy::label_type> level_gen = make_generator(swap_starts.begin(), swap_starts.end());
   const generator<typename Policy::label_type> end_gen = make_generator(swap_ends.begin(), swap_ends.end());
   optional<typename Policy::label_type> next_swap = level_gen();
@@ -785,7 +915,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
     sorter_t sorter(sorter_mem, sorter_max);
     
     //decorator to sometimes push to sorter instead
-    adj_swap_pq_decorator<PQ1, sorter_t> apq(pq1, sorter);
+    pq_sorter_decorator<PQ1, sorter_t, std::less_equal<typename Policy::label_type>> apq(pq1, sorter);
 
     cor_req_t<0> init_req;
     if(v.uid().label() == next_swap){
@@ -826,7 +956,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
         //    (a) never in correct layer case!
         //    (b) when pushing reqs, if level is min, push to pq3 instead (handled by the new policy)
         //    (c) out_label should be next_swap aka current level -1 (handled by label_indicator)
-        correctify_single_level<Policy>(in, aw, apq, pq2, v,  label_indicator::DEC);
+        correctify_single_level<Policy,std::greater_equal<>>(in, aw, apq, pq2, v,  label_indicator::DEC);
         //make sure to update cut since we just continue here 
         out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, apq.size());
         //(2) handle the extra level as correctify but
@@ -835,19 +965,20 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
         //    (c) out_label should be current level -1 aka next_target
         sorter.sort();
         typename Policy::label_type id = 0;
+        if (debug_enabled)std::cout << "starting work for extra level \n";
         while(sorter.can_pull()){
           const cor_req_t<0> extra_r = sorter.top();
+          if (debug_enabled)std::cout << "found req " << extra_r << "\n";
           if (extra_r.target[0] == extra_r.target[1]) {
             if (debug_enabled)std::cout << "skip surpressible node! \n";
-            apq.pop();
+            sorter.pull(); 
             const cor_req_t<0> r1 = {{extra_r.target[0],node::pointer_type::nil()}, {}, {extra_r.data.source}};
             if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
             apq.push(r1);
             continue;
           }
  
-          const typename Policy::uid_type out_uid(next_target.value(), id);
-          id++;
+          const typename Policy::uid_type out_uid(next_target.value(), id++);
           pusher<Policy>(apq, aw, out_uid.as_ptr(false), {extra_r.target[0], node::pointer_type::nil()}, node::pointer_type::nil().level());
           pusher<Policy>(apq, aw, out_uid.as_ptr(true),  {extra_r.target[1], node::pointer_type::nil()}, node::pointer_type::nil().level());
 
@@ -857,10 +988,8 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
             const cor_req_t<0> r1 = sorter.pull();
             if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
             if (r1.data.source.level() != ptr_uint64::nil().level()) {
-              if (debug_enabled) std::cout << "has pushed internal: " << arc{r1.data.source, out_uid} << "\n";
-              aw.push_internal({unflag(r1.data.source), out_uid});
-              //TODO : unfalg here because we use roots sorter class from nested sweeping directly
-              // could define own class to avoid
+              if (debug_enabled) std::cout << "has pushed internal: " << arc{unflag(r1.data.source), out_uid} << "\n";
+              aw.push_internal({r1.data.source, out_uid});
             }
           }
 
@@ -874,7 +1003,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
 
       } else {
          if (debug_enabled) std::cout << "found regular level: " << label << "\n";
-         correctify_single_level<Policy>(in, aw, apq, pq2, v,  label_indicator::NORMAL);
+         correctify_single_level<Policy,std::greater_equal<>>(in, aw, apq, pq2, v,  label_indicator::NORMAL);
       }
 
     }
@@ -895,7 +1024,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
                        const size_t sorter_mem,
                        const size_t sorter_max) {
       
-    std::cout << "started adj_swap_stuff??\n ";
+    if (debug_enabled) std::cout << "started adj_swap stuff\n ";
     //TODO: store numebr of levels in level info file to avoid having to count them initially
     //and or : TODO have a constructor for adiar vectors that take a std:vector as input
     int number_of_levels = 0;
@@ -906,7 +1035,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
       }
     }
 
-    std::cout << "counted " << number_of_levels << "levels\n";
+    if (debug_enabled) std::cout << "counted " << number_of_levels << "levels\n";
     //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
     vector<memory_mode::Internal, typename Policy::label_type> swap_starts(number_of_levels), swap_end(number_of_levels); 
     { level_info_ifstream<> info_in(dd);
@@ -920,7 +1049,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
         }
       }
     }
-    std::cout << "sucessfully made swap_start and ends\n";
+    if (debug_enabled) std::cout << "sucessfully made swap_start and ends\n";
 
     return replace_adj_swap_sweep_1<Policy,PQ1, PQ2, sorter_t>(dd, swap_starts, swap_end, ep, pq1_mem,  max_pq1_size,  pq2_mem,  max_pq2_size,  sorter_mem,  sorter_max);
 }
@@ -929,6 +1058,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
 //all levels are multiplied by 2 to ensure that the extra level we work with for each swap is free
 //the initial doubling means that we do an extra sweep - could be done with affine shift instead to avoid (TODO?)
 //shiftign back again is doen on the fly as arcs are output
+// also means we can only use half of labels which isn't great
   template <typename Policy, typename PQ1, typename PQ2>
   typename Policy::__dd_type
   replace_adj_swap_sweep_double(const typename Policy::dd_type& dd, 
@@ -1783,19 +1913,22 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
     return to_size(max_cut_all * max_cut_all + ConstSizeInc);
   }
 
+  //PQ setup for outer-down adj_swap sweep or dump_down_inhabited sweep prior to nested sweeping
   template<typename Policy>
   typename Policy::__dd_type
-  replace_adj_swap(const typename Policy::dd_type& dd, 
-        const vector<memory_mode::Internal, typename Policy::label_type>& swap_starts,
-        const vector<memory_mode::Internal, typename Policy::label_type>& swap_ends, 
-        const exec_policy& ep) {
+  replace_outer_down(
+        const exec_policy& ep,
+        const typename Policy::dd_type& dd, 
+        const vector<memory_mode::Internal, typename Policy::label_type>& starts,
+        const vector<memory_mode::Internal, typename Policy::label_type>& ends, 
+        const replace_type rt) {
       
     const bool internal_only = ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
     const bool external_only = ep.template get<exec_policy::memory>() == exec_policy::memory::External;
     
     const size_t aux_available_memory = memory_available()- node_ifstream<>::memory_usage() - arc_ofstream::memory_usage();
     using pq1_t = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
-    using default_sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_data_first_lt<cor_req_t<0>>>;
+    using default_sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_data_first_lt<cor_req_t<0>>, false>;
     
     constexpr size_t data_structures_in_pq1 = pq1_t::data_structures;
     constexpr size_t data_structures_in_sorter = default_sorter_t::data_structures;
@@ -1824,9 +1957,20 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
         //internal, no lookahead
         using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
-        return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, swap_starts, swap_ends, ep, 
+        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>, false>;
+
+        switch(rt){
+          case replace_type::Non_Monotone_Adj : {
+            return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, starts, ends, ep, 
           pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
+          }
+          case replace_type::Jump_Down_Inhabited :
+            return replace_jump_down_inhabited_sweep<Policy, PQ1, PQ2, sorter_t>(dd, starts,  ends,  ep,  
+              pq1_memory,  max_pq_1_size,  pq2_memory,  max_pq_2_size,  sorter_memory,  sorter_max);
+          default :
+            adiar_unreachable();
+        }
+
     } 
     else if (!external_only && max_pq_1_size <= pq1_memory_fits 
                             && sorter_max <= sorter_memory_fits
@@ -1837,26 +1981,41 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
 #endif
       using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
       using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-      using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
-      return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, swap_starts, swap_ends, ep, 
+      using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>, false>;
+      switch(rt){
+          case replace_type::Non_Monotone_Adj : {
+            return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, starts, ends, ep, 
           pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
+          }
+          case replace_type::Jump_Down_Inhabited :
+            return replace_jump_down_inhabited_sweep<Policy, PQ1, PQ2, sorter_t>(dd, starts,  ends,  ep,  
+              pq1_memory,  max_pq_1_size,  pq2_memory,  max_pq_2_size,  sorter_memory,  sorter_max);
+          default :
+            adiar_unreachable();
+      }
     } else {
       //external case
       using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,1u>;
       using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
-      using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
-      return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, swap_starts, swap_ends, ep, 
+      using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>, false>;
+      switch(rt){
+          case replace_type::Non_Monotone_Adj : {
+            return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, starts, ends, ep, 
           pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
+          }
+          case replace_type::Jump_Down_Inhabited :
+            return replace_jump_down_inhabited_sweep<Policy, PQ1, PQ2, sorter_t>(dd, starts,  ends,  ep,  
+              pq1_memory,  max_pq_1_size,  pq2_memory,  max_pq_2_size,  sorter_memory,  sorter_max);
+          default :
+            adiar_unreachable();
+      }
     }
   }
 
-//calculating memory stuff for the PQs and sorters used in the special cases 
-//idea
+//calculating memory stuff for the PQs and sorters used in clean special cases 
 // shared entry-point takes replace type and depending on it runs right special case after setting up PQs
 // NOTE: could potentially be cleaner to do this in the public entry pont for replace
 // but since only non-monotone cases need PQs we do it here for now
-
-
 template<typename Policy>
 typename Policy::__dd_type //special cases can return arc format
 replace(const typename Policy::dd_type& dd, 
@@ -1934,7 +2093,7 @@ replace(const typename Policy::dd_type& dd,
       //one levelized, one not and a sorter
       const size_t aux_available_memory = memory_available()- node_ifstream<>::memory_usage() - arc_ofstream::memory_usage();
       using pq1_t = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
-      using default_sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_data_first_lt<cor_req_t<0>>>;
+      using default_sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_data_first_lt<cor_req_t<0>>,false>;
       
       constexpr size_t data_structures_in_pq1 = pq1_t::data_structures;
       constexpr size_t data_structures_in_sorter = default_sorter_t::data_structures;
@@ -1963,7 +2122,7 @@ replace(const typename Policy::dd_type& dd,
           //internal, no lookahead
           using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,1u>;
           using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-          using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+          using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>,false>;
           return replace_adj_swap_sweep<Policy, PQ1, PQ2, sorter_t>(dd, m, ep, 
             pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
       } 
@@ -1976,14 +2135,14 @@ replace(const typename Policy::dd_type& dd,
   #endif
         using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
-        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>,false>;
         return replace_adj_swap_sweep<Policy, PQ1, PQ2, sorter_t>(dd, m, ep, 
             pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
       } else {
         //external case
         using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,1u>;
         using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
-        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>>;
+        using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>,false>;
         return replace_adj_swap_sweep<Policy, PQ1, PQ2, sorter_t>(dd, m, ep, 
             pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
       }
@@ -2044,6 +2203,210 @@ replace(const typename Policy::dd_type& dd,
 
 ///-------------------------------------------------NON_MONOTONE--------------------------------------------------------------------
 
+//-------------------------------------------------- map splitters -----------------------------------------------------------------
+
+  //comparatorsfor sorters
+  //TODO: cleaner wayto do this?
+  template<typename Policy>
+  struct target_increasing
+  {bool
+    operator()(const pair<typename Policy::label_type, typename Policy::label_type>& a, 
+               const pair<typename Policy::label_type, typename Policy::label_type>& b)
+    {return a.second < b.second;}
+  };
+  template<typename Policy>
+  struct target_decreasing
+  {
+    bool
+    operator()(const pair<typename Policy::label_type, typename Policy::label_type>& a, 
+               const pair<typename Policy::label_type, typename Policy::label_type>& b)
+    {return a.second > b.second;}
+  };
+
+  //split map into jump-down and rest parts 
+  template<typename Policy>
+  vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
+  jump_down_map_split(const typename Policy::dd_type dd , const replace_func<Policy>& m){
+    using lbl_t = typename Policy::label_type;
+    //(0) definign some comps 
+    //(1) finding number of variables (TODO: make this a field somewhere to avoid a while loop here..)
+    int varcount =0;
+    { level_info_ifstream<> levels(dd);
+      while (levels.can_pull()){
+        levels.pull();
+        varcount++;
+      }
+    }
+    //(2) find all jump downs
+    sorter<memory_mode::Internal, pair<lbl_t, lbl_t>, target_increasing<Policy>> all_JDs(varcount*2, varcount);
+    { level_info_ifstream<> levels(dd);
+      while(levels.can_pull()){
+        const lbl_t l = levels.pull().level();
+        if(m(l)>l) {all_JDs.push({l,m(l)}); }
+      }
+    }
+    //(3) find largest non-overlapping subset
+    all_JDs.sort();
+    vector<memory_mode::Internal, lbl_t> jump_starts(varcount), jump_ends(varcount);
+    std::vector<pair<lbl_t, lbl_t>> chosen_JDs;
+    lbl_t latest_added = 0;
+    while(all_JDs.can_pull()){
+      pair<lbl_t, lbl_t> pair = all_JDs.pull();
+      if (latest_added == 0 || pair.first > latest_added ){
+        chosen_JDs.push_back(pair);
+        jump_starts.push_back(pair.first);
+        jump_ends.push_back(pair.second);
+        latest_added = pair.second;
+      }
+    }
+    //(4) building out full mappign of pairs to create rest maps 
+    sorter<memory_mode::Internal, pair<lbl_t, lbl_t>, target_decreasing<Policy>> chosen_mapping_pairs(varcount*2, varcount);
+    { level_info_ifstream<> levels(dd);
+      auto next_JD = chosen_JDs.begin();
+      while(levels.can_pull()){
+        const lbl_t l = levels.pull().level();
+        if (l == (*next_JD).first) {
+          if (debug_enabled) std::cout << "(1) pushing pair " << (*next_JD).first << ", " << (*next_JD).second << " to chosen_map\n";
+          chosen_mapping_pairs.push(*next_JD);}
+        else if(l > (*next_JD).first && l < (*next_JD).second) {
+           if (debug_enabled) std::cout << "(2) pushing pair " << l << ", " << l-1 << " to chosen_map\n";
+          chosen_mapping_pairs.push({l,l-1});}
+        else if (l == (*next_JD).second){
+           if (debug_enabled) std::cout << "(3) pushing pair " << l << ", " << l -1<< " to chosen_map\n";
+          chosen_mapping_pairs.push({l,l-1});
+          next_JD++;
+        } else {
+           if (debug_enabled) std::cout << "(4) pushing pair " << l << ", " << l << " to chosen_map\n";
+          chosen_mapping_pairs.push({l,l});
+        }
+      }
+    }
+    //(5) building the sweeping maps and map_level
+    chosen_mapping_pairs.sort();
+    vector<memory_mode::Internal, lbl_t> sweep_starts(varcount), sweep_ends(varcount), map_lvl(varcount);
+    lbl_t min_seen = Policy::max_label;
+    {level_info_ifstream<true> levels_reverse(dd);
+      while(levels_reverse.can_pull()){
+        const lbl_t l = levels_reverse.pull().level();
+        const lbl_t old_l = chosen_mapping_pairs.pull().first;
+        if (debug_enabled)  std::cout << "found l = " << l << ", old_l = "<< old_l << "\n";
+        if(old_l < l){ 
+          map_lvl.push_back(l);
+          if(l > min_seen){
+            if (debug_enabled) std::cout << "sweeping level since " << l << ">" << min_seen << "\n";
+            sweep_starts.push_back(l);
+            sweep_ends.push_back(l);
+          } else {min_seen = l;}
+        }
+        else { //either an in-between layer or untouched by jump_starts (either way we do the same thing)
+          if(m(old_l) > min_seen){
+            if (debug_enabled) std::cout << "sweeping level since " << m(old_l) << ">" << min_seen << "\n";
+            sweep_starts.push_back(l);
+            sweep_ends.push_back(m(old_l));
+            map_lvl.push_back(m(old_l));
+          } else {
+            if (debug_enabled) std::cout << "not sweeping level since " << m(old_l) << "<=" << min_seen << "\n";
+            min_seen = m(old_l);
+            map_lvl.push_back(m(old_l));
+          }
+        }
+      }
+    }
+    //(6) output resulting vectors
+    vector<memory_mode::Internal, vector<memory_mode::Internal, lbl_t>> res(5);
+    res.push_back(jump_starts); res.push_back(jump_ends);
+    res.push_back(sweep_starts); res.push_back(sweep_ends);
+    res.push_back(map_lvl); 
+    return res;
+  }
+
+  //split map into adj_swap part and rest part
+  template<typename Policy>
+  vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
+  adj_map_split(const typename Policy::dd_type& dd , const replace_func<Policy>& m){
+    //build old, new lists
+    if (debug_enabled) std::cout << "runs adj_map_split\n";
+    std::vector<typename Policy::label_type> old, mapped;
+    {
+      level_info_ifstream<true> level_info_file(dd);
+      while(level_info_file.can_pull()){
+        typename Policy::label_type l = level_info_file.pull().level();
+        old.push_back(l);
+        mapped.push_back(m(l));
+      }
+    }
+
+    //build out lists!
+    vector<memory_mode::Internal, typename Policy::label_type> adj_starts(old.size()), adj_targets(old.size()), 
+    sweep_starts(old.size()), sweep_targets(old.size()), mapping_levels(old.size());
+    typename Policy::label_type min_seen = Policy::max_label;
+    //TODO: can probably be written a lot cleaner..
+    for (typename Policy::label_type i = 0 ; i < old.size() ; i++){
+      if (i < old.size()-1 && old[i] == mapped[i+1] && old[i+1] == mapped[i]){
+        //then this is end of an adj swap (cus backwards)
+        adj_targets.push_back(old[i]);
+        mapping_levels.push_back(old[i]);
+        //here important that it's old
+        if (old[i] > min_seen) {sweep_starts.push_back(old[i]); sweep_targets.push_back(old[i]);}
+        else {min_seen = old[i];}
+      } 
+      else if (i > 0 && old[i] == mapped[i-1] && old[i-1] == mapped[i]) {
+        //then this is start of an adj swap (cus backwards)
+        adj_starts.push_back(old[i]);
+        mapping_levels.push_back(old[i]);
+        //here important that it's old
+        if (old[i] > min_seen) {sweep_starts.push_back(old[i]); sweep_targets.push_back(old[i]);}
+        else {min_seen = old[i];}
+      }
+      else if (old[i] != mapped[i]){
+        mapping_levels.push_back(mapped[i]);
+        //here important that it's old, mapped
+        if (mapped[i] > min_seen) {sweep_starts.push_back(old[i]); sweep_targets.push_back(mapped[i]);}
+        else {min_seen = mapped[i];}
+      } else { //they same
+        if (mapped[i] > min_seen) {sweep_starts.push_back(old[i]); sweep_targets.push_back(mapped[i]);}
+        else {min_seen = mapped[i];}
+        mapping_levels.push_back(old[i]);
+      }
+    }
+
+    //reversing adj_swap maps to work with top-down sweep
+    std::reverse(adj_starts.begin(), adj_starts.end());
+    std::reverse(adj_targets.begin(), adj_targets.end());
+    //building res
+    vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> res(5);
+    res.push_back(adj_starts); res.push_back(adj_targets);
+    res.push_back(sweep_starts), res.push_back(sweep_targets);
+    res.push_back(mapping_levels);
+
+    //sanity check on mapping levels...
+    for(typename Policy::label_type e : mapping_levels){
+      std:: cout << e << ",";
+    }
+    return res;
+  }
+
+
+  //calculate from BDD levels and m what levels should be sweeped 
+  //from the bottom, should sweep in those levels which mapped value is larger than smallest seen
+  template<typename Policy>
+  std::vector<typename Policy::label_type>
+  levels_from_map(const replace_func<Policy>& m, const typename Policy::dd_type& dd)
+  {
+    level_info_ifstream<true> level_info_file(dd);
+    std::vector<typename Policy::label_type> sweep_levels;
+
+    level_info lvl_info = level_info_file.pull();
+    bdd::label_type min_seen = m(lvl_info.level());
+
+    while(level_info_file.can_pull()) {
+      lvl_info = level_info_file.pull();
+      bdd::label_type mapped = m(lvl_info.level());
+      if (mapped > min_seen) sweep_levels.push_back(lvl_info.level());
+      else min_seen = mapped;
+    }
+    return sweep_levels;
+  }
 
 
 //-------------------------------------------------- full correctify sweep (2 pqs) --------------------------------------------------
@@ -2172,90 +2535,8 @@ replace(const typename Policy::dd_type& dd,
     return typename Policy::__dd_type(out_arcs,ep);
   }
 
-  //split map into adj_swap part and rest part
-  template<typename Policy>
-  vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
-  adj_map_split(const typename Policy::dd_type& dd , const replace_func<Policy>& m){
-    //build old, new lists
-    if (debug_enabled) std::cout << "runs adj_map_split\n";
-    std::vector<typename Policy::label_type> old, mapped;
-    {
-      level_info_ifstream<true> level_info_file(dd);
-      while(level_info_file.can_pull()){
-        typename Policy::label_type l = level_info_file.pull().level();
-        old.push_back(l);
-        mapped.push_back(m(l));
-      }
-    }
 
-    //build out lists!
-    vector<memory_mode::Internal, typename Policy::label_type> adj_starts(old.size()), adj_targets(old.size()), sweep_starts(old.size()), sweep_targets(old.size()), mapping_levels(old.size()*2);
-    typename Policy::label_type min_seen = mapped[0];
-    for (typename Policy::label_type i = 0 ; i < old.size() ; i++){
-      if (debug_enabled) std::cout << "loop at" << i << "\n";
-      if (i < old.size()-1 && old[i] == mapped[i+1] && old[i+1] == mapped[i]){
-        //then this is end of an adj swap (cus backwards)
-        adj_targets.push_back(old[i]);
-        mapping_levels.push_back(old[i]);
-      }
-      else if (i > 0 && old[i] == mapped[i-1] && old[i-1] == mapped[i]) {
-        //then this is start of an adj swap (cus backwards)
-        adj_starts.push_back(old[i]);
-        mapping_levels.push_back(old[i]);
-      }
-      else if (old[i] != mapped[i]){
-        mapping_levels.push_back(mapped[i]);
-        if (mapped[i] > min_seen) {sweep_starts.push_back(old[i]); sweep_targets.push_back(mapped[i]);}
-        else {min_seen = mapped[i];}
-      } else {
-        //no change??
-        mapping_levels.push_back(old[i]);
-      }
-
-    }
-    if (debug_enabled) std::cout << "makes it to output part\n";
-    //reversing adj_swap maps to work with top-down sweep
-    std::reverse(adj_starts.begin(), adj_starts.end());
-    std::reverse(adj_targets.begin(), adj_targets.end());
-    vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> res(old.size()*10);
-    res.push_back(adj_starts); res.push_back(adj_targets);
-    if (debug_enabled) std::cout << "pushed adj stuff\n";
-    res.push_back(sweep_starts), res.push_back(sweep_targets);
-    if (debug_enabled) std::cout << "pushed sweep stuff\n";
-    res.push_back(mapping_levels);
-    if (debug_enabled) std::cout << "pushed map levels\n";
-
-    //sanity check on mapping levels...
-    if (debug_enabled) std::cout << "computed mapping levels: \n";
-    for(typename Policy::label_type e : mapping_levels){
-      std:: cout << e << ",";
-    }
-    return res;
-  }
-
-
-  //calculate from BDD levels and m what levels should be sweeped 
-  //from the bottom, should sweep in those levels which mapped value is larger than smallest seen
-  template<typename Policy>
-  std::vector<typename Policy::label_type>
-  levels_from_map(const replace_func<Policy>& m, const typename Policy::dd_type& dd)
-  {
-    level_info_ifstream<true> level_info_file(dd);
-    std::vector<typename Policy::label_type> sweep_levels;
-
-    level_info lvl_info = level_info_file.pull();
-    bdd::label_type min_seen = m(lvl_info.level());
-
-    while(level_info_file.can_pull()) {
-      lvl_info = level_info_file.pull();
-      bdd::label_type mapped = m(lvl_info.level());
-      if (mapped > min_seen) sweep_levels.push_back(lvl_info.level());
-      else min_seen = mapped;
-    }
-    return sweep_levels;
-  }
-
-
+//-------------------------------------------------- nested sweeping policy --------------------------------------------------
 //Policy for use in nested sweeping 
 template <typename Policy>
 class nested_sweeping_replace : public Policy
@@ -2326,6 +2607,7 @@ public:
     map_level(const typename Policy::label_type x) { 
       if (use_list){
         if (debug_enabled) std::cout << "indexing into array at " << index << " (map lvl) \n";
+        if (debug_enabled) std::cout << "updating index to " << index +1 << "\n" ; 
         return m_arr[index++];
       }
       return _m(x);}
@@ -2412,8 +2694,8 @@ public:
     {
         //only run for nodes where we want to update level
         if(debug_enabled) std::cout << "runs req from node with " << n << "\n";
-        if (use_list && debug_enabled) std::cout << "indexing into array at " << index << " (from req) \n";
-        typename Policy::label_type new_lvl = (use_list) ? m_arr[index] : _m(n.label());
+        if (use_list && debug_enabled) std::cout << "indexing into array at " << index -1 << " (from req) \n";
+        typename Policy::label_type new_lvl = (use_list) ? m_arr[index -1] : _m(n.label()); //-1 here since otherwise we'd have taken one step too far!!
         if(debug_enabled) std::cout << "builds req " << request_t({n.low(), n.high()}, {}, { parent, new_lvl }) << "\n";
         return request_t({n.low(), n.high()}, {}, { parent, new_lvl });
     }
@@ -2434,7 +2716,7 @@ public:
 
 };
 
-
+//-------------------------------------------------- nested sweeping entry --------------------------------------------------
   // nested sweeping entry
   template <typename Policy>
   typename Policy::__dd_type
@@ -2492,6 +2774,7 @@ public:
     switch (inferred_type) {
       // LCOV_EXCL_START
     case replace_type::Auto:
+    case replace_type::Jump_Down_Inhabited:
       adiar_unreachable();
       // LCOV_EXCL_STOP
 
@@ -2502,15 +2785,40 @@ public:
       if(debug_enabled)std::cout << "begun replace\n";
       return replace_nested_sweep<Policy>(dd,m,ep);
     
-    case replace_type::Non_Monotone_Test: {
+    case replace_type::Non_Monotone_JD: {
+      //EXPERIMENTAL : should only be used when map is a permutation
+      //split the map
+      vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> map_lists = jump_down_map_split<Policy>(dd, m);
+      if(map_lists[0].size() > 1){
+        //TODO: more sophisticated check here
+        __bdd after_jumps = replace_outer_down<Policy>(ep, dd, map_lists[0], map_lists[1], replace_type::Jump_Down_Inhabited);
+        if (map_lists[2].empty()) {
+          //same BIG CLAIM up here shouldn't be possible that there are no inner sweeps but things still need to be relabled..?
+          return after_jumps;
+        }
+        nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
+                                                      make_generator(map_lists[3].begin(), map_lists[3].end()));
+        return nested_sweep<>(ep, after_jumps, inner_impl);
+      } else {
+        return replace_nested_sweep<Policy>(dd,m,ep);
+      }
+    }
+
+    case replace_type::Non_Monotone_Adj: {
+      //EXPERIMENTAL : should only be used when map is a permutation
       //split the map
       vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> map_lists = adj_map_split<Policy>(dd, m);
       if(map_lists[0].size() > 1){
         //TODO: more sophisticated check here
-        __bdd after_swaps = replace_adj_swap<Policy>(dd, map_lists[0], map_lists[1], ep);
+        __bdd after_swaps = replace_outer_down<Policy>(ep, dd, map_lists[0], map_lists[1], replace_type::Non_Monotone_Adj);
+        if (map_lists[2].empty()){ //Notice this is not necessary but we skip all the nested sweeping setup by making it
+          //BIG CLAIM: when we have permutation, if there are no sweep levels then nothing is relabled by outer reduce either so we just return after_swaps..?
+          return after_swaps;
+        } 
+        //else - we need to do at least one sweep so build our things
         nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
                                                       make_generator(map_lists[3].begin(), map_lists[3].end()));
-        return nested_sweep<>(ep, dd, inner_impl);
+        return nested_sweep<>(ep, after_swaps, inner_impl);
       } else {
         return replace_nested_sweep<Policy>(dd,m,ep);
       }
@@ -2578,10 +2886,13 @@ public:
     switch (inferred_type) {
       // LCOV_EXCL_START
     case replace_type::Auto:
+    case replace_type::Jump_Down_Inhabited:
       adiar_unreachable();
       // LCOV_EXCL_STOP
     
     case replace_type::Non_Monotone:
+    case replace_type::Non_Monotone_Adj:
+    case replace_type::Non_Monotone_JD:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
     case replace_type::Jump_Up:
