@@ -8,6 +8,7 @@
 #include "adiar/internal/data_types/level_info.h"
 #include "adiar/internal/io/arc_ofstream.h"
 #include "adiar/internal/io/shared_file_ptr.h"
+#include "adiar/internal/memory.h"
 #include "adiar/internal/util.h"
 #include "adiar/types.h"
 #include "bandit/assertion_frameworks/snowhouse/assert.h"
@@ -28,6 +29,14 @@ void fixed_printdot(__bdd bdd, std::string fn) {
     }
   }
   print_dot(arcs, fn);
+}
+
+void print_list (vector<memory_mode::Internal, bdd_policy::label_type> l){
+  std::cout << "[ ";
+  for (auto e : l){
+    std::cout << e << " ";
+  }
+  std::cout << "]\n";
 }
 
 go_bandit([]() {
@@ -364,6 +373,36 @@ go_bandit([]() {
       nw << n5 << n4 << n3 << n2 << n1;
     }
     const bdd bdd_10(bdd_10_nf);
+
+    /* exampel stolen from rel-prod - has many levels
+    //
+    //                 1           ---- x0 (x)
+    //                / \
+    //                2  \         ---- x1 (0)
+    //               / \  \
+    //               3 |   \       ---- x2 (1)
+    //              / \|   |
+    //              |  4   5       ---- x3 (0')
+    //              \ / \ / \
+    //               X  | | F
+    //              / \_|_/
+    //              F   6          ---- x4 (1')
+    //                 / \
+    //                 T F
+    */
+    shared_levelized_file<bdd::node_type> bryant_fig18;
+    { // Garbage collect early and free write-lock
+      const node n6 = node(4, bdd::max_id, terminal_T, terminal_F);
+      const node n5 = node(3, bdd::max_id, n6.uid(), terminal_F);
+      const node n4 = node(3, bdd::max_id - 1, terminal_F, n6.uid());
+      const node n3 = node(2, bdd::max_id, n6.uid(), n4.uid());
+      const node n2 = node(1, bdd::max_id, n3.uid(), n4.uid());
+      const node n1 = node(0, bdd::max_id, n2.uid(), n5.uid());
+
+      node_ofstream nw(bryant_fig18);
+      nw << n6 << n5 << n4 << n3 << n2 << n1;
+    }
+    const bdd bdd_b18(bryant_fig18);
 
 
     describe("bdd_replace(const bdd&, <...>)", [&]() {
@@ -1158,9 +1197,8 @@ go_bandit([]() {
             bdd res =  bdd_replace(bdd_7, m);
             AssertThat(res, Is().EqualTo(bdd_expected));
           });
-        });
 
-        it("Non-monotonic - Jump down with node and leaf children" , [&]() {
+          it("Non-monotonic - Jump down with node and leaf children" , [&]() {
             /*
             //        1        ---- x2
             //       / \
@@ -1174,133 +1212,502 @@ go_bandit([]() {
             bdd expected_res = bdd_replace(bdd_1, m);
             bdd res = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
             AssertThat(res, Is().EqualTo(expected_res));
+          });
+
+          it("Non-monotonic - Jump down with subtree children" , [&]() {
+              /*
+              //        1        ---- x2
+              //       / \
+              //       | 2       ---- x0...3?
+              //       |/ \
+              //       3  |      ---- x4
+              //      / \ |
+              //     4   5       ---- x5
+              //    / \ / \
+              //   F   T   F 
+              */
+              const mapping_type m = [](const int x) { if (x == 0) return 3;
+              return x; };
+              bdd expected_res = bdd_replace(bdd_1_ext, m);
+              bdd res = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
+              AssertThat(res, Is().EqualTo(expected_res));
+
+
+          });
+
+          it("Non-monotonic - Jump down for 2 nodes in same mapping" , [&]() {
+              /*
+              //        1        ---- x2
+              //       / \
+              //       | 2       ---- x0...3?
+              //       |/ \_
+              //      3     4    ---- x5
+              //     / \   / \
+              //    5   6 T   F  ---- x4...6?
+              //   / \ / \
+              //  F   T   F 
+              */
+              const mapping_type m = [](const int x) {if (x == 0) return 3;
+                                                      if (x == 4) return 6;
+                                                      return x; };
+              bdd expected_res = bdd_replace(bdd_1_ext, m);
+              bdd res = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
+              AssertThat(res, Is().EqualTo(expected_res));
+
+          });
+
+          it("Non-monotonic - jumps the root down to the bottom layer" , [&]() {
+              /*
+              //        _1_         ---- x2
+              //       /   \
+              //      2     3       ---- x4
+              //     / \   / \
+              //    |  T  4  T      ---- x0...5?
+              //    |    / \
+              //    F   F   T
+              */
+              const mapping_type m = [](const int x) {if (x == 0) return 5;
+                                                      else return x;};
+
+              bdd expected_res = bdd_replace(bdd_1, m);
+              bdd res = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
+              AssertThat(res, Is().EqualTo(expected_res));
+
+          });
+
+          it("Non-monotonic - jumps that move through a double layer" , [&]() {
+              /*
+              //
+              //          __1__        ---- x1
+              //         /     \
+              //        2      3       ---- x2
+              //       / \    / \
+              //      |  F   |  F
+              //      4      5         ---- x0...3?
+              //     / \    / \
+              //    T  F   F   T
+              //
+              */
+              const mapping_type m = [](const int x) {if (x == 0) return 3;
+                                                      else return x; };
+              bdd expected_res = bdd_replace(bdd_3, m);
+              bdd res = bdd_replace(bdd_3, m, replace_type::Non_Monotone);
+              AssertThat(res, Is().EqualTo(expected_res));
+
+
+          });
+
+          it("Non-monotonic -Jump down and has two children" , [&]() {
+              /*
+              //
+              //        __1__            ---- x1
+              //       /     \
+              //      F    __3__         ---- x0...2?
+              //          /     \
+              //         4       5       ---- x3
+              //        / \     / \
+              //       F   T   T   F
+              //
+              */
+              const mapping_type m = [](const int x) {if (x == 0) return 2;
+                                                      else return x; };
+              bdd expected_res = bdd_replace(bdd_5, m);
+              bdd res = bdd_replace(bdd_5, m, replace_type::Non_Monotone);
+              AssertThat(res, Is().EqualTo(expected_res));
+
+          });
+
+          it("correctly handles terminal requests in nested sweeping [bdd_8]", [&](){
+              /*            
+              //          1         ---- x0  //         1
+              //         / \                 //        / \
+              //        /   2       ---- x1  //       2   \
+              //       /    |\               //      /|    \
+              //      3     | \     ---- x2  //     / |     3
+              //     / \    |  \             //    /  |    / \
+              //    F   T   F   T            //   F   T   F   T
+              */
+              const mapping_type m = [](const int x) {if (x == 1) return 2;
+                                                            if (x == 2) return 1; 
+                                                            return x;};
+              bdd out = bdd_replace(bdd_8, m, replace_type::Non_Monotone);
+              node_test_ifstream out_nodes(out);
+              AssertThat(out_nodes.can_pull(), Is().True());
+              AssertThat(out_nodes.pull(), Is().EqualTo(node(2, node::max_id, terminal_F, terminal_T)));
+              AssertThat(out_nodes.can_pull(), Is().True());
+              AssertThat(out_nodes.pull(), Is().EqualTo(node(1, node::max_id, terminal_F, terminal_T)));
+              AssertThat(out_nodes.can_pull(), Is().True());
+              AssertThat(out_nodes.pull(), Is().EqualTo(node(0, node::max_id, node::pointer_type(1,node::max_id), node::pointer_type(2,node::max_id))));
+              AssertThat(out_nodes.can_pull(), Is().False());
+          });
         });
 
-        it("Non-monotonic - Jump down with subtree children" , [&]() {
-            /*
-            //        1        ---- x2
-            //       / \
-            //       | 2       ---- x0...3?
-            //       |/ \
-            //       3  |      ---- x4
-            //      / \ |
-            //     4   5       ---- x5
-            //    / \ / \
-            //   F   T   F 
-            */
-            const mapping_type m = [](const int x) { if (x == 0) return 3;
-            return x; };
-            bdd expected_res = bdd_replace(bdd_1_ext, m);
-            bdd res = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
-            AssertThat(res, Is().EqualTo(expected_res));
+        describe("Mixed approach test cases", [&]() {
+          it("correctly identifies adj_swaps in map (1) [bdd_b18]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 5;}
+              if (x == 1) {return 2;}
+              if (x == 2) {return 1;}
+              return x;
+            };
+            auto res_lists = adj_map_split<bdd_policy>(bdd_b18, m);
+            print_list(res_lists[0]);
+            print_list(res_lists[1]);
+            print_list(res_lists[2]);
+            print_list(res_lists[3]);
+            print_list(res_lists[4]);
+            //only one swap
+            AssertThat(res_lists[0].size() == 1,Is().True());
+            AssertThat(res_lists[1].size() == 1,Is().True());
+            //swap is the expected one
+            AssertThat(res_lists[0][0] == 1,Is().True());
+            AssertThat(res_lists[1][0] == 2,Is().True());
+            //only one sweep
+            AssertThat(res_lists[2].size() == 1,Is().True());
+            AssertThat(res_lists[3].size() == 1,Is().True());
+            //sweep is expected one
+            AssertThat(res_lists[2][0] == 0, Is().True());
+            AssertThat(res_lists[3][0] == 5, Is().True());
+            //map_level is right
+            AssertThat(res_lists[4][0] == 4, Is().True());
+            AssertThat(res_lists[4][1] == 3, Is().True());
+            AssertThat(res_lists[4][2] == 2, Is().True());
+            AssertThat(res_lists[4][3] == 1, Is().True());
+            AssertThat(res_lists[4][4] == 5, Is().True());
+          });
 
+          it("correctly identifies adj_swaps in map (2) [bdd_b18]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 1;}
+              if (x == 1) {return 2;}
+              if (x == 2) {return 0;}
+              if (x == 3) {return 4;}
+              if (x == 4) {return 3;}
+              return x;
+            };
+            auto res_lists = adj_map_split<bdd_policy>(bdd_b18, m);
+            print_list(res_lists[0]);
+            print_list(res_lists[1]);
+            print_list(res_lists[2]);
+            print_list(res_lists[3]);
+            print_list(res_lists[4]);
+            //only one swap
+            AssertThat(res_lists[0].size() == 1,Is().True());
+            AssertThat(res_lists[1].size() == 1,Is().True());
+            //swap is the expected one
+            AssertThat(res_lists[0][0] == 3,Is().True());
+            AssertThat(res_lists[1][0] == 4,Is().True());
+            //2 inner sweeps
+            AssertThat(res_lists[2].size() == 2,Is().True());
+            AssertThat(res_lists[3].size() == 2,Is().True());
+            //sweeps are expected ones
+            AssertThat(res_lists[2][0] == 1 && res_lists[3][0] == 2, Is().True());
+            AssertThat(res_lists[2][1] == 0 && res_lists[3][1] == 1, Is().True());
+            //map_level is right
+            AssertThat(res_lists[4][0] == 4, Is().True());
+            AssertThat(res_lists[4][1] == 3, Is().True());
+            AssertThat(res_lists[4][2] == 0, Is().True());
+            AssertThat(res_lists[4][3] == 2, Is().True());
+            AssertThat(res_lists[4][4] == 1, Is().True());
+          });
 
-        });
+          it("correctly identifies adj_swaps in map (3) [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 2;} //AS
+              if (x == 2) {return 1;}
+              if (x == 3) {return 5;}
+              if (x == 4) {return 4;}
+              if (x == 5) {return 3;} 
+              if (x == 6) {return 7;} //AS
+              if (x == 7) {return 6;}
+              return x;
+            };
+            auto res_lists = adj_map_split<bdd_policy>(bdd_9, m);
+            print_list(res_lists[0]);
+            print_list(res_lists[1]);
+            print_list(res_lists[2]);
+            print_list(res_lists[3]);
+            print_list(res_lists[4]);
+            //2 adj_swaps
+            AssertThat(res_lists[0].size() == 2 && res_lists[1].size() == 2, Is().True());
+            //adj_swaps are the expected ones
+            AssertThat(res_lists[0][0] == 1 && res_lists[1][0] == 2, Is().True());
+            AssertThat(res_lists[0][1] == 6 && res_lists[1][1] == 7, Is().True());
+            //2 inner sweeps
+            AssertThat(res_lists[2].size() == 2 && res_lists[3].size() == 2, Is().True());
+            //the ones we expect
+            AssertThat(res_lists[2][0] == 4 && res_lists[3][0] == 4, Is().True());
+            AssertThat(res_lists[2][1] == 3 && res_lists[3][1] == 5, Is().True());
+            //map_lvl is correct
+            AssertThat(res_lists[4][0] == 7 , Is().True());
+            AssertThat(res_lists[4][1] == 6 , Is().True());
+            AssertThat(res_lists[4][2] == 3 , Is().True());
+            AssertThat(res_lists[4][3] == 4 , Is().True());
+            AssertThat(res_lists[4][4] == 5 , Is().True());
+            AssertThat(res_lists[4][5] == 2 , Is().True());
+            AssertThat(res_lists[4][6] == 1 , Is().True());
+            AssertThat(res_lists[4][7] == 0 , Is().True());
+          });
 
-        it("Non-monotonic - Jump down for 2 nodes in same mapping" , [&]() {
-            /*
-            //        1        ---- x2
-            //       / \
-            //       | 2       ---- x0...3?
-            //       |/ \_
-            //      3     4    ---- x5
-            //     / \   / \
-            //    5   6 T   F  ---- x4...6?
-            //   / \ / \
-            //  F   T   F 
-            */
-            const mapping_type m = [](const int x) {if (x == 0) return 3;
-                                                    if (x == 4) return 6;
-                                                    return x; };
-            bdd expected_res = bdd_replace(bdd_1_ext, m);
-            bdd res = bdd_replace(bdd_1_ext, m, replace_type::Non_Monotone);
-            AssertThat(res, Is().EqualTo(expected_res));
+          it("correctly identifies adj_swaps in map (4) [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 7;} 
+              if (x == 2) {return 3;} //AS
+              if (x == 3) {return 2;}
+              if (x == 4) {return 4;}
+              if (x == 5) {return 6;} //AS
+              if (x == 6) {return 5;} 
+              if (x == 7) {return 1;}
+              return x;
+            };
+            auto res_lists = adj_map_split<bdd_policy>(bdd_9, m);
+            print_list(res_lists[0]);
+            print_list(res_lists[1]);
+            print_list(res_lists[2]);
+            print_list(res_lists[3]);
+            print_list(res_lists[4]);
+            //2 adj_swaps
+            AssertThat(res_lists[0].size() == 2 && res_lists[1].size() == 2, Is().True());
+            //adj_swaps are the expected ones
+            AssertThat(res_lists[0][0] == 2 && res_lists[1][0] == 3, Is().True());
+            AssertThat(res_lists[0][1] == 5 && res_lists[1][1] == 6, Is().True());
+            //6 inner sweeps
+            AssertThat(res_lists[2].size() == 6 && res_lists[3].size() == 6, Is().True());
+            //the ones we expect
+            AssertThat(res_lists[2][0] == 6 && res_lists[3][0] == 6, Is().True());
+            AssertThat(res_lists[2][1] == 5 && res_lists[3][1] == 5, Is().True());
+            AssertThat(res_lists[2][2] == 4 && res_lists[3][2] == 4, Is().True());
+            AssertThat(res_lists[2][3] == 3 && res_lists[3][3] == 3, Is().True());
+            AssertThat(res_lists[2][4] == 2 && res_lists[3][4] == 2, Is().True());
+            AssertThat(res_lists[2][5] == 1 && res_lists[3][5] == 7, Is().True());
+            //map_lvl is correct
+            AssertThat(res_lists[4][0] == 1 , Is().True());
+            AssertThat(res_lists[4][1] == 6 , Is().True());
+            AssertThat(res_lists[4][2] == 5 , Is().True());
+            AssertThat(res_lists[4][3] == 4 , Is().True());
+            AssertThat(res_lists[4][4] == 3 , Is().True());
+            AssertThat(res_lists[4][5] == 2 , Is().True());
+            AssertThat(res_lists[4][6] == 7 , Is().True());
+            AssertThat(res_lists[4][7] == 0 , Is().True());
+          });
+          
+          it("correctly identifies jump_downs in map (1) [bdd_b18]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 2;}
+              if (x == 1) {return 0;}
+              if (x == 2) {return 3;}
+              if (x == 3) {return 1;}
+              if (x == 4) {return 4;}
+              return x;
+            };
+            auto res_lists = jump_down_map_split<bdd_policy>(bdd_b18, m);
+            //only one JD
+            AssertThat(res_lists[0].size() == 1,Is().True());
+            AssertThat(res_lists[1].size() == 1,Is().True());
+            //JD is the expected one
+            AssertThat(res_lists[0][0] == 0 && res_lists[1][0] == 2, Is().True());
+            //1 inner sweep
+            AssertThat(res_lists[2].size() == 2,Is().True());
+            AssertThat(res_lists[3].size() == 2,Is().True());
+            //sweeps are expected ones
+            AssertThat(res_lists[2][0] == 2 && res_lists[3][0] == 2, Is().True());
+            AssertThat(res_lists[2][1] == 1 && res_lists[3][1] == 3, Is().True());
+            //map_level is right
+            AssertThat(res_lists[4][0] == 4, Is().True());
+            AssertThat(res_lists[4][1] == 1, Is().True());
+            AssertThat(res_lists[4][2] == 2, Is().True());
+            AssertThat(res_lists[4][3] == 3, Is().True());
+            AssertThat(res_lists[4][4] == 0, Is().True());
+          });
 
-        });
+          it("correctly identifies jump_downs in map (2) [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 3;} //JD
+              if (x == 2) {return 4;}
+              if (x == 3) {return 5;}
+              if (x == 4) {return 2;}
+              if (x == 5) {return 7;} //JD
+              if (x == 6) {return 6;}
+              if (x == 7) {return 1;}
+              return x;
+            };
+            auto res_lists = jump_down_map_split<bdd_policy>(bdd_9, m);
+            //2 JDs
+            AssertThat(res_lists[0].size() == 2,Is().True());
+            AssertThat(res_lists[1].size() == 2,Is().True());
+            //JDs are the expected ones
+            AssertThat(res_lists[0][0] == 1 && res_lists[1][0] == 3, Is().True());
+            AssertThat(res_lists[0][1] == 5 && res_lists[1][1] == 7, Is().True());
+            //5 inner sweeps
+            AssertThat(res_lists[2].size() == 5,Is().True());
+            AssertThat(res_lists[3].size() == 5,Is().True());
+            //sweeps are expected ones
+            AssertThat(res_lists[2][0] == 5 && res_lists[3][0] == 6, Is().True());
+            AssertThat(res_lists[2][1] == 4 && res_lists[3][1] == 2, Is().True());
+            AssertThat(res_lists[2][2] == 3 && res_lists[3][2] == 3, Is().True());
+            AssertThat(res_lists[2][3] == 2 && res_lists[3][3] == 5, Is().True());
+            AssertThat(res_lists[2][4] == 1 && res_lists[3][4] == 4, Is().True());
+            //map_level is right
+            AssertThat(res_lists[4][0] == 7, Is().True());
+            AssertThat(res_lists[4][1] == 1, Is().True());
+            AssertThat(res_lists[4][2] == 6, Is().True());
+            AssertThat(res_lists[4][3] == 2, Is().True());
+            AssertThat(res_lists[4][4] == 3, Is().True());
+            AssertThat(res_lists[4][5] == 5, Is().True());
+            AssertThat(res_lists[4][6] == 4, Is().True());
+            AssertThat(res_lists[4][7] == 0, Is().True());
+          });
 
-        it("Non-monotonic - jumps the root down to the bottom layer" , [&]() {
-            /*
-            //        _1_         ---- x2
-            //       /   \
-            //      2     3       ---- x4
-            //     / \   / \
-            //    |  T  4  T      ---- x0...5?
-            //    |    / \
-            //    F   F   T
-            */
-            const mapping_type m = [](const int x) {if (x == 0) return 5;
-                                                    else return x;};
+          it("performs many adj_swaps and then nested sweeping [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 2;} //AS
+              if (x == 2) {return 1;}
+              if (x == 3) {return 5;}
+              if (x == 4) {return 4;}
+              if (x == 5) {return 3;} 
+              if (x == 6) {return 7;} //AS
+              if (x == 7) {return 6;}
+              return x;
+            };
+            auto rl = adj_map_split<bdd_policy>(bdd_9, m);
+            bdd res_got = bdd_replace(bdd_9, m , replace_type::Non_Monotone_Adj);
+            bdd res_expected = bdd_replace(bdd_9, m);
+            bdd_printdot(res_got, "from_ns.dot");
+            bdd_printdot(res_expected, "from_special.dot");
+            AssertThat(res_got == res_expected, Is().True());
+          });
 
-            bdd expected_res = bdd_replace(bdd_1, m);
-            bdd res = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
-            AssertThat(res, Is().EqualTo(expected_res));
+          it("performs adj_swaps and then nested sweeping (1) [bdd_b18]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 5;}
+              if (x == 1) {return 2;}
+              if (x == 2) {return 1;}
+              return x;
+            };
+            bdd res_got = bdd_replace(bdd_b18, m , replace_type::Non_Monotone_Adj);
+            bdd res_expected = bdd_replace(bdd_b18, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
 
-        });
+          it("performs adj_swaps and then nested sweeping (2) [bdd_b18]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 1;}
+              if (x == 1) {return 2;}
+              if (x == 2) {return 0;}
+              if (x == 3) {return 4;}
+              if (x == 4) {return 3;}
+              return x;
+            };
+            auto rl = adj_map_split<bdd_policy>(bdd_b18, m);
+            bdd res_got = bdd_replace(bdd_b18, m , replace_type::Non_Monotone_Adj);
+            bdd res_expected = bdd_replace(bdd_b18, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
 
-        it("Non-monotonic - jumps that move through a double layer" , [&]() {
-            /*
-            //
-            //          __1__        ---- x1
-            //         /     \
-            //        2      3       ---- x2
-            //       / \    / \
-            //      |  F   |  F
-            //      4      5         ---- x0...3?
-            //     / \    / \
-            //    T  F   F   T
-            //
-            */
-            const mapping_type m = [](const int x) {if (x == 0) return 3;
-                                                    else return x; };
-            bdd expected_res = bdd_replace(bdd_3, m);
-            bdd res = bdd_replace(bdd_3, m, replace_type::Non_Monotone);
-            AssertThat(res, Is().EqualTo(expected_res));
+            it("performs many adj_swaps not nested sweeping [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 1;}
+              if (x == 1) {return 0;} //AS
+              if (x == 2) {return 3;}
+              if (x == 3) {return 2;}
+              if (x == 4) {return 5;}
+              if (x == 5) {return 4;} 
+              if (x == 6) {return 7;} //AS
+              if (x == 7) {return 6;}
+              return x;
+            };
+            bdd res_got = bdd_replace(bdd_9, m , replace_type::Non_Monotone_Adj);
+            bdd res_expected = bdd_replace(bdd_9, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
 
+          it("performs many jump_downs then nested sweeping (1) [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 3;} //JD
+              if (x == 2) {return 4;}
+              if (x == 3) {return 5;}
+              if (x == 4) {return 2;}
+              if (x == 5) {return 7;} //JD
+              if (x == 6) {return 6;}
+              if (x == 7) {return 1;}
+              return x;
+            };
 
-        });
+            bdd res_got = bdd_replace(bdd_9, m, replace_type::Non_Monotone_JD);
+            bdd res_expected = bdd_replace(bdd_9, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
 
-        it("Non-monotonic -Jump down and has two children" , [&]() {
-            /*
-            //
-            //        __1__            ---- x1
-            //       /     \
-            //      F    __3__         ---- x0...2?
-            //          /     \
-            //         4       5       ---- x3
-            //        / \     / \
-            //       F   T   T   F
-            //
-            */
-            const mapping_type m = [](const int x) {if (x == 0) return 2;
-                                                    else return x; };
-            bdd expected_res = bdd_replace(bdd_5, m);
-            bdd res = bdd_replace(bdd_5, m, replace_type::Non_Monotone);
-            AssertThat(res, Is().EqualTo(expected_res));
+          it("performs many jump_downs then nested sweeping (2) [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 3;} //JD
+              if (x == 1) {return 2;} 
+              if (x == 2) {return 1;}
+              if (x == 3) {return 0;}
+              if (x == 4) {return 7;} //JD
+              if (x == 5) {return 5;} 
+              if (x == 6) {return 6;}
+              if (x == 7) {return 4;}
+              return x;
+            };
 
-        });
+            bdd res_got = bdd_replace(bdd_9, m, replace_type::Non_Monotone_JD);
+            bdd res_expected = bdd_replace(bdd_9, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
 
-        it("correctly handles terminal requests in nested sweeping [bdd_8]", [&](){
-            /*            
-            //          1         ---- x0  //         1
-            //         / \                 //        / \
-            //        /   2       ---- x1  //       2   \
-            //       /    |\               //      /|    \
-            //      3     | \     ---- x2  //     / |     3
-            //     / \    |  \             //    /  |    / \
-            //    F   T   F   T            //   F   T   F   T
-            */
-            const mapping_type m = [](const int x) {if (x == 1) return 2;
-                                                          if (x == 2) return 1; 
-                                                          return x;};
-            bdd out = bdd_replace(bdd_8, m, replace_type::Non_Monotone);
-            node_test_ifstream out_nodes(out);
-            AssertThat(out_nodes.can_pull(), Is().True());
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(2, node::max_id, terminal_F, terminal_T)));
-            AssertThat(out_nodes.can_pull(), Is().True());
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(1, node::max_id, terminal_F, terminal_T)));
-            AssertThat(out_nodes.can_pull(), Is().True());
-            AssertThat(out_nodes.pull(), Is().EqualTo(node(0, node::max_id, node::pointer_type(1,node::max_id), node::pointer_type(2,node::max_id))));
-            AssertThat(out_nodes.can_pull(), Is().False());
+          it("performs a jump_down then nested sweeping (1) [bdd_b18]", [&]() {
+             const mapping_type m = [](const int x) { 
+              if (x == 0) {return 2;}
+              if (x == 1) {return 0;}
+              if (x == 2) {return 3;}
+              if (x == 3) {return 1;}
+              if (x == 4) {return 4;}
+              return x;
+            };
+
+            bdd res_got = bdd_replace(bdd_b18, m, replace_type::Non_Monotone_JD);
+            bdd res_expected = bdd_replace(bdd_b18, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
+
+          it("performs another jump_downs then nested sweeping (2) [bdd_b18]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 1;}
+              if (x == 1) {return 0;}
+              if (x == 2) {return 4;}
+              if (x == 3) {return 2;}
+              if (x == 4) {return 3;}
+              return x;
+            };
+
+            bdd res_got = bdd_replace(bdd_b18, m, replace_type::Non_Monotone_JD);
+            bdd res_expected = bdd_replace(bdd_b18, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
+
+          it("performs many jump_downs no nested sweeping [bdd_9]", [&]() {
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 3;} //JD
+              if (x == 1) {return 0;} 
+              if (x == 2) {return 1;}
+              if (x == 3) {return 2;}
+              if (x == 4) {return 7;} //JD
+              if (x == 5) {return 4;} 
+              if (x == 6) {return 5;}
+              if (x == 7) {return 6;}
+              return x;
+            };
+            bdd res_got = bdd_replace(bdd_9, m, replace_type::Non_Monotone_JD);
+            bdd res_expected = bdd_replace(bdd_9, m);
+            AssertThat(res_got == res_expected, Is().True());
+          });
+
         });
 
         //TODO: more tests?!
