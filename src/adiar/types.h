@@ -34,7 +34,9 @@ namespace adiar
     Auto = -1,
 
     /*testing for initial adj_swaps*/
-    Non_Monotone_Test = 9, 
+    Jump_Down_Inhabited = 11, 
+    Non_Monotone_JD = 10, 
+    Non_Monotone_Adj = 9, 
     /** Any variable remapping without any guarantees on `m`. */
     Non_Monotone = 8, // TODO
 
