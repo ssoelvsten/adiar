@@ -311,9 +311,11 @@ namespace adiar
       // LCOV_EXCL_STOP
 
     case replace_type::Non_Monotone:
-    case replace_type::Non_Monotone_Test:
+    case replace_type::Non_Monotone_JD:
+    case replace_type::Non_Monotone_Adj:
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
+    case replace_type::Jump_Down_Inhabited:
     case replace_type::Jump_Up:
 #ifdef ADIAR_STATS
       internal::stats_replace.nested_sweeps += 1u;
@@ -391,11 +393,14 @@ namespace adiar
     
     switch(inferred_type) {
       case replace_type::Non_Monotone :
-      case replace_type::Non_Monotone_Test :
+      case replace_type::Non_Monotone_Adj :
+      case replace_type::Non_Monotone_JD :
       case replace_type::Swap_Adjacent :
       case replace_type::Jump_Down :
-      case replace_type::Jump_Up :
+      case replace_type::Jump_Down_Inhabited :
+      case replace_type::Jump_Up : {
         throw invalid_argument("relprev given non-monotone substituion");
+      }
       case replace_type::Shift :
       case replace_type::Identity :
       case replace_type::Monotone : {
@@ -406,8 +411,9 @@ namespace adiar
         const bdd tmp_3 = bdd_exists(ep, std::move(tmp_2), [&m](bdd::label_type x) { return !m(x).has_value(); });
         return tmp_3;
       }
-      case replace_type::Auto :
+      case replace_type::Auto :{
         adiar_unreachable();
+      }
     }
 
   }
