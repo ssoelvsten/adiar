@@ -196,7 +196,10 @@ public:
   request_from_node(const node& n, const ptr_uint64& parent)
   {
     // Always pick high child
-    return request_t({ n.high(), OnlyGC ? node::pointer_type::nil() : n.high() }, {}, { parent });
+    return request_t(
+      { n.high(), OnlyGC || n.high().is_terminal() ? node::pointer_type::nil() : n.high() },
+      {},
+      { parent });
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,7 +371,8 @@ public:
   request_from_node(const node& n, const ptr_uint64& parent)
   {
     // Always pick low child
-    return request_t({ n.low() }, {}, { parent });
+    return request_t(
+      { n.low(), n.low().is_terminal() ? node::pointer_type::nil() : n.low() }, {}, { parent });
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1055,7 +1059,7 @@ go_bandit([]() {
           AssertThat(sorter.size(), Is().EqualTo(1u));
         });
 
-        it("forwards terminal request to PQ", [&]() {
+        it("forwards non-modifying terminal request to PQ", [&]() {
           test_pq_t pq({ outer_dag }, memory_available(), 16);
           pq.setup_next_level(4u);
 
@@ -1064,10 +1068,25 @@ go_bandit([]() {
           test_decorator d(pq, sorter, 2);
 
           // internal at threshold
-          d.push(test_request_t({ terminal_T }, {}, { outer_n1 }));
+          d.push(test_request_t({ terminal_T, arc::pointer_type::nil() }, {}, { outer_n1 }));
 
           AssertThat(pq.size(), Is().EqualTo(1u));
           AssertThat(sorter.size(), Is().EqualTo(0u));
+        });
+
+        it("forwards modifying terminal request to sorter", [&]() {
+          test_pq_t pq({ outer_dag }, memory_available(), 16);
+          pq.setup_next_level(4u);
+
+          test_roots_sorter_t sorter(1024, 16);
+
+          test_decorator d(pq, sorter, 2);
+
+          // internal at threshold
+          d.push(test_request_t({ terminal_F, terminal_T }, {}, { outer_n1 }));
+
+          AssertThat(pq.size(), Is().EqualTo(0u));
+          AssertThat(sorter.size(), Is().EqualTo(1u));
         });
 
         it("forwards arc with nil source to sorter", [&]() {

@@ -238,8 +238,8 @@ namespace adiar::internal
         void
         push(value_type&& v)
         {
-          adiar_assert(v.target.first().is_node(),
-                       "Requests should have at least one internal node");
+          adiar_assert(v.target.first().is_node() || v.targets() > 1,
+                       "Requests should have at least one internal node or be modifying");
 
           _max_source = _max_source.is_nil() ? v.data.source : std::max(_max_source, v.data.source);
           v.data.source = flag(v.data.source);
@@ -545,16 +545,19 @@ namespace adiar::internal
         push(const typename OuterRoots::value_type& e)
         {
           adiar_assert(e.data.source.is_nil() || e.data.source.label() < _next_inner);
-          if (e.target.first().is_terminal()) {
+
+          // TODO: Ask Policy whether `e` is `modifying`.
+          const bool modifying = e.targets() > 1;
+          if (e.target.first().is_terminal() && !modifying) {
 #ifdef ADIAR_STATS
             nested_sweeping::stats.inner_down.requests.terminals += 1u;
 #endif
             _outer_pq.push({ e.data.source, e.target.first() });
           } else {
 #ifdef ADIAR_STATS
-            const size_t modifying = e.targets() > 1; // 0 or 1
-            nested_sweeping::stats.inner_down.requests.modifying += modifying;
-            nested_sweeping::stats.inner_down.requests.preserving += 1 - modifying; // !modifying
+            nested_sweeping::stats.inner_down.requests.modifying += static_cast<size_t>(modifying);
+            nested_sweeping::stats.inner_down.requests.preserving +=
+              static_cast<size_t>(!modifying);
 #endif
             _outer_roots.push(e);
           }
