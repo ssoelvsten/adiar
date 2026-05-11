@@ -204,6 +204,11 @@ public:
   static constexpr bool fast_reduce     = FastReduce;
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Policy to test the Inner Down Sweep in isolation. This immediately empties the priority queue
+/// with nodes with terminal children (regardless of their shape in the input). Some nodes are
+/// replaced directly with a terminal.
+////////////////////////////////////////////////////////////////////////////////////////////////////
 class test_terminal_sweep
   : public bdd_policy
   , public statistics::__alg_base::__lpq_t
