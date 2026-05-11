@@ -228,13 +228,23 @@ namespace adiar::internal
         void
         push(const value_type& v)
         {
+          value_type w = v;
+          this->push(std::move(w));
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        /// \brief Push request (marked as from outer sweep).
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        void
+        push(value_type&& v)
+        {
           adiar_assert(v.target.first().is_node(),
                        "Requests should have at least one internal node");
 
           _max_source = _max_source.is_nil() ? v.data.source : std::max(_max_source, v.data.source);
+          v.data.source = flag(v.data.source);
 
-          // TODO: support requests with more than just the source
-          _sorter_ptr->push({ v.target, {}, { flag(v.data.source) } });
+          _sorter_ptr->push(std::move(v));
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -246,11 +256,10 @@ namespace adiar::internal
           adiar_assert(!a.target().is_terminal(),
                        "Arcs to terminals always reside in the outer PQ");
 
-          // TODO: support requests with more than just the source
+          // TODO: Is there a better way to explicitly set the remainders of target to nil?
 
-          // TODO: Is there a better way to explicitly set the remainders of
-          //       target to nil?
-
+          // NOTE: We assume that the data field supports a constructor with only the source given;
+          //       all other fields are set to a default that match with "nothing given".
           if constexpr (value_type::cardinality == 1u) {
             push(value_type({ a.target() }, {}, { a.source() }));
           } else if constexpr (value_type::cardinality == 2u) {
