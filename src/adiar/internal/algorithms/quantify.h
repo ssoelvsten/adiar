@@ -114,6 +114,8 @@ namespace adiar::internal
   template <typename Policy>
   class multi_quantify_policy : public prod2u_nested_policy<Policy>
   {
+    using base_type = prod2u_nested_policy<Policy>;
+
   public:
     multi_quantify_policy()
     {}
@@ -130,11 +132,11 @@ namespace adiar::internal
     //////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Convert a node from the outer sweep on a to-be quantified level into a request.
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    inline typename prod2u_nested_policy<Policy>::request_t
+    inline typename base_type::request_t
     request_from_node(const typename Policy::node_type& n,
                       const typename Policy::pointer_type& parent) const
     {
-      using request_t = typename prod2u_nested_policy<Policy>::request_t;
+      using request_t = typename base_type::request_t;
       using target_t  = typename request_t::target_t;
 
       // Shortcutting or Irrelevant terminal?

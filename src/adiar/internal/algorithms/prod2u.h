@@ -833,6 +833,15 @@ namespace adiar::internal
                       __prod2u_ilevel_upper_bound(outer_wrapper));
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief List of sources from which to pull levels.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    std::array<pq_t<0, memory_mode::Internal>::level_input_type, 1>
+    pq_levels(const typename Policy::shared_node_file_type& outer_file) const
+    {
+      return { { outer_file } };
+    }
+
   public:
     prod2u_nested_policy()
     {}
