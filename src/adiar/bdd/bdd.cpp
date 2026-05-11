@@ -90,7 +90,6 @@ namespace adiar
     return (*this = internal::reduce<bdd_policy>(std::move(other)));
   }
 
-
   //////////////////////////////////////////////////////////////////////////////
   // Operators (Truthy)
 
