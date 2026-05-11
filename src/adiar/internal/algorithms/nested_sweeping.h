@@ -1024,7 +1024,6 @@ namespace adiar::internal
         const size_t inner_pq_max_size =
           internal_only ? std::min(inner_pq_fits, inner_pq_bound) : inner_pq_bound;
 
-        // TODO (bdd_compose): ask 'Policy' implementation for the initalizer list
         if (!external_only
             && inner_pq_max_size <= no_lookahead_bound(OuterRoots::value_type::cardinality)) {
 #ifdef ADIAR_STATS
@@ -1034,10 +1033,8 @@ namespace adiar::internal
                        "'no_lookahead' implies it should (in practice) satisfy the '<='");
 
           using InnerPriorityQueue = typename Policy::template pq_t<0, memory_mode::Internal>;
-          InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
-                                      inner_pq_memory,
-                                      inner_pq_max_size,
-                                      lpq_stats);
+          InnerPriorityQueue inner_pq(
+            policy_impl.pq_levels(outer_file), inner_pq_memory, inner_pq_max_size, lpq_stats);
 
           using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
           decorator_t decorated_pq(inner_pq, outer_roots);
@@ -1051,10 +1048,8 @@ namespace adiar::internal
 #endif
           using InnerPriorityQueue =
             typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
-          InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
-                                      inner_pq_memory,
-                                      inner_pq_max_size,
-                                      lpq_stats);
+          InnerPriorityQueue inner_pq(
+            policy_impl.pq_levels(outer_file), inner_pq_memory, inner_pq_max_size, lpq_stats);
 
           using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
           decorator_t decorated_pq(inner_pq, outer_roots);
@@ -1068,10 +1063,8 @@ namespace adiar::internal
 #endif
           using InnerPriorityQueue =
             typename Policy::template pq_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
-          InnerPriorityQueue inner_pq({ typename Policy::dd_type(outer_file) },
-                                      inner_pq_memory,
-                                      inner_pq_max_size,
-                                      lpq_stats);
+          InnerPriorityQueue inner_pq(
+            policy_impl.pq_levels(outer_file), inner_pq_memory, inner_pq_max_size, lpq_stats);
 
           using decorator_t = down__pq_decorator<InnerPriorityQueue, OuterRoots>;
           decorator_t decorated_pq(inner_pq, outer_roots);

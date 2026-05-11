@@ -75,6 +75,13 @@ public:
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
+  std::array<pq_t<0, memory_mode::Internal>::level_input_type, 1>
+  pq_levels(const shared_levelized_file<node>& outer_file) const
+  {
+    return { { outer_file } };
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
   constexpr inline bdd::label_type
   map_level(bdd::label_type x) const
   {
@@ -259,6 +266,13 @@ public:
   pq_bound(const shared_levelized_file<node>& /*outer_file*/, const size_t /*outer_roots*/)
   {
     return 1u;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  std::array<pq_t<0, memory_mode::Internal>::level_input_type, 1>
+  pq_levels(const shared_levelized_file<node>& outer_file) const
+  {
+    return { { outer_file } };
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
