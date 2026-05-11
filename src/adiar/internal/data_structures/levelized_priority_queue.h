@@ -371,7 +371,7 @@ namespace adiar::internal
     /// \brief  Type of level inputs.
     ///
     /// \remark You only need to use this directly, if you are designing a wrapper/decorator for the
-    ///         televised priority queue, e.g., `reduce` and `nested_sweep`.
+    ///         levelized priority queue, e.g., `reduce` and `nested_sweep`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     using level_input_type = typename level_merger_t::istream_ptr;
 
