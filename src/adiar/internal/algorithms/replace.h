@@ -1909,8 +1909,18 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
   size_t
   __cor_ilevel_upper_bound(const In& in)
   {
-    const safe_size_t max_cut_all = Cut::get(in,cut::type::All);
-    return to_size(max_cut_all * max_cut_all + ConstSizeInc);
+    const safe_size_t max_cut_internal = Cut::get(in,cut::type::Internal);
+    const safe_size_t max_cut_true = Cut::get(in,cut::type::Internal_True);
+    const safe_size_t max_cut_false = Cut::get(in,cut::type::Internal_False);
+    return to_size(max_cut_true * max_cut_false + (max_cut_true - max_cut_internal)*(max_cut_false - max_cut_internal)   + ConstSizeInc);
+  }
+
+template <typename In>
+  size_t
+  __cor_ilevel_upper_bound(const In& in)
+  { 
+    const safe_size_t in_size = in.size();
+    return to_size(in_size * in_size + 1u + 2u);
   }
 
   //PQ setup for outer-down adj_swap sweep or dump_down_inhabited sweep prior to nested sweeping
@@ -2599,7 +2609,8 @@ public:
     static size_t
     pq_bound(const shared_levelized_file<node>& outer_file, const size_t /*outer_roots*/) {
       const typename Policy::dd_type outer_wrapper(outer_file);
-      return __cor_ilevel_upper_bound<Policy, get_2level_cut, 2u>(outer_wrapper);
+      return std::min (__cor_ilevel_upper_bound<Policy, get_2level_cut, 2u>(outer_wrapper), 
+                       __cor_ilevel_upper_bound(outer_wrapper));
     }
 
     //labels mapped according to given map
@@ -2625,7 +2636,9 @@ public:
       // (1) setup PQ2
       const size_t pq_2_memory_fits =
       cor_priority_queue_2_t<memory_mode::Internal>::memory_fits(inner_remaining_memory);
-
+      
+      //std::cout << "inner pq size:" << inner_pq.size() << "\n";
+      //std::cout << "memory available:" << inner_remaining_memory << "\n";
       const size_t pq_2_bound =__cor_ilevel_upper_bound<Policy, get_1level_cut, 0u>(typename Policy::dd_type(outer_file)) 
         + (inner_pq.size()); // Add crossing arcs
 
