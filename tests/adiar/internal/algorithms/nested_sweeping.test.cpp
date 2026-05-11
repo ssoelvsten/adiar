@@ -85,11 +85,11 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The Sweep Logic for the PQ access mode case.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename inner_pq_t>
+  template <typename InnerPriorityQueue>
   __bdd
   sweep_pq(const exec_policy& ep,
            const shared_levelized_file<node>& outer_file,
-           inner_pq_t& inner_pq,
+           InnerPriorityQueue& inner_pq,
            const size_t /*inner_remaining_memory == 0*/)
   {
     node_ifstream<> ns(outer_file);
@@ -139,11 +139,11 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The Sweep Logic for the RA access mode case.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename inner_pq_t>
+  template <typename InnerPriorityQueue>
   __bdd
   sweep_ra(const exec_policy& ep,
            const shared_levelized_file<node>& outer_file,
-           inner_pq_t& inner_pq,
+           InnerPriorityQueue& inner_pq,
            const size_t inner_remaining_memory)
   {
     return sweep_pq(ep, outer_file, inner_pq, inner_remaining_memory);
@@ -151,9 +151,9 @@ public:
 
 private:
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <bool is_high, typename inner_pq_t>
+  template <bool is_high, typename InnerPriorityQueue>
   void
-  forward_arc(inner_pq_t& inner_pq,
+  forward_arc(InnerPriorityQueue& inner_pq,
               arc_ofstream& aw,
               const node::uid_type& uid,
               const node::pointer_type& c)
@@ -264,11 +264,11 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The Sweep Logic for the PQ access mode case.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename inner_pq_t>
+  template <typename InnerPriorityQueue>
   __bdd
   sweep_pq(const exec_policy& ep,
            const shared_levelized_file<node>& outer_file,
-           inner_pq_t& inner_pq,
+           InnerPriorityQueue& inner_pq,
            const size_t /*inner_remaining_memory == 0*/)
   {
     node_ifstream<> ns(outer_file);
@@ -322,11 +322,11 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief The Sweep Logic for the RA access mode case.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename inner_pq_t>
+  template <typename InnerPriorityQueue>
   __bdd
   sweep_ra(const exec_policy& ep,
            const shared_levelized_file<node>& outer_file,
-           inner_pq_t& inner_pq,
+           InnerPriorityQueue& inner_pq,
            const size_t inner_remaining_memory)
   {
     return sweep_pq(ep, outer_file, inner_pq, inner_remaining_memory);
