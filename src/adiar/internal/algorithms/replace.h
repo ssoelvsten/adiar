@@ -23,13 +23,16 @@ namespace adiar::internal
   extern statistics::replace_t stats_replace;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Helper Functions
+  // Types
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief A total mapping function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename T>
   using replace_func = function<typename T::label_type(typename T::label_type)>;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Inference of the most precise replacement-type.
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Infer the replace type.
@@ -116,7 +119,17 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Algorithms
+  // Algorithms: `Shift`
+  //
+  // If the decision diagram is already fully reduced and the variable ordering is a mere `Shift`,
+  // i.e. the levels are offset by the same constant amount, then we can reuse the original file by
+  // merely deferring the level replacement until it is read later. This saves an expensive O(N/B)
+  // copy operation and disk space otherwise done for the `Monotone` case below.
+  /*
+  //         a           a        | x -> x+c
+  //        / \     =>  / \
+  //        b c         b c       | y -> y+c
+  */
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace the level in constant time
@@ -135,6 +148,18 @@ namespace adiar::internal
     return typename Policy::dd_type(
       dd.file_ptr(), dd.is_negated(), dd.shift() + (shifted_topvar - topvar));
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Algorithms: `Monotone`
+  //
+  // If the variable ordering is monotone, i.e. the levels still follow the same relative ordering,
+  // then we can apply the level replacement node-for-node or as part of the reduce algorithm (which
+  // has to be run anyways).
+  /*
+  //         a            a'        | x -> x'
+  //        / \     =>   /  \
+  //        b c         b'  c'      | y -> y'
+  */
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace the level of all nodes in a single linear scan.
@@ -208,10 +233,77 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // TODO: Nested Sweeping for non-monotonic reorderings.
+  // Algorithms: `Jump_Down` (+ `Swap_Adjacent`)
+  //
+  // Top-down 2-ary product construction which works as a `prod2u` extended with logic in
+  // `intercut` to move levels down.
+  /*
+  //             ____ O ____                      __ O __                | ...
+  //            /           \                    /       \
+  //          _a_          _b_                  /         \              | x -> y
+  //         /   \        /   \      =>        /           \
+  //         c   c'       d   d'            (c,c')        (d,d')         | ...
+  //        / \ / \      / \ / \            /    \        /    \
+  //        | | |  \     | | |  \        (e,e') (f,f') (g,g') (h,h')     | y
+  //        | | |  |     | | |  |         /  \   /  \   /  \   /  \
+  //        e f e' f'    g h g' h'        e  e' f   f'  g  g'  h  h'     | ...
+  */
+  // The most basic version assumes the target level is empty. This can be (thereby also supporting
+  // `Swap_Adjacent`) by doubling levels in the levelized priority queue; input and untouched levels
+  // are even whereas target levels are odd.
+  //
+  // This sweep is guaranteed to preserve the reducedness of the input! That is, if one does not
+  // care about the output being *sorted*, then one can use the fast `reduce` operation.
+
+  // TODO
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // "Public" interface
+  // Algorithms: `Jump_Up`
+  //
+  // Bottom-up 2-ary product construction that incorporates `intercut` inside of the bottom-up
+  // `reduce` sweep.
+  /*
+  //
+  //             e                     _ e _         | ...
+  //            / \                   /     \
+  //           /   \                (!)      \       | x
+  //          /     \              /   \      \
+  //         d      f           (a,g) (b,g)    f     | ...
+  //        / \          =>      /
+  //       c   \               (a,b)                 | y -> x
+  //      / \   \              /   \
+  //     a   b   g             a   b                 | ...
+  */
+  // This procedure *can* create duplicate nodes. Hence, one has to still do one (or two?) sorting
+  // steps to remove duplicate nodes.
+  //
+  // To be able to send a variable to a level that is occupied in the input, we again do the
+  // doubling trick above inside of the levelized priority queue.
+
+  // TODO
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Algorithms: `Non-Monotone` (+ `Swap`)
+  //
+  // Starting from the bottom with *nested sweeping*, we accumulate the results of multiple
+  // `Jump_Downs`. This is essentially an *insertion sort* on the levels. Here, we can abuse the
+  // invariant, that the nested `Jump_Down` is always moving levels down to an empty one.
+  /*
+  //   .            .  .            .  .             _._          | x -> y
+  //  / \                          / \              /   \
+  //  . |  ==(z)=>        ==(y)=>  . .    ==(x)=>   .   .         | y -> z
+  // / \/                                          / \ / \
+  // . .                                           . . . .        | z -> x
+  */
+  // The main weakness of this operation is if something has to be moved up, i.e. multiple
+  // `Jump_Down` operations are used to effectively create a single `Jump_Up`. To mitigate this, we
+  // want to preface the nested sweep with one or more `Jump_Up` and `Adjacent_Swap` operations.
+  // Furthermore, we can incorporate the `Jump_Up` logic inside the Outer Reduce.
+
+  // TODO
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Public interface
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replace variables based on the given (total) map.
