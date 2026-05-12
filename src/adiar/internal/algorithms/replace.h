@@ -125,7 +125,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   inline typename Policy::dd_type
-  __replace__shift_return(const typename Policy::dd_type& dd, const replace_func<Policy>& m)
+  replace__shift(const typename Policy::dd_type& dd, const replace_func<Policy>& m)
   {
     adiar_assert(!dd->is_terminal());
 
@@ -143,7 +143,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   inline typename Policy::dd_type
-  __replace__monotonic_scan(const typename Policy::dd_type& dd, const replace_func<Policy>& m)
+  replace__monotone(const typename Policy::dd_type& dd, const replace_func<Policy>& m)
   {
     adiar_assert(!dd->is_terminal());
 
@@ -176,32 +176,34 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy>
-  class replace_reduce_policy : public Policy
-  {
-  private:
-    const replace_func<Policy>& _m;
-
-  public:
-    replace_reduce_policy(const replace_func<Policy>& m)
-      : _m(m)
-    {}
-
-    constexpr inline typename Policy::label_type
-    map_level(typename Policy::label_type x) const
-    {
-      return this->_m(x);
-    }
-  };
-
+  /// \brief Replace the level of all nodes as part of the bottom-up reduce sweep.
+  ///
+  /// \remark This requires that the mapping, `m`, is *monotonic*.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   inline typename Policy::dd_type
-  __replace__monotonic_reduce(const exec_policy& ep,
-                              const typename Policy::__dd_type& __dd,
-                              const replace_func<Policy>& m)
+  replace__monotone(const exec_policy& ep,
+                    const typename Policy::__dd_type& __dd,
+                    const replace_func<Policy>& m)
   {
-    replace_reduce_policy<Policy> policy(m);
+    class reduce_policy : public Policy
+    {
+    private:
+      const replace_func<Policy>& _m;
+
+    public:
+      reduce_policy(const replace_func<Policy>& m)
+        : _m(m)
+      {}
+
+      constexpr inline typename Policy::label_type
+      map_level(typename Policy::label_type x) const
+      {
+        return this->_m(x);
+      }
+    };
+
+    reduce_policy policy(m);
     return reduce(ep, policy, std::move(__dd));
   }
 
@@ -249,13 +251,13 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_replace.monotonic_scans += 1u;
 #endif
-      return __replace__monotonic_scan<Policy>(dd, m);
+      return replace__monotone<Policy>(dd, m);
 
     case replace_type::Shift:
 #ifdef ADIAR_STATS
       stats_replace.shift_returns += 1u;
 #endif
-      return __replace__shift_return<Policy>(dd, m);
+      return replace__shift<Policy>(dd, m);
 
     case replace_type::Identity:
 #ifdef ADIAR_STATS
@@ -304,7 +306,7 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_replace.monotonic_reduces += 1u;
 #endif
-      return __replace__monotonic_reduce<Policy>(ep, std::move(__dd), m);
+      return replace__monotone<Policy>(ep, std::move(__dd), m);
 
     case replace_type::Identity:
 #ifdef ADIAR_STATS
