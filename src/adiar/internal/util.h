@@ -23,7 +23,7 @@ namespace adiar::internal
   /// \brief Template to hide how to obtain the level from a data type.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename T>
-  inline ptr_uint64::label_type
+  inline ptr_uint64::level_type
   level_of(const T& t)
   {
     if constexpr (is_integral<T>) {
@@ -42,10 +42,10 @@ namespace adiar::internal
   /// \see level_ifstream_t, generator
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename LevelStream>
-  generator<ptr_uint64::label_type>
+  generator<ptr_uint64::level_type>
   make_generator__levels(LevelStream& ls)
   {
-    return [&ls]() mutable -> optional<ptr_uint64::label_type> {
+    return [&ls]() mutable -> optional<ptr_uint64::level_type> {
       if (!ls.can_pull()) { return {}; }
       return level_of(ls.pull());
     };
@@ -77,20 +77,19 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Whether a certain level exists in a file.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // TODO: Move to dd_func?
   template <typename DD>
   bool
-  has_level(const DD& d, const typename DD::label_type x)
+  has_level(const DD& d, const typename DD::level_type x)
   {
     level_info_ifstream<> in_meta(d);
     while (in_meta.can_pull()) {
       level_info m = in_meta.pull();
 
       // Are we already past where it should be?
-      if (x < m.label()) { return false; }
+      if (x < m.level()) { return false; }
 
       // Did we find it?
-      if (m.label() == x) { return true; }
+      if (m.level() == x) { return true; }
     }
     return false;
   }

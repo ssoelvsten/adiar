@@ -276,7 +276,7 @@ go_bandit([]() {
     describe("bdd_satcount(f) [non-empty dom]", [&]() {
       shared_file<bdd::label_type> dom;
       {
-        ofstream<bdd::pointer_type::label_type> lw(dom);
+        ofstream<bdd::label_type> lw(dom);
         lw << 0 << 1 << 2 << 3 << 4 << 5 << 6;
       }
       domain_set(dom);

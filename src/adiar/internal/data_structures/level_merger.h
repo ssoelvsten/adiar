@@ -32,7 +32,7 @@ namespace adiar::internal
   class level_merger
   {
   public:
-    using value_type = dd::label_type;
+    using value_type = dd::level_type;
     using arg_type   = std::variant<dd, __dd, generator<value_type>>;
 
   private:

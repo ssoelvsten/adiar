@@ -29,10 +29,10 @@ namespace adiar::internal
     using node_type    = typename from_policy::node_type;
 
     using __dd_type  = typename to_policy::__dd_type;
-    using label_type = typename to_policy::label_type;
+    using level_type = typename to_policy::level_type;
     using id_type    = typename to_policy::id_type;
 
-    static constexpr label_type max_label = to_policy::max_label;
+    static constexpr level_type max_label = to_policy::max_label;
 
     static constexpr id_type max_id = to_policy::max_id;
 
@@ -46,7 +46,7 @@ namespace adiar::internal
 
   public:
     static typename to_policy::dd_type
-    on_empty_labels(const typename from_policy::dd_type& dd)
+    on_empty_levels(const typename from_policy::dd_type& dd)
     {
       adiar_assert(dd_isterminal(dd));
       return typename to_policy::dd_type(dd.file_ptr(), dd.is_negated(), 0);
@@ -55,7 +55,7 @@ namespace adiar::internal
     static typename to_policy::dd_type
     on_terminal_input(const bool terminal_value,
                       const typename from_policy::dd_type& /*dd*/,
-                      const internal_vector<typename from_policy::label_type>& dom)
+                      const internal_vector<typename from_policy::level_type>& dom)
     {
       adiar_assert(dom.size() > 0, "Emptiness check is before terminal check");
 
@@ -78,7 +78,7 @@ namespace adiar::internal
           nw.unsafe_push(next_node);
           nw.unsafe_push(level_info(*iter, 1u));
         } else {
-          // If we kill the resulting node once, then we will also do it for all the other labels we
+          // If we kill the resulting node once, then we will also do it for all the other levels we
           // still are missing.
           has_output = false;
           break;

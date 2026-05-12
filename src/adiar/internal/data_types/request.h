@@ -56,9 +56,9 @@ namespace adiar::internal
     static constexpr bool sorted_target = Sorted || cardinality == 1u;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Type of a variable label.
+    /// \brief Type for the requests level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    using label_type = node::label_type;
+    using level_type = node::level_type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type of a pointer.
@@ -80,7 +80,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The level at which this request should be resolved.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    pointer_type::label_type
+    level_type
     level() const
     {
       return target.first().level();
@@ -418,10 +418,10 @@ namespace adiar::internal
     inline bool
     operator()(const Request& a, const Request& b)
     {
-      const typename Request::label_type label_a = a.target.first().label();
-      const typename Request::label_type label_b = b.target.first().label();
+      const typename Request::level_type level_a = a.target.first().level();
+      const typename Request::level_type level_b = b.target.first().level();
 
-      return label_a < label_b || (label_a == label_b && a.target < b.target);
+      return level_a < level_b || (level_a == level_b && a.target < b.target);
     }
   };
 
@@ -566,7 +566,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The level at which this request should be resolved.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    typename Request::label_type
+    typename Request::level_type
     level() const
     {
       if constexpr (Data::has_level) { return std::min(Request::level(), this->data.level); }
@@ -617,8 +617,8 @@ namespace adiar::internal
     operator()(const Request& a, const Request& b)
     {
       if constexpr (Request::data_type::has_level) {
-        const typename Request::label_type a_level = a.level();
-        const typename Request::label_type b_level = b.level();
+        const typename Request::level_type a_level = a.level();
+        const typename Request::level_type b_level = b.level();
         if (a_level != b_level) return a_level < b_level;
       }
       if constexpr (Request::data_type::sort_on_tiebreak) {
@@ -718,12 +718,12 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Level to be used if the level is invalid/non-existent.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr node::label_type no_level = node::pointer_type::nil_level;
+    static constexpr node::level_type no_level = node::pointer_type::nil_level;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Level at which something ought to happen.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node::label_type level;
+    node::level_type level;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief String representation of the level data.
@@ -776,7 +776,7 @@ namespace adiar::internal
       , with_level{ with_level::no_level }
     {}
 
-    with_parent_and_level(const node::pointer_type& source, node::label_type level)
+    with_parent_and_level(const node::pointer_type& source, node::level_type level)
       : with_parent{ source }
       , with_level{ level }
     {}

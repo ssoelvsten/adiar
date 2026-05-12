@@ -51,7 +51,7 @@ namespace adiar::internal
     {}
 
     void
-    next_level(ptr_uint64::label_type /* level */)
+    next_level(ptr_uint64::level_type /* level */)
     { // Ignore input, since only used with the isomorphism_policy below.
       curr_level_size      = in_meta_1.pull().width();
       curr_level_processed = 0;
@@ -77,7 +77,7 @@ namespace adiar::internal
   /// \pre To use this operation, the following should be satisfied.
   ///  - The number of nodes are the same
   ///  - The number of levels are the same
-  ///  - The label and size of each level are the same
+  ///  - The level and size of each level are the same
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO (Decision Diagrams with other kinds of pointers):
   // template<class dd_policy>
@@ -113,7 +113,7 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_equality.slow_check.exit_on_root += 1u;
 #endif
-      adiar_assert(v1.label() == v2.label(), "Levels match per the precondition");
+      adiar_assert(v1.level() == v2.level(), "Levels match per the precondition");
       return v1.low() == v2.low() && v1.high() == v2.high();
     }
 
@@ -135,7 +135,7 @@ namespace adiar::internal
       }
 
       // Do they NOT point to a node with the same level?
-      if (rp[0].label() != rp[1].label()) {
+      if (rp[0].level() != rp[1].level()) {
 #ifdef ADIAR_STATS
         stats_equality.slow_check.exit_on_children += 1u;
 #endif
@@ -236,7 +236,7 @@ namespace adiar::internal
       return false;
     }
 
-    // Are they trivially not the same, since the labels or the size of each level does not match?
+    // Are they trivially not the same, since the levels or the size of each level does not match?
     { // Create new scope to garbage collect the two meta_ifstreams early
       level_info_ifstream<> in_meta_a(a);
       level_info_ifstream<> in_meta_b(b);
@@ -253,7 +253,7 @@ namespace adiar::internal
     }
 
     // TODO: Use 'fast_isomorphism_check' when there is only one node per level. In this case, we
-    // can just ignore the id (and only focus on the label and terminal values).
+    // can just ignore the id (and only focus on the level and terminal values).
 
     // Compare their content to discern whether there exists an isomorphism between them.
     if (a->is_canonical() && b->is_canonical() && a_negated == b_negated) {

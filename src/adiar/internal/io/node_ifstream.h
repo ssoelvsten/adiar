@@ -31,7 +31,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Number of levels with which an element ought to be shifted.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node::signed_label_type _shift = 0;
+    node::signed_level_type _shift = 0;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node_ifstream(const levelized_file<node>& file,
                   bool negate                   = false,
-                  node::signed_label_type shift = 0)
+                  node::signed_level_type shift = 0)
       : parent_type(file)
       , _negate(negate)
       , _shift(shift)
@@ -55,7 +55,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node_ifstream(const shared_ptr<levelized_file<node>>& file,
                   bool negate                   = false,
-                  node::signed_label_type shift = 0)
+                  node::signed_level_type shift = 0)
       : parent_type(file)
       , _negate(negate)
       , _shift(shift)

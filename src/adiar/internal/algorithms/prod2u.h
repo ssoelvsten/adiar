@@ -282,12 +282,12 @@ namespace adiar::internal
     while (!pq.empty()) {
       // Set up level
       pq.setup_next_level();
-      const typename Policy::label_type out_label = pq.current_level();
+      const typename Policy::level_type out_level = pq.current_level();
       typename Policy::id_type out_id             = 0;
 
-      in_nodes.setup_next_level(out_label);
+      in_nodes.setup_next_level(out_level);
 
-      const bool split = policy.split(out_label);
+      const bool split = policy.split(out_level);
 
       while (!pq.empty_level()) {
         prod2u_request<0> req = pq.top();
@@ -297,13 +297,13 @@ namespace adiar::internal
 #endif
 
         // Obtain of first to-be seen node
-        adiar_assert(req.target.first().level() == out_label,
+        adiar_assert(req.target.first().level() == out_level,
                      "Level of requests always ought to match the one currently processed");
 
         const typename Policy::children_type children_fst =
           in_nodes.at(req.target.first()).children();
 
-        const typename Policy::children_type children_snd = req.target.second().level() == out_label
+        const typename Policy::children_type children_snd = req.target.second().level() == out_level
           ? in_nodes.at(req.target.second()).children()
           : Policy::reduction_rule_inv(req.target.second());
 
@@ -339,7 +339,7 @@ namespace adiar::internal
         //   The variable should stay: proceed as in the Product Construction by simulating both
         //   possibilities in parallel.
 
-        const node::uid_type out_uid(out_label, out_id++);
+        const node::uid_type out_uid(out_level, out_id++);
 
         prod2u_request<0>::target_t rec0 =
           __prod2u_resolve_request<Policy>(children_fst[false], children_snd[false]);
@@ -355,7 +355,7 @@ namespace adiar::internal
       }
 
       // Update meta information
-      if (out_id > 0) { aw.push(level_info(out_label, out_id)); }
+      if (out_id > 0) { aw.push(level_info(out_level, out_id)); }
 
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq.size());
     }
@@ -408,10 +408,10 @@ namespace adiar::internal
 
       // Set up level
       pq_1.setup_next_level();
-      const typename Policy::label_type out_label = pq_1.current_level();
+      const typename Policy::level_type out_level = pq_1.current_level();
       typename Policy::id_type out_id             = 0;
 
-      const bool split = policy.split(out_label);
+      const bool split = policy.split(out_level);
 
       while (!pq_1.empty_level() || !pq_2.empty()) {
         // Merge requests from pq_1 and pq_2
@@ -433,7 +433,7 @@ namespace adiar::internal
 
         // Forward information of node t1 across the level if needed
         if (req.empty_carry() && req.target.second().is_node()
-            && req.target.first().label() == req.target.second().label()) {
+            && req.target.first().level() == req.target.second().level()) {
           do {
 #ifdef ADIAR_STATS
             stats_prod2u.pq.pq_2_elems += 1u;
@@ -443,7 +443,7 @@ namespace adiar::internal
           continue;
         }
 
-        adiar_assert(req.target.first().label() == out_label,
+        adiar_assert(req.target.first().level() == out_level,
                      "Level of requests always ought to match the one currently processed");
 
 #ifdef ADIAR_STATS
@@ -455,7 +455,7 @@ namespace adiar::internal
         const node::children_type children_fst =
           req.empty_carry() ? v.children() : req.node_carry[0];
 
-        const node::children_type children_snd = req.target.second().level() == out_label
+        const node::children_type children_snd = req.target.second().level() == out_level
           ? v.children()
           : Policy::reduction_rule_inv(req.target.second());
 
@@ -493,7 +493,7 @@ namespace adiar::internal
         //   The variable should stay: proceed as in the Product Construction by simulating both
         //   possibilities in parallel.
 
-        const node::uid_type out_uid(out_label, out_id++);
+        const node::uid_type out_uid(out_level, out_id++);
 
         prod2u_request<0>::target_t rec0 =
           __prod2u_resolve_request<Policy>(children_fst[false], children_snd[false]);
@@ -509,7 +509,7 @@ namespace adiar::internal
       }
 
       // Update meta information
-      if (out_id > 0) { aw.push(level_info(out_label, out_id)); }
+      if (out_id > 0) { aw.push(level_info(out_level, out_id)); }
 
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq_1.size());
     }
@@ -854,7 +854,7 @@ namespace adiar::internal
     ///          to-be split level. Hence, we can provide an always-false predicate that can be
     ///          optimized by the compiler.
     //////////////////////////////////////////////////////////////////////////////////////////////////
-    constexpr bool split(typename Policy::label_type /*level*/) const
+    constexpr bool split(typename Policy::level_type /*level*/) const
     {
       return false;
     }

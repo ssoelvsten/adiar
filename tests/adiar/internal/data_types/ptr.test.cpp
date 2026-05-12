@@ -590,61 +590,49 @@ go_bandit([]() {
           });
         });
 
-        describe(".label(), .level()", [&]() {
-          it("should store and retrieve label for (0, max_id, false) Ptr", [&]() {
-            // This checks overflow of ids/out_idx into labels
+        describe(".level()", [&]() {
+          it("should store and retrieve level for (0, max_id, false) Ptr", [&]() {
+            // This checks overflow of ids/out_idx into levels
             const ptr_uint64 p = ptr_uint64(0, ptr_uint64::max_id, true);
 
-            AssertThat(p.label(), Is().EqualTo(0u));
-            AssertThat(flag(p).label(), Is().EqualTo(0u));
-
-            AssertThat(p.label(), Is().EqualTo(p.level()));
+            AssertThat(p.level(), Is().EqualTo(0u));
+            AssertThat(flag(p).level(), Is().EqualTo(0u));
           });
 
           it("should store and retrieve label for (12, max_id, false) Ptr", [&]() {
             const ptr_uint64 p = ptr_uint64(12, ptr_uint64::max_id, false);
 
-            AssertThat(p.label(), Is().EqualTo(12u));
-            AssertThat(flag(p).label(), Is().EqualTo(12u));
-
-            AssertThat(p.label(), Is().EqualTo(p.level()));
+            AssertThat(p.level(), Is().EqualTo(12u));
+            AssertThat(flag(p).level(), Is().EqualTo(12u));
           });
 
           it("should store and retrieve for (42, 2) Ptr", [&]() {
             const ptr_uint64 p = ptr_uint64(42, 2);
 
-            AssertThat(p.label(), Is().EqualTo(42u));
-            AssertThat(flag(p).label(), Is().EqualTo(42u));
-
-            AssertThat(p.label(), Is().EqualTo(p.level()));
+            AssertThat(p.level(), Is().EqualTo(42u));
+            AssertThat(flag(p).level(), Is().EqualTo(42u));
           });
 
           it("should store and retrieve for (21, 0, true) Ptr", [&]() {
             const ptr_uint64 p = ptr_uint64(21, 0, true);
 
-            AssertThat(p.label(), Is().EqualTo(21u));
-            AssertThat(flag(p).label(), Is().EqualTo(21u));
-
-            AssertThat(p.label(), Is().EqualTo(p.level()));
+            AssertThat(p.level(), Is().EqualTo(21u));
+            AssertThat(flag(p).level(), Is().EqualTo(21u));
           });
 
           it("should store and retrieve for (max_label, max_id) Ptr", [&]() {
             const ptr_uint64 p = ptr_uint64(ptr_uint64::max_label, ptr_uint64::max_id);
 
-            AssertThat(p.label(), Is().EqualTo(ptr_uint64::max_label));
-            AssertThat(flag(p).label(), Is().EqualTo(ptr_uint64::max_label));
-
-            AssertThat(p.label(), Is().EqualTo(p.level()));
+            AssertThat(p.level(), Is().EqualTo(ptr_uint64::max_label));
+            AssertThat(flag(p).level(), Is().EqualTo(ptr_uint64::max_label));
           });
 
           it("should store and retrieve for (max_label, max_id, max_out_idx) Ptr", [&]() {
             const ptr_uint64 p =
               ptr_uint64(ptr_uint64::max_label, ptr_uint64::max_id, ptr_uint64::max_out_idx);
 
-            AssertThat(p.label(), Is().EqualTo(ptr_uint64::max_label));
-            AssertThat(flag(p).label(), Is().EqualTo(ptr_uint64::max_label));
-
-            AssertThat(p.label(), Is().EqualTo(p.level()));
+            AssertThat(p.level(), Is().EqualTo(ptr_uint64::max_label));
+            AssertThat(flag(p).level(), Is().EqualTo(ptr_uint64::max_label));
           });
         });
 
@@ -1063,7 +1051,7 @@ go_bandit([]() {
       });
 
       describe("ordering ( < )", [&]() {
-        it("should sort by label, then by id", [&]() {
+        it("should sort by level, then by id", [&]() {
           const ptr_uint64 node_1_2 = ptr_uint64(1, 2);
           const ptr_uint64 node_2_1 = ptr_uint64(2, 1);
           const ptr_uint64 node_2_2 = ptr_uint64(2, 2);
@@ -1072,7 +1060,7 @@ go_bandit([]() {
           AssertThat(node_2_1 < node_2_2, Is().True());
         });
 
-        it("should sort by label and id independent of the flag", [&]() {
+        it("should sort by level and id independent of the flag", [&]() {
           const ptr_uint64 node_1_2 = ptr_uint64(1, 2);
           const ptr_uint64 node_2_1 = ptr_uint64(2, 1);
 
@@ -1099,7 +1087,7 @@ go_bandit([]() {
           AssertThat(flag(node_1_T) < flag(node_2_F), Is().True());
         });
 
-        it("should sort by label, then id, and finally out-index", [&]() {
+        it("should sort by level, then id, and finally out-index", [&]() {
           const ptr_uint64 node_a = ptr_uint64(0, 3, true);
           const ptr_uint64 node_b = ptr_uint64(1, 2, false);
 
@@ -1111,7 +1099,7 @@ go_bandit([]() {
           AssertThat(node_c < node_d, Is().True());
         });
 
-        it("should sort by label id, and out-index independent of the flag", [&]() {
+        it("should sort by level id, and out-index independent of the flag", [&]() {
           const ptr_uint64 node_a = ptr_uint64(0, 3, true);
           const ptr_uint64 node_b = ptr_uint64(1, 2, false);
 

@@ -20,7 +20,7 @@ namespace adiar
     optional<zdd::label_type> l_excl = make_optional<zdd::label_type>();
 
     /// We will rememeber how far the algorithm in substitution.h has got
-    zdd::label_type alg_level = 0;
+    zdd::level_type alg_level = 0;
 
     /// Remember whether the current level is affected
     bool l_matches = false;
@@ -71,7 +71,7 @@ namespace adiar
     }
 
     /// \brief Get the current level (including the current algorithm level)
-    zdd::label_type
+    zdd::level_type
     level_incl() const
     {
       adiar_assert(has_level_incl());
@@ -86,7 +86,7 @@ namespace adiar
     }
 
     /// \brief Get the next level (excluding the current one)
-    zdd::label_type
+    zdd::level_type
     level_excl() const
     {
       adiar_assert(has_level_excl());
@@ -204,7 +204,7 @@ namespace adiar
     {
       if (AssignmentPolicy::current_matches()) {
         if (AssignmentPolicy::has_level_excl()) {
-          if (n.high().is_terminal() || n.high().label() > AssignmentPolicy::level_excl()) {
+          if (n.high().is_terminal() || n.high().level() > AssignmentPolicy::level_excl()) {
             return zdd::pointer_type(false);
           }
         }
@@ -216,12 +216,12 @@ namespace adiar
         // If recursion goes past the intended level, then it is replaced with
         // the false terminal.
         const zdd::pointer_type low =
-          n.low().is_terminal() || n.low().label() > AssignmentPolicy::level_incl()
+          n.low().is_terminal() || n.low().level() > AssignmentPolicy::level_incl()
           ? zdd::pointer_type(false)
           : n.low();
 
         // If this applies to high, then the node should be skipped entirely.
-        if (n.high().is_terminal() || n.high().label() > AssignmentPolicy::level_incl()) {
+        if (n.high().is_terminal() || n.high().level() > AssignmentPolicy::level_incl()) {
           return low;
         }
         return zdd::node_type(n.uid(), low, n.high());

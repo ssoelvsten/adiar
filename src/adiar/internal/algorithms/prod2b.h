@@ -104,7 +104,7 @@ namespace adiar::internal
       const arc out_arc = { source, policy(target[0], target[1]) };
       aw.push_terminal(out_arc);
     } else {
-      adiar_assert(source.label() < std::min(target[0], target[1]).label(),
+      adiar_assert(source.level() < std::min(target[0], target[1]).level(),
                    "should always push recursion for 'later' level");
 
       pq.push({ target, {}, { source } });
@@ -248,15 +248,15 @@ namespace adiar::internal
           const typename DdPolicy::node_type& v1)
     {
       if (r.target[0].is_terminal() || r.target[1].is_terminal()
-          || r.target[0].label() != r.target[1].label()) {
+          || r.target[0].level() != r.target[1].level()) {
 
         adiar_assert(r.target[0] != r.target[1], "Cannot have mismatching levels and be equal");
 
-        // t.target[0].label() < r.target[1].label() || r.target[1].is_terminal() ?
+        // t.target[0].level() < r.target[1].level() || r.target[1].is_terminal() ?
         const typename DdPolicy::children_type pair_0 =
           r.target[0] < r.target[1] ? v0.children() : DdPolicy::reduction_rule_inv(r.target[0]);
 
-        // r.target[1].label() < r.target[0].label() || r.target[0].is_terminal() ?
+        // r.target[1].level() < r.target[0].level() || r.target[0].is_terminal() ?
         const typename DdPolicy::children_type pair_1 =
           r.target[1] < r.target[0] ? v1.children() : DdPolicy::reduction_rule_inv(r.target[1]);
 
@@ -308,11 +308,11 @@ namespace adiar::internal
       // Set up level
       prod_pq.setup_next_level();
 
-      typename Policy::label_type out_label = prod_pq.current_level();
+      typename Policy::level_type out_level = prod_pq.current_level();
       typename Policy::id_type out_id       = 0;
 
-      policy.setup_next_level(out_label);
-      in_nodes_ra.setup_next_level(out_label);
+      policy.setup_next_level(out_level);
+      in_nodes_ra.setup_next_level(out_level);
 
       // Update maximum 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, prod_pq.size());
@@ -322,7 +322,7 @@ namespace adiar::internal
         const prod2b_request<0> req = prod_pq.top();
 
         // Seek request partially in stream
-        if (req.target[pq_idx].is_node() && req.target[pq_idx].label() == out_label) {
+        if (req.target[pq_idx].is_node() && req.target[pq_idx].level() == out_level) {
           while (v_pq.uid() < req.target[pq_idx] && in_nodes_pq.can_pull()) {
             v_pq = in_nodes_pq.pull();
           }
@@ -331,11 +331,11 @@ namespace adiar::internal
         }
 
         // Recreate/Obtain children of req.target (possibly of suppressed node)
-        const typename Policy::children_type children_pq = req.target[pq_idx].level() == out_label
+        const typename Policy::children_type children_pq = req.target[pq_idx].level() == out_level
           ? v_pq.children()
           : Policy::reduction_rule_inv(req.target[pq_idx]);
 
-        const typename Policy::children_type children_ra = req.target[ra_idx].level() == out_label
+        const typename Policy::children_type children_ra = req.target[ra_idx].level() == out_level
           ? in_nodes_ra.at(req.target[ra_idx]).children()
           : Policy::reduction_rule_inv(req.target[ra_idx]);
 
@@ -354,7 +354,7 @@ namespace adiar::internal
           const prod2b_rec_output r = std::get<prod2b_rec_output>(rec_res);
 
           adiar_assert(out_id < Policy::max_id, "Has run out of ids");
-          const node::uid_type out_uid(out_label, out_id++);
+          const node::uid_type out_uid(out_level, out_id++);
 
           __prod2b_recurse_out(prod_pq, aw, policy, out_uid.as_ptr(false), r.low);
           __prod2b_recurse_out(prod_pq, aw, policy, out_uid.as_ptr(true), r.high);
@@ -381,7 +381,7 @@ namespace adiar::internal
       }
 
       // Update meta information
-      if (Policy::no_skip || out_id > 0) { aw.push(level_info(out_label, out_id)); }
+      if (Policy::no_skip || out_id > 0) { aw.push(level_info(out_level, out_id)); }
     }
 
     // Ensure the edge case, where the in-going edge from nil to the root pair
@@ -434,10 +434,10 @@ namespace adiar::internal
       // Set up next level
       prod_pq_1.setup_next_level();
 
-      const typename Policy::label_type out_label = prod_pq_1.current_level();
+      const typename Policy::level_type out_level = prod_pq_1.current_level();
       typename Policy::id_type out_id             = 0;
 
-      policy.setup_next_level(out_label);
+      policy.setup_next_level(out_level);
 
       // Update max 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, prod_pq_1.size());
@@ -457,9 +457,9 @@ namespace adiar::internal
           req = prod_pq_2.top();
         }
 
-        adiar_assert(req.target[0].is_terminal() || out_label <= req.target[0].label(),
+        adiar_assert(req.target[0].is_terminal() || out_level <= req.target[0].level(),
                      "Request should never level-wise be behind current position");
-        adiar_assert(req.target[1].is_terminal() || out_label <= req.target[1].label(),
+        adiar_assert(req.target[1].is_terminal() || out_level <= req.target[1].level(),
                      "Request should never level-wise be behind current position");
 
         // Seek request partially in stream
@@ -471,7 +471,7 @@ namespace adiar::internal
 
         // Forward information across the level
         if (req.empty_carry() && req.target[0].is_node() && req.target[1].is_node()
-            && req.target[0].label() == req.target[1].label()
+            && req.target[0].level() == req.target[1].level()
             && (v0.uid() != req.target[0] || v1.uid() != req.target[1])) {
           const typename Policy::children_type children =
             (req.target[0] == v0.uid() ? v0 : v1).children();
@@ -503,7 +503,7 @@ namespace adiar::internal
           const prod2b_rec_output r = std::get<prod2b_rec_output>(rec_res);
 
           adiar_assert(out_id < Policy::max_id, "Has run out of ids");
-          const node::uid_type out_uid(out_label, out_id++);
+          const node::uid_type out_uid(out_level, out_id++);
 
           __prod2b_recurse_out(prod_pq_1, aw, policy, out_uid.as_ptr(false), r.low);
           __prod2b_recurse_out(prod_pq_1, aw, policy, out_uid.as_ptr(true), r.high);
@@ -530,7 +530,7 @@ namespace adiar::internal
       }
 
       // Push meta data about this level
-      if (Policy::no_skip || out_id > 0) { aw.push(level_info(out_label, out_id)); }
+      if (Policy::no_skip || out_id > 0) { aw.push(level_info(out_level, out_id)); }
     }
 
     // Ensure the edge case, where the in-going edge from nil to the root pair does not dominate the

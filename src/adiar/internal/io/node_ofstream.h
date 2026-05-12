@@ -140,7 +140,7 @@ namespace adiar::internal
       if (_latest_node != dummy()) {
         // Output level information of the final level
         if (!_latest_node.is_terminal()) {
-          unsafe_push(level_info(_latest_node.label(), _level_size));
+          unsafe_push(level_info(_latest_node.level(), _level_size));
         }
 
         _level_size = 0u; // TODO: remove?
@@ -202,7 +202,7 @@ namespace adiar::internal
 
       adiar_assert(!_latest_node.is_terminal(), "Cannot push after having pushed a terminal");
 
-      const bool new_level = !first_push && _latest_node.label() != n.label();
+      const bool new_level = !first_push && _latest_node.level() != n.level();
 
       // -------------------------------------------------------------------------------------------
       // Terminal edge-case
@@ -232,7 +232,7 @@ namespace adiar::internal
       // Commit prior level when starting to push the next one
       if (new_level) {
         // Update level information with the level just finished
-        unsafe_push(level_info(_latest_node.label(), _level_size));
+        unsafe_push(level_info(_latest_node.level(), _level_size));
         _level_size = 0u;
 
         // Update 1-level cut information
@@ -240,7 +240,7 @@ namespace adiar::internal
           std::max(_max_1level_short_internal, _curr_1level_short_internal);
 
         _curr_1level_short_internal = 0u;
-        _long_internal_ptr          = node::uid_type(_latest_node.label(), node::max_id);
+        _long_internal_ptr          = node::uid_type(_latest_node.level(), node::max_id);
       }
 
       // Update cut of the current level

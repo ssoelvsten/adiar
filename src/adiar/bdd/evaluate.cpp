@@ -30,7 +30,7 @@ namespace adiar
     inline bdd::pointer_type
     visit(const bdd::node_type& n)
     {
-      const bool a = af(n.label());
+      const bool a = af(n.level());
       return a ? n.high() : n.low();
     }
 
@@ -77,7 +77,7 @@ namespace adiar
     inline bdd::pointer_type
     visit(const bdd::node_type& n)
     {
-      const bdd::label_type level = n.label();
+      const bdd::level_type level = n.level();
 
       while (_next_pair.first < level) {
         const optional<pair<bdd::label_type, bool>> p = _generator();
@@ -148,16 +148,17 @@ namespace adiar
     visit(const bdd::node_type& n)
     {
       // Add skipped levels
-      while (this->_next_domain && this->_next_domain.value() <= n.label()) {
+      while (this->_next_domain && this->_next_domain.value() <= n.level()) {
         const bdd::label_type next_domain = this->_next_domain.value();
-        if (next_domain != n.label()) {
+        if (next_domain != n.level()) {
           this->_stack.push({ next_domain, !Visitor::default_direction });
         }
         this->_next_domain = this->_generator();
       }
       // Update with this level
       const bdd::pointer_type next = this->_visitor.visit(n);
-      this->_stack.push({ n.label(), next == n.low() });
+      const bdd::level_type level  = n.level();
+      this->_stack.push({ level, next == n.low() });
       return next;
     }
 
@@ -206,7 +207,8 @@ namespace adiar
     visit(const bdd::node_type& n)
     {
       const bdd::pointer_type next = this->_visitor.visit(n);
-      this->_consumer({ n.label(), next == n.high() });
+      const bdd::level_type level  = n.level();
+      this->_consumer({ level, next == n.high() });
       return next;
     }
 

@@ -4,13 +4,19 @@
 
 struct lpq_test_data
 {
-  ptr_uint64::label_type label;
-  uint64_t nonce;
+  ptr_uint64::level_type _level;
+  uint64_t _nonce;
 
-  ptr_uint64::label_type
+  ptr_uint64::level_type
   level() const
   {
-    return label;
+    return _level;
+  }
+
+  uint64_t
+  nonce() const
+  {
+    return _nonce;
   }
 };
 
@@ -24,7 +30,7 @@ namespace snowhouse
     ToString(const lpq_test_data& d)
     {
       std::stringstream stream;
-      stream << "{ " << d.label << ", " << d.nonce << " }";
+      stream << "{ " << d.level() << ", " << d.nonce() << " }";
       return stream.str();
     }
   };
@@ -48,7 +54,7 @@ namespace adiar::internal
 bool
 operator==(const lpq_test_data& a, const lpq_test_data& b)
 {
-  return a.label == b.label && a.nonce == b.nonce;
+  return a.level() == b.level() && a.nonce() == b.nonce();
 }
 
 struct lpq_test_lt
@@ -56,7 +62,7 @@ struct lpq_test_lt
   bool
   operator()(const lpq_test_data& a, const lpq_test_data& b)
   {
-    return a.label < b.label || (a.label == b.label && a.nonce < b.nonce);
+    return a.level() < b.level() || (a.level() == b.level() && a.nonce() < b.nonce());
   }
 };
 
@@ -65,7 +71,7 @@ struct lpq_test_gt
   bool
   operator()(const lpq_test_data& a, const lpq_test_data& b)
   {
-    return a.label > b.label || (a.label == b.label && a.nonce > b.nonce);
+    return a.level() > b.level() || (a.level() == b.level() && a.nonce() > b.nonce());
   }
 };
 
@@ -85,7 +91,7 @@ go_bandit([]() {
   describe("adiar/internal/levelized_priority_queue.h", []() {
     ////////////////////////////////////////////////////////////////////////////
     // TODO: Most level files should be replaced with a simpler
-    //       shared_file<ptr_uint64::label_type> (and use the << operator).
+    //       shared_file<ptr_uint64::level_type> (and use the << operator).
     //       Yet, we of course need one test or two with a meta file.
     //
     // TODO: Are we not missing some unit tests for the very simple accessors?
@@ -462,7 +468,7 @@ go_bandit([]() {
         });
       });
 
-      describe(".setup_next_level(stop_label)", []() {
+      describe(".setup_next_level(stop_level)", []() {
         it("does nothing when given level prior to next bucket [1]", []() {
           const std::vector<int> ls = {
             1, // skipped
@@ -987,7 +993,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [1]", []() {
+        it("can set up next level with a stop_level [1]", []() {
           lpq_test_file f;
 
           { // Garbage collect the writer early
@@ -1017,7 +1023,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [2]", []() {
+        it("can set up next level with a stop_level [2]", []() {
           lpq_test_file f;
 
           { // Garbage collect the writer early
@@ -2363,7 +2369,7 @@ go_bandit([]() {
         });
       });
 
-      describe(".setup_next_level(stop_label)", []() {
+      describe(".setup_next_level(stop_level)", []() {
         it("forwards to first level", []() {
           const std::vector<int> ls = { 1, // skipped
                                         2,
@@ -2756,7 +2762,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [1]", []() {
+        it("can set up next level with a stop_level [1]", []() {
           lpq_test_file f;
 
           { // Garbage collect the writer early
@@ -2786,7 +2792,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [2]", []() {
+        it("can set up next level with a stop_level [2]", []() {
           lpq_test_file f;
 
           { // Garbage collect the writer early
@@ -3060,7 +3066,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [3]", []() {
+        it("can set up next level with a stop_level [3]", []() {
           const std::vector<int> ls = {
             0, // skipped
             1, 2, 3, 4,
@@ -3100,7 +3106,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [4]", []() {
+        it("can set up next level with a stop_level [4]", []() {
           const std::vector<int> ls = { 0, // skipped
                                         1, 2, 3, 4, 5, 6 };
 
@@ -3133,7 +3139,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [5]", []() {
+        it("can set up next level with a stop_level [5]", []() {
           const std::vector<int> ls = { 0, // skipped
                                         1,
                                         2,
@@ -3166,7 +3172,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [6]", []() {
+        it("can set up next level with a stop_level [6]", []() {
           const std::vector<int> ls = { 0, // skipped
                                         1, 2, 3, 4, 5, 6, 7 };
 
@@ -3206,7 +3212,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [7]", []() {
+        it("can set up next level with a stop_level [7]", []() {
           const std::vector<int> ls = { 0, // skipped
                                         1, 2, 3, 4, 5, 6, 7 };
 
@@ -3244,7 +3250,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [8]", []() {
+        it("can set up next level with a stop_level [8]", []() {
           const std::vector<int> ls = { 0, // skipped
                                         1, 2, 3, 4, 5 };
 
@@ -3279,7 +3285,7 @@ go_bandit([]() {
           AssertThat(pq.can_pull(), Is().False());
         });
 
-        it("can set up next level with a stop_label [9]", []() {
+        it("can set up next level with a stop_level [9]", []() {
           const std::vector<int> ls = { 0, // skipped
                                         1, 2, 3, 4, 5 };
 
@@ -4243,7 +4249,7 @@ go_bandit([]() {
                                  0u,
                                  memory_mode::Internal,
                                  1u,
-                                 std::less<ptr_uint64::label_type>,
+                                 std::less<ptr_uint64::level_type>,
                                  0u>
           pq({ f }, memory_available(), 32, stats_lpq_tests);
 

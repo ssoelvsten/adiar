@@ -125,7 +125,7 @@ namespace adiar::internal
 
         // Forward information across the level
         if (req.empty_carry() && req.target[0].is_node() && req.target[1].is_node()
-            && req.target[0].label() == req.target[1].label()
+            && req.target[0].level() == req.target[1].level()
             && (v0.uid() != req.target[0] || v1.uid() != req.target[1])) {
           const typename Policy::children_type children =
             (req.target[0] == v0.uid() ? v0 : v1).children();

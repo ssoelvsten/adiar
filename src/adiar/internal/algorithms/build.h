@@ -38,20 +38,20 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////
   template <typename DdPolicy>
   inline shared_levelized_file<typename DdPolicy::node_type>
-  build_ithvar(typename DdPolicy::label_type label)
+  build_ithvar(typename DdPolicy::level_type level)
   {
     using node_type    = typename DdPolicy::node_type;
     using pointer_type = typename node_type::pointer_type;
 
-    if (node_type::max_label < label) {
-      throw invalid_argument("Cannot represent that large a label");
+    if (node_type::max_label < level) {
+      throw invalid_argument("Cannot represent that large a level");
     }
 
     shared_levelized_file<node_type> nf;
     {
       node_ofstream nw(nf);
-      nw.unsafe_push(node(label, pointer_type::max_id, pointer_type(false), pointer_type(true)));
-      nw.unsafe_push(level_info(label, 1u));
+      nw.unsafe_push(node(level, pointer_type::max_id, pointer_type(false), pointer_type(true)));
+      nw.unsafe_push(level_info(level, 1u));
       nw.unsafe_set_canonical(true);
     }
 
@@ -65,9 +65,9 @@ namespace adiar::internal
   inline typename Policy::dd_type
   build_chain(const Policy& policy, const Generator& vars)
   {
-    using label_type = typename Policy::label_type;
+    using level_type = typename Policy::level_type;
 
-    optional<pair<label_type, bool>> next = vars();
+    optional<pair<level_type, bool>> next = vars();
 
     if (!next) { return build_terminal<Policy>(Policy::init_terminal); }
 
@@ -84,16 +84,16 @@ namespace adiar::internal
     adiar_assert(root.is_terminal());
 
     do {
-      const label_type next_var     = next.value().first;
-      const label_type next_negated = next.value().second;
+      const level_type next_var     = next.value().first;
+      const level_type next_negated = next.value().second;
 
       // Fail if generator is increasing.
-      if (!root.is_terminal() && root.label() < next_var) {
-        throw invalid_argument("Labels not given in decreasing order");
+      if (!root.is_terminal() && root.level() < next_var) {
+        throw invalid_argument("Levels not given in decreasing order");
       }
 
       // Skip value if generator provides the same (legal) value twice.
-      if (!root.is_terminal() && root.label() == next_var) {
+      if (!root.is_terminal() && root.level() == next_var) {
         next = vars();
         continue;
       }
@@ -104,14 +104,14 @@ namespace adiar::internal
         continue;
       }
 
-      // TODO: throw exception for too large labels
+      // TODO: throw exception for too large levels
 
       // Create node on chain.
       using node_type = typename Policy::node_type;
 
       const node_type n = policy.make_node(next_var, root, next_negated);
 
-      adiar_assert(n.label() == next_var, "Policy ought to make a node for this level node");
+      adiar_assert(n.level() == next_var, "Policy ought to make a node for this level node");
       adiar_assert(n.id() == node_type::max_id, "Policy ought to make a canonical node");
 
       max_internal_cut = std::max<size_t>(max_internal_cut, n.low().is_node() + n.high().is_node());
@@ -140,7 +140,7 @@ namespace adiar::internal
 
       root = n.uid();
 
-      // Get next label
+      // Get next level
       next = vars();
     } while (next);
 
@@ -183,13 +183,13 @@ namespace adiar::internal
     static constexpr bool init_terminal = InitTerminal;
 
     constexpr bool
-    skip(const typename DdPolicy::label_type&) const
+    skip(const typename DdPolicy::level_type&) const
     {
       return false;
     }
 
     inline typename DdPolicy::node_type
-    make_node(const typename DdPolicy::label_type& l,
+    make_node(const typename DdPolicy::level_type& l,
               const typename DdPolicy::pointer_type& r,
               const bool /*negated*/) const
     {
@@ -208,13 +208,13 @@ namespace adiar::internal
     static constexpr bool init_terminal = InitTerminal;
 
     constexpr bool
-    skip(const typename DdPolicy::label_type&) const
+    skip(const typename DdPolicy::level_type&) const
     {
       return false;
     }
 
     inline typename DdPolicy::node_type
-    make_node(const typename DdPolicy::label_type& l,
+    make_node(const typename DdPolicy::level_type& l,
               const typename DdPolicy::pointer_type& r,
               const bool /*negated*/) const
     {
@@ -234,13 +234,13 @@ namespace adiar::internal
     static constexpr bool init_terminal = InitTerminal;
 
     constexpr bool
-    skip(const typename DdPolicy::label_type&) const
+    skip(const typename DdPolicy::level_type&) const
     {
       return false;
     }
 
     inline typename DdPolicy::node_type
-    make_node(const typename DdPolicy::label_type& l,
+    make_node(const typename DdPolicy::level_type& l,
               const typename DdPolicy::pointer_type& r,
               const bool /*negated*/) const
     {
@@ -259,7 +259,7 @@ namespace adiar::internal
     const Generator& _gen;
 
   public:
-    using value_type  = pair<typename DdPolicy::label_type, bool>;
+    using value_type  = pair<typename DdPolicy::level_type, bool>;
     using result_type = optional<value_type>;
 
   private:
@@ -270,7 +270,7 @@ namespace adiar::internal
     }
 
     inline value_type
-    map(const typename DdPolicy::label_type& x) const
+    map(const typename DdPolicy::level_type& x) const
     {
       return make_pair(x, negate);
     }

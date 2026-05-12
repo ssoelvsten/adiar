@@ -15,11 +15,11 @@ go_bandit([]() {
         AssertThat(sizeof(n), Is().EqualTo(3u * 8u));
       });
 
-      describe("node(...), .label(), .id(), .low(), .high()", [&]() {
-        it("creates node [label_type, id_type, ptr_uint64, ptr_uint64] [1]", [&]() {
+      describe("node(...), .level(), .id(), .low(), .high()", [&]() {
+        it("creates node [level_type, id_type, ptr_uint64, ptr_uint64] [1]", [&]() {
           const node n = node(3u, 12u, terminal_F, terminal_T);
           AssertThat(n.uid(), Is().EqualTo(ptr_uint64(3, 12)));
-          AssertThat(n.label(), Is().EqualTo(3u));
+          AssertThat(n.level(), Is().EqualTo(3u));
           AssertThat(n.id(), Is().EqualTo(12u));
 
           AssertThat(n.child(false), Is().EqualTo(n.low()));
@@ -28,10 +28,10 @@ go_bandit([]() {
           AssertThat(n.high(), Is().EqualTo(terminal_T));
         });
 
-        it("creates node [label_type, id_type, ptr_uint64, ptr_uint64] [2]", [&]() {
+        it("creates node [level_type, id_type, ptr_uint64, ptr_uint64] [2]", [&]() {
           const node n = node(3u, 42u, terminal_T, terminal_F);
           AssertThat(n.uid(), Is().EqualTo(ptr_uint64(3, 42)));
-          AssertThat(n.label(), Is().EqualTo(3u));
+          AssertThat(n.level(), Is().EqualTo(3u));
           AssertThat(n.id(), Is().EqualTo(42u));
 
           AssertThat(n.child(false), Is().EqualTo(n.low()));
@@ -40,13 +40,13 @@ go_bandit([]() {
           AssertThat(n.high(), Is().EqualTo(terminal_F));
         });
 
-        it("creates node [label_type, id_type, node&, node&]", [&]() {
+        it("creates node [level_type, id_type, node&, node&]", [&]() {
           const node n_child1 = node(3u, 12u, terminal_F, terminal_T);
           const node n_child2 = node(3u, 42u, terminal_T, terminal_F);
 
           const node n = node(2, 2, n_child1, n_child2);
           AssertThat(n.uid(), Is().EqualTo(ptr_uint64(2, 2)));
-          AssertThat(n.label(), Is().EqualTo(2u));
+          AssertThat(n.level(), Is().EqualTo(2u));
           AssertThat(n.id(), Is().EqualTo(2u));
 
           AssertThat(n.child(false), Is().EqualTo(n.low()));
@@ -55,12 +55,12 @@ go_bandit([]() {
           AssertThat(n.high(), Is().EqualTo(n_child2.uid()));
         });
 
-        it("creates node [label_type, id_type, node&, ptr_uint64]", [&]() {
+        it("creates node [level_type, id_type, node&, ptr_uint64]", [&]() {
           const node n_child = node(2u, 2u, terminal_F, terminal_T);
 
           const node n = node(1u, 7u, terminal_T, n_child);
           AssertThat(n.uid(), Is().EqualTo(ptr_uint64(1, 7)));
-          AssertThat(n.label(), Is().EqualTo(1u));
+          AssertThat(n.level(), Is().EqualTo(1u));
           AssertThat(n.id(), Is().EqualTo(7u));
 
           AssertThat(n.child(false), Is().EqualTo(n.low()));
@@ -69,12 +69,12 @@ go_bandit([]() {
           AssertThat(n.high(), Is().EqualTo(n_child.uid()));
         });
 
-        it("creates node [label_type, id_type, ptr_uint64, node&]", [&]() {
+        it("creates node [level_type, id_type, ptr_uint64, node&]", [&]() {
           const node n_child = node(2u, 2u, terminal_F, terminal_T);
 
           const node n = node(0u, 3u, terminal_T, n_child);
           AssertThat(n.uid(), Is().EqualTo(ptr_uint64(0, 3)));
-          AssertThat(n.label(), Is().EqualTo(0u));
+          AssertThat(n.level(), Is().EqualTo(0u));
           AssertThat(n.id(), Is().EqualTo(3u));
 
           AssertThat(n.child(false), Is().EqualTo(n.low()));
@@ -193,7 +193,7 @@ go_bandit([]() {
       });
 
       describe("comparators [node]", [&]() {
-        it("sorts primarily by label", [&]() {
+        it("sorts primarily by level", [&]() {
           const node node_1 = node(1u, 2u, terminal_F, terminal_T);
           const node node_2 = node(2u, 1u, terminal_T, terminal_F);
 
@@ -302,7 +302,7 @@ go_bandit([]() {
       });
 
       describe("comparators [uid]", [&]() {
-        it("sorts primarily by label [ 1]", [&]() {
+        it("sorts primarily by level [ 1]", [&]() {
           const node n           = node(0u, 1u, terminal_F, terminal_T);
           const node::uid_type u = node::uid_type(1u, 0u);
 
@@ -312,7 +312,7 @@ go_bandit([]() {
           AssertThat(u, Is().GreaterThanOrEqualTo(n));
         });
 
-        it("sorts  primarily by label [!1]", [&]() {
+        it("sorts  primarily by level [!1]", [&]() {
           const node n           = node(0u, 1u, terminal_F, terminal_T);
           const node::uid_type u = node::uid_type(1u, 0u);
 
@@ -322,7 +322,7 @@ go_bandit([]() {
           AssertThat(n, Is().Not().GreaterThanOrEqualTo(u));
         });
 
-        it("sorts primarily by label [ 2]", [&]() {
+        it("sorts primarily by level [ 2]", [&]() {
           const node n           = node(21u, 8u, terminal_F, terminal_T);
           const node::uid_type u = node::uid_type(42u, 2u);
 
@@ -332,7 +332,7 @@ go_bandit([]() {
           AssertThat(u, Is().GreaterThanOrEqualTo(n));
         });
 
-        it("sorts primarily by label [ 3]", [&]() {
+        it("sorts primarily by level [ 3]", [&]() {
           const node n           = node(1u, 1u, terminal_F, terminal_T);
           const node::uid_type u = node::uid_type(0u, 2u);
 
@@ -342,7 +342,7 @@ go_bandit([]() {
           AssertThat(n, Is().GreaterThanOrEqualTo(u));
         });
 
-        it("sorts primarily by label [ 4]", [&]() {
+        it("sorts primarily by level [ 4]", [&]() {
           const node n           = node(42u, 0u, terminal_F, terminal_T);
           const node::uid_type u = node::uid_type(21u, 8u);
 
@@ -352,7 +352,7 @@ go_bandit([]() {
           AssertThat(n, Is().GreaterThanOrEqualTo(u));
         });
 
-        it("sorts primarily by label [!4]", [&]() {
+        it("sorts primarily by level [!4]", [&]() {
           const node n           = node(42u, 0u, terminal_F, terminal_T);
           const node::uid_type u = node::uid_type(21u, 8u);
 

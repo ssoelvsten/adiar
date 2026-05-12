@@ -51,10 +51,10 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Combine two arcs into a single node with a custom label.
+  /// \brief Combine two arcs into a single node with a custom level.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline node
-  node_of(const node::label_type label, const arc& low, const arc& high)
+  node_of(const node::level_type level, const arc& low, const arc& high)
   {
     adiar_assert(essential(low.source()) == essential(high.source()), "Source are the same origin");
 
@@ -72,7 +72,7 @@ namespace adiar::internal
     adiar_assert(essential(low.source()) == low.source()
                  && essential(high.source()) == low.source());
 
-    return node(node::uid_type(unsafe_replace(low.source(), label)), low.target(), high.target());
+    return node(node::uid_type(unsafe_replace(low.source(), level)), low.target(), high.target());
   }
 }
 

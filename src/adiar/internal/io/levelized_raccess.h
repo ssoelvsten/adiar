@@ -29,7 +29,7 @@ namespace adiar::internal
 
     using pointer_type      = typename value_type::pointer_type;
     using uid_type          = typename value_type::uid_type;
-    using signed_label_type = typename value_type::signed_label_type;
+    using signed_level_type = typename value_type::signed_level_type;
     using idx_type          = typename value_type::id_type;
 
   public:
@@ -64,7 +64,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Buffer with all elements of the current level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    signed_label_type _curr_level = 0;
+    signed_level_type _curr_level = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Width of the current level.
@@ -89,7 +89,7 @@ namespace adiar::internal
     template <typename T>
     levelized_raccess(levelized_file<T>& f,
                       const bool negate                          = false,
-                      const typename T::signed_label_type& shift = 0)
+                      const typename T::signed_level_type& shift = 0)
       : _ifstream(f, negate, shift)
       , _max_width(f.width)
       , _level_buffer(f.width)
@@ -104,7 +104,7 @@ namespace adiar::internal
     template <typename T>
     levelized_raccess(const levelized_file<T>& f,
                       const bool negate                         = false,
-                      const typename T::signed_label_type shift = 0)
+                      const typename T::signed_level_type shift = 0)
       : _ifstream(f, negate, shift)
       , _max_width(f.width)
       , _level_buffer(f.width)
@@ -119,7 +119,7 @@ namespace adiar::internal
     template <typename T>
     levelized_raccess(const shared_ptr<levelized_file<T>>& f,
                       const bool negate                         = false,
-                      const typename T::signed_label_type shift = 0)
+                      const typename T::signed_level_type shift = 0)
       : _ifstream(f, negate, shift)
       , _max_width(f->width)
       , _level_buffer(f->width)
@@ -163,10 +163,10 @@ namespace adiar::internal
     ///
     /// \pre `has_next_level() == true`
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    signed_label_type
+    signed_level_type
     next_level()
     {
-      return _ifstream.peek().uid().label();
+      return _ifstream.peek().uid().level();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +178,7 @@ namespace adiar::internal
     /// \pre `has_current_level() == false` or `current_level() < level`
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void
-    setup_next_level(const signed_label_type level)
+    setup_next_level(const signed_level_type level)
     {
       adiar_assert(!has_current_level() || current_level() < level);
 
@@ -192,13 +192,13 @@ namespace adiar::internal
 
       // Skip all levels not of interest
       while (_ifstream.can_pull()
-             && static_cast<signed_label_type>(_ifstream.peek().uid().label()) < level) {
+             && static_cast<signed_level_type>(_ifstream.peek().uid().level()) < level) {
         _ifstream.pull();
       }
 
       // Copy over all elements from the requested level
       while (_ifstream.can_pull()
-             && static_cast<signed_label_type>(_ifstream.peek().uid().label()) == level) {
+             && static_cast<signed_level_type>(_ifstream.peek().uid().level()) == level) {
         _level_buffer[_curr_width++] = _ifstream.pull();
       }
     }
@@ -223,9 +223,9 @@ namespace adiar::internal
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief The label of the current level.
+    /// \brief The current level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    signed_label_type
+    signed_level_type
     current_level() const
     {
       return _curr_level;

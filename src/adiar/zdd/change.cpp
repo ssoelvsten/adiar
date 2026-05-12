@@ -23,7 +23,7 @@ namespace adiar
 
   public:
     static zdd
-    on_empty_labels(const zdd& dd)
+    on_empty_levels(const zdd& dd)
     {
       return dd;
     }

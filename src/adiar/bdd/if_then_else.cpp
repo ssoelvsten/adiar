@@ -116,13 +116,13 @@ namespace adiar
   inline bool
   ite_must_forward(internal::node v,
                    internal::node::pointer_type t,
-                   internal::node::label_type out_label,
+                   internal::node::level_type out_level,
                    internal::node::pointer_type t_seek)
   {
     return
       // is it a node at this level?
       t.is_node()
-      && t.label() == out_label
+      && t.level() == out_level
       // and we should be seeing it later
       && t_seek < t
       // and we haven't by accident just run into it anyway
@@ -132,11 +132,11 @@ namespace adiar
   inline void
   ite_init_request(internal::node_ifstream<>& in_nodes,
                    internal::node& v,
-                   const internal::node::label_type out_label,
+                   const internal::node::level_type out_level,
                    internal::node::pointer_type& low,
                    internal::node::pointer_type& high)
   {
-    if (v.label() == out_label) {
+    if (v.level() == out_level) {
       low  = v.low();
       high = v.high();
 
@@ -220,18 +220,18 @@ namespace adiar
 
     // Process root and create initial recursion requests
     {
-      const bdd::label_type out_label = first(v_if.uid(), v_then.uid(), v_else.uid()).label();
+      const bdd::level_type out_level = first(v_if.uid(), v_then.uid(), v_else.uid()).level();
 
       bdd::pointer_type low_if, low_then, low_else, high_if, high_then, high_else;
-      ite_init_request(in_nodes_if, v_if, out_label, low_if, high_if);
-      ite_init_request(in_nodes_then, v_then, out_label, low_then, high_then);
-      ite_init_request(in_nodes_else, v_else, out_label, low_else, high_else);
+      ite_init_request(in_nodes_if, v_if, out_level, low_if, high_if);
+      ite_init_request(in_nodes_then, v_then, out_level, low_then, high_then);
+      ite_init_request(in_nodes_else, v_else, out_level, low_else, high_else);
 
-      const bdd::node_type::uid_type out_uid(out_label, 0);
+      const bdd::node_type::uid_type out_uid(out_level, 0);
       __ite_resolve_request(pq_1, aw, out_uid.as_ptr(false), low_if, low_then, low_else);
       __ite_resolve_request(pq_1, aw, out_uid.as_ptr(true), high_if, high_then, high_else);
 
-      aw.push(internal::level_info(out_label, 1));
+      aw.push(internal::level_info(out_level, 1));
     }
 
     // Process all nodes in topological order of both BDDs
@@ -239,7 +239,7 @@ namespace adiar
       // Set up next level
       pq_1.setup_next_level();
 
-      const bdd::label_type out_label = pq_1.current_level();
+      const bdd::level_type out_level = pq_1.current_level();
       bdd::id_type out_id             = 0;
 
       // Update max 1-level cut
@@ -290,9 +290,9 @@ namespace adiar
         while (v_else.uid() < t_seek && in_nodes_else.can_pull()) { v_else = in_nodes_else.pull(); }
 
         // Forward information across the level
-        if (ite_must_forward(v_if, req.target[0], out_label, t_seek)
-            || ite_must_forward(v_then, req.target[1], out_label, t_seek)
-            || ite_must_forward(v_else, req.target[2], out_label, t_seek)) {
+        if (ite_must_forward(v_if, req.target[0], out_level, t_seek)
+            || ite_must_forward(v_then, req.target[1], out_level, t_seek)
+            || ite_must_forward(v_else, req.target[2], out_level, t_seek)) {
           // An element should be forwarded, if it was not already forwarded (t_seek <= t_x), if it
           // isn't the last one to seek (t_x < t_third), and if we actually are holding it.
           const bool forward_if =
@@ -358,7 +358,7 @@ namespace adiar
         // Recreate nodes from priority queue carries
         bdd::pointer_type low_if, low_then, low_else, high_if, high_then, high_else;
 
-        if (req.target[0].is_terminal() || out_label < req.target[0].label()) {
+        if (req.target[0].is_terminal() || out_level < req.target[0].level()) {
           low_if = high_if = req.target[0];
         } else {
           low_if  = req.target[0] == v_if.uid() ? v_if.low() : req.node_carry[0][false];
@@ -366,7 +366,7 @@ namespace adiar
         }
 
         if (req.target[1].is_nil() || req.target[1].is_terminal()
-            || out_label < req.target[1].label()) {
+            || out_level < req.target[1].level()) {
           low_then = high_then = req.target[1];
         } else if (req.target[1] == v_then.uid()) {
           low_then  = v_then.low();
@@ -380,7 +380,7 @@ namespace adiar
         }
 
         if (req.target[2].is_nil() || req.target[2].is_terminal()
-            || out_label < req.target[2].label()) {
+            || out_level < req.target[2].level()) {
           low_else = high_else = req.target[2];
         } else if (req.target[2] == v_else.uid()) {
           low_else  = v_else.low();
@@ -395,7 +395,7 @@ namespace adiar
 
         // Resolve request
         adiar_assert(out_id < bdd::max_id, "Has run out of ids");
-        const bdd::node_type::uid_type out_uid(out_label, out_id++);
+        const bdd::node_type::uid_type out_uid(out_level, out_id++);
 
         __ite_resolve_request(pq_1, aw, out_uid.as_ptr(false), low_if, low_then, low_else);
         __ite_resolve_request(pq_1, aw, out_uid.as_ptr(true), high_if, high_then, high_else);
@@ -422,7 +422,7 @@ namespace adiar
       }
 
       // Push meta data about this level
-      aw.push(internal::level_info(out_label, out_id));
+      aw.push(internal::level_info(out_level, out_id));
     }
 
     return __bdd(out_arcs, ep);

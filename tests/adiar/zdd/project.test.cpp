@@ -1722,7 +1722,7 @@ go_bandit([]() {
         it("returns { Ø } for {1} with dom = {0} [const &]", [&]() {
           shared_file<zdd::label_type> dom;
           {
-            ofstream<zdd::pointer_type::label_type> lw(dom);
+            ofstream<zdd::label_type> lw(dom);
             lw << 0;
           }
 
@@ -2203,7 +2203,7 @@ go_bandit([]() {
         it("returns { Ø } for {1} with dom = {0} [const &]", [&]() {
           shared_file<zdd::label_type> dom;
           {
-            ofstream<zdd::pointer_type::label_type> lw(dom);
+            ofstream<zdd::label_type> lw(dom);
             lw << 0;
           }
 

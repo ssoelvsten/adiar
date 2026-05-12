@@ -45,8 +45,8 @@ namespace adiar::internal
     template <typename Policy, typename PriorityQueue, typename ArcStream>
     void
     __reduce_level__fast(ArcStream& arcs,
-                         const typename Policy::label_type in_label,
-                         const typename Policy::label_type out_label,
+                         const typename Policy::level_type in_level,
+                         const typename Policy::level_type out_level,
                          PriorityQueue& pq,
                          node_ofstream& out,
                          [[maybe_unused]] statistics::reduce_t& stats = internal::stats_reduce)
@@ -64,7 +64,7 @@ namespace adiar::internal
       typename Policy::id_type out_id = Policy::max_id;
 
       while (pq.can_pull()
-             || (arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == in_label)) {
+             || (arcs.can_pull_terminal() && arcs.peek_terminal().source().level() == in_level)) {
         // TODO (MDD / QMDD):
         //   Use __reduce_get_next node_type::outdegree times to create a node_type::children_type.
         const arc e_high = __reduce_get_next(pq, arcs);
@@ -79,7 +79,7 @@ namespace adiar::internal
         // Output node
         adiar_assert(out_id > 0, "Should still have more ids left");
         const typename Policy::node_type out_node(
-          out_label, out_id--, e_low.target(), e_high.target());
+          out_level, out_id--, e_low.target(), e_high.target());
         out.unsafe_push(out_node);
 
         // Forward resulting node to parents
@@ -105,7 +105,7 @@ namespace adiar::internal
       // very much have been wrong).
       if (out_id != Policy::max_id) {
         const size_t width = Policy::max_id - out_id;
-        out.unsafe_push(level_info(out_label, width));
+        out.unsafe_push(level_info(out_level, width));
 
         if (width > 1u) { out.unsafe_set_sorted(false); }
       }
@@ -118,13 +118,13 @@ namespace adiar::internal
     template <typename Policy, typename PriorityQueue, typename ArcStream>
     void
     __reduce_level__fast(ArcStream& arcs,
-                         const typename Policy::label_type label,
+                         const typename Policy::level_type level,
                          PriorityQueue& pq,
                          node_ofstream& out,
                          statistics::reduce_t& stats = internal::stats_reduce)
     {
       return __reduce_level__fast<Policy, PriorityQueue, ArcStream>(
-        arcs, label, label, pq, out, stats);
+        arcs, level, level, pq, out, stats);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,8 +165,8 @@ namespace adiar::internal
         using sorter_t = sorter<mem_mode, value_type, value_comp_type>;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr typename value_type::label_type no_level =
-          static_cast<typename value_type::label_type>(-1);
+        static constexpr typename value_type::level_type no_level =
+          static_cast<typename value_type::level_type>(-1);
 
         static constexpr size_t data_structures = sorter_t::data_structures;
 
@@ -343,10 +343,10 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Level of the deepest source
         ////////////////////////////////////////////////////////////////////////////////////////////
-        typename value_type::label_type
+        typename value_type::level_type
         deepest_source()
         {
-          return _max_source.is_nil() ? no_level : _max_source.label();
+          return _max_source.is_nil() ? no_level : _max_source.level();
         }
       };
 
@@ -400,7 +400,7 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of a level.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using level_type = typename value_type::pointer_type::label_type;
+        using level_type = typename value_type::pointer_type::level_type;
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief The level of the next inner sweep;
@@ -413,7 +413,7 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Value to reflect 'out of levels'.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr level_type no_label = OuterPriorityQueue::no_label;
+        static constexpr level_type no_level = OuterPriorityQueue::no_level;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -516,7 +516,7 @@ namespace adiar::internal
         void
         push(const reduce_arc& a)
         {
-          if (a.source().is_nil() || (a.source().label() < _next_inner && a.target().is_node())) {
+          if (a.source().is_nil() || (a.source().level() < _next_inner && a.target().is_node())) {
 #ifdef ADIAR_STATS
             nested_sweeping::stats.inner_down.requests.preserving += 1u;
 #endif
@@ -544,7 +544,7 @@ namespace adiar::internal
         void
         push(const typename OuterRoots::value_type& e)
         {
-          adiar_assert(e.data.source.is_nil() || e.data.source.label() < _next_inner);
+          adiar_assert(e.data.source.is_nil() || e.data.source.level() < _next_inner);
 
           // TODO: Ask Policy whether `e` is `modifying`.
           const bool modifying = e.targets() > 1;
@@ -586,7 +586,7 @@ namespace adiar::internal
         ///        given `stop_level`).
         ////////////////////////////////////////////////////////////////////////////////////////////
         void
-        setup_next_level(level_type stop_level = no_label)
+        setup_next_level(level_type stop_level = no_level)
         {
           _outer_pq.setup_next_level(stop_level);
           adiar_assert(_next_inner <= _outer_pq.current_level(),
@@ -611,7 +611,7 @@ namespace adiar::internal
       class inner_iterator
       {
       public:
-        using level_type = typename Policy::pointer_type::label_type;
+        using level_type = typename Policy::pointer_type::level_type;
 
       public:
         ////////////////////////////////////////////////////////////////////////
@@ -689,7 +689,7 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements in the priority queue / sorter.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using level_type = typename value_type::pointer_type::label_type;
+        using level_type = typename value_type::pointer_type::level_type;
 
       private:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -713,7 +713,7 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Value to reflect 'out of levels'.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr level_type no_label = InnerPriorityQueue::no_label;
+        static constexpr level_type no_level = InnerPriorityQueue::no_level;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -735,7 +735,7 @@ namespace adiar::internal
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        /// \brief The label of the current level.
+        /// \brief The current level.
         ////////////////////////////////////////////////////////////////////////////////////////////
         level_type
         current_level() const
@@ -753,7 +753,7 @@ namespace adiar::internal
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        /// \brief The label of the next (possibly empty) level.
+        /// \brief The next (possibly empty) level.
         ////////////////////////////////////////////////////////////////////////////////////////////
         level_type
         next_level() /*const*/
@@ -784,7 +784,7 @@ namespace adiar::internal
         ///        given `stop_level`).
         ////////////////////////////////////////////////////////////////////////////////////////////
         void
-        setup_next_level(level_type stop_level = no_label)
+        setup_next_level(level_type stop_level = no_level)
         {
           if (_outer_roots.can_pull()) {
             stop_level = std::min(stop_level, _outer_roots.top().level());
@@ -1113,7 +1113,7 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Type of the elements in the priority queue / sorter.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        using level_type = typename value_type::pointer_type::label_type;
+        using level_type = typename value_type::pointer_type::level_type;
 
       private:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -1136,7 +1136,7 @@ namespace adiar::internal
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// \brief Value to reflect 'out of levels'.
         ////////////////////////////////////////////////////////////////////////////////////////////
-        static constexpr level_type no_label = InnerPriorityQueue::no_label;
+        static constexpr level_type no_level = InnerPriorityQueue::no_level;
 
       public:
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -1158,7 +1158,7 @@ namespace adiar::internal
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        /// \brief The label of the current level.
+        /// \brief The current level.
         ////////////////////////////////////////////////////////////////////////////////////////////
         level_type
         current_level() const
@@ -1176,7 +1176,7 @@ namespace adiar::internal
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        /// \brief The label of the next (possibly empty) level.
+        /// \brief The next (possibly empty) level.
         ////////////////////////////////////////////////////////////////////////////////////////////
         level_type
         next_level() /*const*/
@@ -1217,7 +1217,7 @@ namespace adiar::internal
         ///        given `stop_level`).
         ////////////////////////////////////////////////////////////////////////////////////////////
         void
-        setup_next_level(level_type stop_level = no_label)
+        setup_next_level(level_type stop_level = no_level)
         {
           _inner_pq.setup_next_level(stop_level);
         }
@@ -1472,7 +1472,7 @@ namespace adiar::internal
                        "If there is a level, then there should also be something for it.");
           const level_info inner_level_info = inner_levels.pull();
 
-          const typename Policy::label_type level = inner_level_info.level();
+          const typename Policy::level_type level = inner_level_info.level();
 
           adiar_assert(!decorated_pq.has_current_level() || level == decorated_pq.current_level(),
                        "level and priority queue should be in sync");
@@ -1632,7 +1632,7 @@ namespace adiar::internal
                  const size_t outer_pq_roots_max,
                  const size_t inner_memory)
   {
-    using level_type            = typename Policy::label_type;
+    using level_type            = typename Policy::level_type;
     using reduced_t             = typename Policy::dd_type;
     using unreduced_t           = typename Policy::__dd_type;
     using request_t             = typename Policy::request_t;
@@ -1837,7 +1837,7 @@ namespace adiar::internal
         //   Support creating nodes on this level.
 
         while ((outer_arcs.can_pull_terminal()
-                && outer_arcs.peek_terminal().source().label() == outer_level.level())
+                && outer_arcs.peek_terminal().source().level() == outer_level.level())
                || outer_pq.can_pull()) {
 
           const arc e_high = __reduce_get_next(outer_pq, outer_arcs);
@@ -2020,35 +2020,35 @@ namespace adiar::internal
       // Set up next level in Outer PQ
       if (!outer_pq.empty() || !outer_roots.empty()) {
         adiar_assert(!outer_arcs.can_pull_terminal()
-                       || outer_arcs.peek_terminal().source().label() < outer_level.level(),
-                     "All terminal arcs for 'label' should be processed");
+                       || outer_arcs.peek_terminal().source().level() < outer_level.level(),
+                     "All terminal arcs for 'level' should be processed");
 
         adiar_assert(!outer_arcs.can_pull_internal()
-                       || outer_arcs.peek_internal().target().label() < outer_level.level(),
-                     "All internal arcs for 'label' should be processed");
+                       || outer_arcs.peek_internal().target().level() < outer_level.level(),
+                     "All internal arcs for 'level' should be processed");
 
         adiar_assert(outer_pq.empty() || !outer_pq.can_pull(),
-                     "All forwarded arcs for 'label' should be processed");
+                     "All forwarded arcs for 'level' should be processed");
 
         const size_t terminal_stop_level = outer_arcs.can_pull_terminal()
-          ? outer_arcs.peek_terminal().source().label()
-          : OuterPriorityQueue::no_label;
+          ? outer_arcs.peek_terminal().source().level()
+          : OuterPriorityQueue::no_level;
 
         const size_t outer_roots_stop_level =
-          !outer_roots.empty() ? outer_roots.deepest_source() : OuterPriorityQueue::no_label;
+          !outer_roots.empty() ? outer_roots.deepest_source() : OuterPriorityQueue::no_level;
 
-        adiar_assert(terminal_stop_level != OuterPriorityQueue::no_label
-                       || outer_roots_stop_level != OuterPriorityQueue::no_label
+        adiar_assert(terminal_stop_level != OuterPriorityQueue::no_level
+                       || outer_roots_stop_level != OuterPriorityQueue::no_level
                        || !outer_pq.empty(),
                      "There must be some (known) level ready to be forwarded to.");
 
-        const size_t stop_level = terminal_stop_level == OuterPriorityQueue::no_label
+        const size_t stop_level = terminal_stop_level == OuterPriorityQueue::no_level
           ? outer_roots_stop_level
-          : outer_roots_stop_level == OuterPriorityQueue::no_label
+          : outer_roots_stop_level == OuterPriorityQueue::no_level
           ? terminal_stop_level
           : std::max(terminal_stop_level, outer_roots_stop_level);
 
-        adiar_assert(stop_level != OuterPriorityQueue::no_label || !outer_pq.empty(),
+        adiar_assert(stop_level != OuterPriorityQueue::no_level || !outer_pq.empty(),
                      "There must be some (known) level ready to be forwarded to.");
 
         outer_pq.setup_next_level(stop_level);

@@ -38,7 +38,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node_raccess(const levelized_file<value_type>& f,
                  const bool negate                         = false,
-                 const node::signed_label_type level_shift = 0)
+                 const node::signed_level_type level_shift = 0)
       : parent_type(f, negate, level_shift)
     {
       adiar_assert(f.indexable);
@@ -51,7 +51,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     node_raccess(const shared_ptr<levelized_file<value_type>>& f,
                  const bool negate                         = false,
-                 const node::signed_label_type level_shift = 0)
+                 const node::signed_level_type level_shift = 0)
       : parent_type(f, negate, level_shift)
     {
       adiar_assert(f->indexable);
@@ -86,7 +86,7 @@ namespace adiar::internal
     at(pointer_type p) const
     {
       adiar_assert(!p.is_nil());
-      adiar_assert(static_cast<signed_label_type>(p.label()) == this->current_level());
+      adiar_assert(static_cast<signed_level_type>(p.level()) == this->current_level());
 
       const idx_type idx = this->current_width() - ((pointer_type::max_id + 1u) - p.id());
       return parent_type::at(idx);
