@@ -32,34 +32,6 @@ namespace adiar::internal
   using replace_func = function<typename T::label_type(typename T::label_type)>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replaces the level of a single pointer with the one provided by the map `m`.
-  ///
-  /// \details All other information, e.g. level-identifier, terminal value, and taint flag, are
-  ///          preserved as-is.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  inline ptr_uint64
-  __replace(const ptr_uint64& p, const replace_func<ptr_uint64>& m)
-  {
-    return p.is_node() ? replace(p, m(p.level())) : p;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  inline uid_uint64
-  __replace(const uid_uint64& u, const replace_func<ptr_uint64>& m)
-  {
-    return uid_uint64::unsafe(__replace(u.as_ptr(), m));
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Replaces the level of a single node and its children pointers.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  inline node
-  __replace(const node& n, const replace_func<node>& m)
-  {
-    return { __replace(n.uid(), m), __replace(n.low(), m), __replace(n.high(), m) };
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Infer the replace type.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy, typename LevelInfoStream, typename ReplaceFunction>
@@ -190,7 +162,7 @@ namespace adiar::internal
 
     { // Copy over nodes (in "reverse" to still follow the same order on disk)
       node_ifstream<true> in_nodes(dd);
-      while (in_nodes.can_pull()) { out.unsafe_push(__replace(in_nodes.pull(), m)); }
+      while (in_nodes.can_pull()) { out.unsafe_push(replace(in_nodes.pull(), m)); }
     }
     { // Copy over levels (also in "reverse")
       level_info_ifstream<true> in_levels(dd);

@@ -460,6 +460,40 @@ go_bandit([]() {
       });
     });
 
+    describe("replace(const node&, function<int(int)>)", [&]() {
+      const function<int(int)> m = [](int x) { return 2*x; };
+
+      it("doubles levels of node and its children", [&]() {
+        const node in  = node(0, 1, node::pointer_type(1, 2), node::pointer_type(2, 3));
+        const node out = replace(in, m);
+
+        AssertThat(out.uid(), Is().EqualTo(node::uid_type(0, 1)));
+        AssertThat(out.low(), Is().EqualTo(node::pointer_type(2, 2)));
+        AssertThat(out.high(), Is().EqualTo(node::pointer_type(4, 3)));
+      });
+
+      it("leaves terminal children as-is", [&]() {
+        const node in  = node(2, 4, terminal_F, terminal_T);
+        const node out = replace(in, m);
+
+        AssertThat(out.uid(), Is().EqualTo(node::uid_type(4, 4)));
+        AssertThat(out.low(), Is().EqualTo(node::pointer_type(false)));
+        AssertThat(out.high(), Is().EqualTo(node::pointer_type(true)));
+      });
+
+      it("leaves 'F' terminal node as-is", [&]() {
+        const node in  = node(false);
+        const node out = replace(in, m);
+        AssertThat(in, Is().EqualTo(out));
+      });
+
+      it("leaves 'T' terminal node as-is", [&]() {
+        const node in  = node(true);
+        const node out = replace(in, m);
+        AssertThat(in, Is().EqualTo(out));
+      });
+    });
+
     describe("shift_replace(const node&, ...)", [&]() {
       it("leaves node as-is [levels = 0]", [&]() {
         const node in  = node(0, 42, terminal_F, terminal_T);
