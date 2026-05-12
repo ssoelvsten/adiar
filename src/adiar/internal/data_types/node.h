@@ -4,6 +4,7 @@
 #include <ostream>
 #include <string>
 
+#include <adiar/functional.h>
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/ptr.h>
 #include <adiar/internal/data_types/tuple.h>
@@ -545,6 +546,15 @@ namespace adiar::internal
   }
 
   /* =========================================== LEVELS ========================================= */
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the levels of the node and its children as provided by the given map function.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline node
+  replace(const node& n, const function<node::level_type(node::level_type)>& m)
+  {
+    return { replace(n.uid(), m), replace(n.low(), m), replace(n.high(), m) };
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Shift the level of the node and its children by `levels` amount.

@@ -846,7 +846,7 @@ go_bandit([]() {
           });
         });
 
-        describe("replace(...)", [&]() {
+        describe("replace(ptr_uint64, int)", [&]() {
           it("halves x42 -> x21", [&]() {
             const ptr_uint64 in(42, 0);
             const ptr_uint64 out = replace(in, 21);
@@ -868,6 +868,34 @@ go_bandit([]() {
           it("preserves 'nil' as-is", [&]() {
             const ptr_uint64 in = ptr_uint64::nil();
             const ptr_uint64 out = replace(in, 8);
+            AssertThat(out, Is().EqualTo(ptr_uint64::nil()));
+          });
+        });
+
+        describe("replace(ptr_uint64, function<int(int)>)", [&]() {
+          const function<int(int)> m = [](int x) { return x / 2; };
+
+          it("halves x42 -> x21", [&]() {
+            const ptr_uint64 in(42, 0);
+            const ptr_uint64 out = replace(in, m);
+            AssertThat(out, Is().EqualTo(ptr_uint64(21, 0)));
+          });
+
+          it("preserves 'F' terminal as-is", [&]() {
+            const ptr_uint64 in(false);
+            const ptr_uint64 out = replace(in, m);
+            AssertThat(out, Is().EqualTo(ptr_uint64(false)));
+          });
+
+          it("preserves 'T' terminal as-is", [&]() {
+            const ptr_uint64 in(true);
+            const ptr_uint64 out = replace(in, m);
+            AssertThat(out, Is().EqualTo(ptr_uint64(true)));
+          });
+
+          it("preserves 'nil' as-is", [&]() {
+            const ptr_uint64 in = ptr_uint64::nil();
+            const ptr_uint64 out = replace(in, m);
             AssertThat(out, Is().EqualTo(ptr_uint64::nil()));
           });
         });

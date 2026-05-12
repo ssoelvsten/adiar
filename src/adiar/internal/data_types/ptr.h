@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string>
 
+#include <adiar/functional.h>
 #include <adiar/internal/assert.h>
 
 namespace adiar::internal
@@ -886,6 +887,16 @@ namespace adiar::internal
   replace(const ptr_uint64& p, const ptr_uint64::level_type new_level)
   {
     return p.is_node() ? unsafe_replace(p, new_level) : p;
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the level with the one provided by the map function.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline ptr_uint64
+  replace(const ptr_uint64& p, const function<ptr_uint64::level_type(ptr_uint64::level_type)> m)
+  {
+    return p.is_node() ? unsafe_replace(p, m(p.level())) : p;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

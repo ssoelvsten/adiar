@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 
+#include <adiar/functional.h>
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/ptr.h>
 
@@ -226,6 +227,16 @@ namespace adiar::internal
   replace(const Uid& u, const typename Uid::level_type new_level)
   {
     return Uid::unsafe(replace(static_cast<typename Uid::pointer_type>(u), new_level));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the level with the one provided by the map function.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Uid>
+  inline Uid
+  replace(const Uid& u, const function<typename Uid::level_type(typename Uid::level_type)> m)
+  {
+    return Uid::unsafe(replace(static_cast<typename Uid::pointer_type>(u), m));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
