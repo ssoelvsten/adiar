@@ -1,12 +1,14 @@
 var classadiar_1_1____zdd =
 [
     [ "arc_type", "classadiar_1_1____zdd.html#a527247761bb12a0b07a17a65062c356a", null ],
-    [ "label_type", "classadiar_1_1____zdd.html#ae0cf2e3c87dd7d2ea7c63b5e6b316c6e", null ],
+    [ "label_type", "classadiar_1_1____zdd.html#a8471cdfc5096f343532f095e56ac15cd", null ],
+    [ "level_type", "classadiar_1_1____zdd.html#abbde026a365239ac58db30568b5afb13", null ],
     [ "node_type", "classadiar_1_1____zdd.html#aa1eafa94e60449e285536ba37968bd83", null ],
     [ "pointer_type", "classadiar_1_1____zdd.html#ab221d0872bfb0409a7c58262fa7ea761", null ],
     [ "shared_arc_file_type", "classadiar_1_1____zdd.html#a073bd9314a5213108cdb99e4175dc5ae", null ],
     [ "shared_node_file_type", "classadiar_1_1____zdd.html#a0e3ab4aa5b10f26683c9d7b7bfb577b1", null ],
-    [ "signed_label_type", "classadiar_1_1____zdd.html#a17d8487d9260569855a29780e975b8d3", null ],
+    [ "signed_label_type", "classadiar_1_1____zdd.html#a1450d963197ef4acb01aaa2a4f588096", null ],
+    [ "signed_level_type", "classadiar_1_1____zdd.html#a69fcb782fddafd22d28cf65bd72cc8c1", null ],
     [ "uid_type", "classadiar_1_1____zdd.html#a7ee63f3c5e69ef1374c85ec112398e08", null ],
     [ "__zdd", "classadiar_1_1____zdd.html#a021e7080658ecb52a8120ed559f31e9f", null ],
     [ "__zdd", "classadiar_1_1____zdd.html#a96bab59f59ddbb66b38bbeb1688d58cf", null ],

@@ -24,5 +24,5 @@ var searchData=
   ['exit_5fon_5fterminalcount_21',['exit_on_terminalcount',['../structadiar_1_1statistics_1_1equality__t.html#acfad6b0365652afc6c232497f94e28c9',1,'adiar::statistics::equality_t']]],
   ['exit_5fon_5fvarcount_22',['exit_on_varcount',['../structadiar_1_1statistics_1_1equality__t.html#a2fb0af2f48be760a798196ded72171fc',1,'adiar::statistics::equality_t']]],
   ['exit_5fon_5fwidth_23',['exit_on_width',['../structadiar_1_1statistics_1_1equality__t.html#a603f0b976f8b963c9558dccfda7e5663',1,'adiar::statistics::equality_t']]],
-  ['external_24',['external',['../classadiar_1_1exec__policy.html#a24984bb43a1a8929b858011949155b18ab206a1b4ea1097761f78e8876f6da779',1,'adiar::exec_policy::External'],['../structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a6f5781021c252979f0e3e628638d3b16',1,'adiar::statistics::__alg_base::__lpq_t::external']]]
+  ['external_24',['external',['../structadiar_1_1statistics_1_1____alg__base_1_1____lpq__t.html#a6f5781021c252979f0e3e628638d3b16',1,'adiar::statistics::__alg_base::__lpq_t::external'],['../classadiar_1_1exec__policy.html#a24984bb43a1a8929b858011949155b18ab206a1b4ea1097761f78e8876f6da779',1,'adiar::exec_policy::External']]]
 ];

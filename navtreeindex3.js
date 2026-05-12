@@ -1,5 +1,17 @@
 var NAVTREEINDEX3 =
 {
+"structadiar_1_1statistics_1_1equality__t_1_1slow__t.html#ae69010f63979fd0b372a009ef51290d6":[4,6,0,5,1,0],
+"structadiar_1_1statistics_1_1equality__t_1_1slow__t.html#ae905650314d06a09934bdcb6a41b95e1":[4,6,0,5,1,1],
+"structadiar_1_1statistics_1_1intercut__t.html":[4,6,0,6],
+"structadiar_1_1statistics_1_1intercut__t.html#ab769667ff5ecea10ecd9e2589b7e72bf":[4,6,0,6,0],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html":[4,6,0,7],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a18db66cef68fc1e68532347a86bd3d2b":[4,6,0,7,3],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a6cbf004655dd759cc729fad62a47321d":[4,6,0,7,4],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a704d98578648ed0b0daf834b92b21fe7":[4,6,0,7,0],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html#a844804602d4c05ae87cef7f40c10371d":[4,6,0,7,1],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html#acbc2d26c2cafb41e66a1965679dfbc78":[4,6,0,7,5],
+"structadiar_1_1statistics_1_1levelized__priority__queue__t.html#ae485ef1f9462d3c8106dc37a519ca896":[4,6,0,7,2],
+"structadiar_1_1statistics_1_1nested__sweeping__t.html":[4,6,0,8],
 "structadiar_1_1statistics_1_1nested__sweeping__t.html#ab5f4b829b0a3293ebacd923b3c4b9f51":[4,6,0,8,3],
 "structadiar_1_1statistics_1_1nested__sweeping__t.html#ab65a101f1a7e13f44cf62108759fc600":[4,6,0,8,7],
 "structadiar_1_1statistics_1_1nested__sweeping__t.html#ae5c07ce09ef0fbdc29bac7d3c78f64c8":[4,6,0,8,4],

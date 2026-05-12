@@ -128,11 +128,11 @@ Variable Ordering</h2>
 N\) chess board as the truth value of the BDD variable \(x_{i,j} :=
 x_{N\cdot i+j}\).</p>
 <p>In C++, we can derive the label of each chess board position as follows.</p>
-<div class="fragment"><div class="line"><span class="keyword">inline</span> <span class="keyword">typename</span> <a class="code hl_typedef" href="classadiar_1_1internal_1_1dd.html#a89544dd479c73f3704c989d54e72b10b">adiar::bdd::label_type</a> label_of_position(uint64_t i, uint64_t j)</div>
+<div class="fragment"><div class="line"><span class="keyword">inline</span> <span class="keyword">typename</span> <a class="code hl_typedef" href="classadiar_1_1internal_1_1dd.html#a1e2a84dc135fd97e3e5b9ae6512f1954">adiar::bdd::label_type</a> label_of_position(uint64_t i, uint64_t j)</div>
 <div class="line">{</div>
 <div class="line">  <span class="keywordflow">return</span> (N * i) + j;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassadiar_1_1internal_1_1dd_html_a89544dd479c73f3704c989d54e72b10b"><div class="ttname"><a href="classadiar_1_1internal_1_1dd.html#a89544dd479c73f3704c989d54e72b10b">adiar::internal::dd::label_type</a></div><div class="ttdeci">node_type::label_type label_type</div><div class="ttdoc">Type of this node's variable label.</div><div class="ttdef"><b>Definition</b> dd.h:292</div></div>
+<div class="ttc" id="aclassadiar_1_1internal_1_1dd_html_a1e2a84dc135fd97e3e5b9ae6512f1954"><div class="ttname"><a href="classadiar_1_1internal_1_1dd.html#a1e2a84dc135fd97e3e5b9ae6512f1954">adiar::internal::dd::label_type</a></div><div class="ttdeci">level_type label_type</div><div class="ttdoc">Type of variable labels.</div><div class="ttdef"><b>Definition</b> dd.h:312</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="autotoc_md32"></a>
 Constructing the Board</h2>
 <p>We construct the set of solutions for the Queens problem as described by Kunkle, Slavici, and Cooperman.</p>
@@ -173,7 +173,7 @@ S(i,j) : Single Position</h3>
 <div class="line">      <span class="comment">// On row of the queen in question</span></div>
 <div class="line">      <span class="keywordtype">int</span> column = N - 1;</div>
 <div class="line">      <span class="keywordflow">do</span> {</div>
-<div class="line">        <span class="keyword">typename</span> <a class="code hl_typedef" href="classadiar_1_1internal_1_1dd.html#a89544dd479c73f3704c989d54e72b10b">adiar::bdd::label_type</a> label = label_of_position(row, column);</div>
+<div class="line">        <span class="keyword">typename</span> <a class="code hl_typedef" href="classadiar_1_1internal_1_1dd.html#a1e2a84dc135fd97e3e5b9ae6512f1954">adiar::bdd::label_type</a> label = label_of_position(row, column);</div>
 <div class="line"> </div>
 <div class="line">        <span class="comment">// If (row, column) == (i,j), then the chain goes through high because</span></div>
 <div class="line">        <span class="comment">// then we need to check the queen actually is placed here.</span></div>

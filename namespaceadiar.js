@@ -13,7 +13,7 @@ var namespaceadiar =
     [ "consumer", "group__module____functional.html#ga3d65dbfd2713f575acf291dfbabd8e7b", null ],
     [ "cost", "group__module____functional.html#ga3adf1876f8333cf8cbe78255823b0f8e", null ],
     [ "domain_error", "namespaceadiar.html#a6a0fcc1b673b3baa0c71c5b180e835a8", null ],
-    [ "domain_var", "group__module____domain.html#gabffcbfe753972ad7bb25244829364343", null ],
+    [ "domain_var", "group__module____domain.html#gadf70d71296c3e834851b1252e8abe76d", null ],
     [ "function", "group__module____functional.html#ga7cedafe2a659228db84b6dc3c35fb0ca", null ],
     [ "generator", "group__module____functional.html#ga13ea491f2be12fdc18cf118b931a423a", null ],
     [ "invalid_argument", "namespaceadiar.html#aaf65708269c4aee050aa6adb7db50286", null ],
