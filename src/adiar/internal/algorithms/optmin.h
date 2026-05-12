@@ -100,8 +100,8 @@ namespace adiar::internal
       while (!optmin_pq.empty()) {
         optmin_pq.setup_next_level();
 
-        typename Policy::label_type label = optmin_pq.current_level();
-        double c                          = policy.cost_fn(label);
+        typename Policy::level_type level = optmin_pq.current_level();
+        double c                          = policy.cost_fn(level);
 
         while (!optmin_pq.empty_level()) {
           // Merge requests for the next target, finding the request with the
@@ -178,12 +178,12 @@ namespace adiar::internal
     {
       arc_ifstream ns(best_parent_graph);
       arc next = { min_so_far_end, node::pointer_type(true) };
-      policy.out(min_so_far_end.label(), min_so_far_end.out_idx());
+      policy.out(min_so_far_end.level(), min_so_far_end.out_idx());
       while (ns.can_pull_internal()) {
         arc n = ns.pull_internal();
         if (n.target() == essential(next.source())) {
           next = n;
-          policy.out(next.source().label(), next.source().out_idx());
+          policy.out(next.source().level(), next.source().out_idx());
         }
       }
     }

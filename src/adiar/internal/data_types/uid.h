@@ -123,11 +123,11 @@ namespace adiar::internal
     /* ========================================== NODES ========================================= */
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Constructor for a pointer to an internal node (label, id).
+    /// \brief Constructor for a pointer to an internal node (level, id).
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    explicit __uid(const typename pointer_type::label_type label,
+    explicit __uid(const typename pointer_type::level_type level,
                    const typename pointer_type::id_type id)
-      : pointer_type(label, id)
+      : pointer_type(level, id)
     {}
 
     // Remove anything related to out-index
@@ -189,7 +189,7 @@ namespace adiar::internal
     as_ptr(const typename pointer_type::out_idx_type out_idx) const
     {
       adiar_assert(this->is_node());
-      return pointer_type(this->label(), this->id(), out_idx);
+      return pointer_type(this->level(), this->id(), out_idx);
     }
   };
 

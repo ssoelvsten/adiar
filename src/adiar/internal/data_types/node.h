@@ -61,12 +61,7 @@ namespace adiar::internal
     using level_type = pointer_type::level_type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Type of this node's variable label.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    using label_type = pointer_type::label_type;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief The maximal possible value for a unique identifier's label.
+    /// \brief The maximal possible value for a unique identifier's level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     static constexpr level_type max_label = pointer_type::max_label;
 
@@ -74,11 +69,6 @@ namespace adiar::internal
     /// \brief Type for a difference of levels.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     using signed_level_type = pointer_type::signed_level_type;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Type for a difference of levels.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    using signed_label_type = pointer_type::signed_label_type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type of this node's level identifier.
@@ -235,57 +225,53 @@ namespace adiar::internal
     {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Construct *internal* node `((label, id), low, high)`.
+    /// \brief Construct *internal* node `((level, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const level_type label, const id_type id, const pointer_type& l, const pointer_type& h)
-      : _uid(label, id)
+    node(const level_type level, const id_type id, const pointer_type& l, const pointer_type& h)
+      : _uid(level, id)
       , _children{ l, h }
     {
       adiar_assert(!l.is_nil(), "Cannot create a node with nil child");
-      adiar_assert(l.is_terminal() || label < l.label(), "Node is not prior to given low child");
+      adiar_assert(l.is_terminal() || level < l.level(), "Node is not prior to given low child");
 
       adiar_assert(!h.is_nil(), "Cannot create a node with nil child");
-      adiar_assert(h.is_terminal() || label < h.label(), "Node is not prior to given high child");
+      adiar_assert(h.is_terminal() || level < h.level(), "Node is not prior to given high child");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Construct *internal* node `((label, id), low, high)`.
+    /// \brief Construct *internal* node `((level, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const level_type label, const id_type id, const node& l, const pointer_type& h)
-      : node(label, id, l.uid(), h)
+    node(const level_type level, const id_type id, const node& l, const pointer_type& h)
+      : node(level, id, l.uid(), h)
     {
       adiar_assert(outdegree == 2, "Constructor is for binary node only.");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Construct *internal* node `((label, id), low, high)`.
+    /// \brief Construct *internal* node `((level, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const level_type label, const id_type id, const pointer_type& l, const node& h)
-      : node(label, id, l, h.uid())
+    node(const level_type level, const id_type id, const pointer_type& l, const node& h)
+      : node(level, id, l, h.uid())
     {
       adiar_assert(outdegree == 2, "Constructor is for binary node only.");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Construct *internal* node `((label, id), low, high)`.
+    /// \brief Construct *internal* node `((level, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const level_type label, const id_type id, const node& l, const node& h)
-      : node(label, id, l.uid(), h.uid())
+    node(const level_type level, const id_type id, const node& l, const node& h)
+      : node(level, id, l.uid(), h.uid())
     {
       adiar_assert(outdegree == 2, "Constructor is for binary node only.");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Obtain the label of a node.
-    ///
-    /// \pre `is_terminal()` evaluates to `false`.
+    /// \brief Obtain the level of a node.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // TODO: Rename to `level()` when introducing variable ordering
     inline level_type
-    label() const
+    level() const
     {
-      adiar_assert(!is_terminal());
-      return uid().label();
+      return uid().level();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +309,7 @@ namespace adiar::internal
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The 'low' child (also known as the 'else' child), i.e. reflecting assigning `false`
-    ///        to variable with the 'label'.
+    ///        to variable with the 'level'.
     ///
     /// \details This is similar to writing `.child(false)`.
     ///
@@ -339,7 +325,7 @@ namespace adiar::internal
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The 'high' child (also known as the 'then' child), i.e. reflecting assigning `true`
-    ///        to variable with the 'label'.
+    ///        to variable with the 'level'.
     ///
     /// \details This is similar to writing `.child(true)`.
     ///

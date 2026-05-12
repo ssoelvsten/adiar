@@ -162,7 +162,7 @@ namespace adiar
     static bool
     resolve_singletons(const zdd::node_type& v1, const zdd::node_type& v2)
     {
-      return v1.label() == v2.label() && v1.low() <= v2.low() && v1.high() <= v2.high();
+      return v1.level() == v2.level() && v1.low() <= v2.low() && v1.high() <= v2.high();
     }
 
   public:
@@ -246,7 +246,7 @@ namespace adiar
     static bool
     resolve_singletons(const zdd::node_type& v1, const zdd::node_type& v2)
     {
-      return v1.label() != v2.label() || v1.low() != v2.low() || v1.high() != v2.high();
+      return v1.level() != v2.level() || v1.low() != v2.low() || v1.high() != v2.high();
     }
 
   public:

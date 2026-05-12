@@ -44,7 +44,7 @@ namespace adiar
       adiar_assert(!n.high().is_terminal() || n.high().value(), "high terminals are never false");
 
       const zdd::pointer_type next = _visitor.visit(n);
-      if (__zdd_Xelem__output<Visitor>(n, next)) { _consumer(n.label()); }
+      if (__zdd_Xelem__output<Visitor>(n, next)) { _consumer(n.level()); }
       return next;
     }
 
@@ -98,7 +98,7 @@ namespace adiar
       adiar_assert(!n.high().is_terminal() || n.high().value(), "high terminals are never false");
 
       const zdd::pointer_type next = _visitor.visit(n);
-      if (__zdd_Xelem__output<Visitor>(n, next)) { _stack.push(n.label()); }
+      if (__zdd_Xelem__output<Visitor>(n, next)) { _stack.push(n.level()); }
       return next;
     }
 

@@ -82,8 +82,8 @@ public:
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  constexpr inline bdd::label_type
-  map_level(bdd::label_type x) const
+  constexpr inline bdd::level_type
+  map_level(bdd::level_type x) const
   {
     return x;
   }
@@ -109,12 +109,12 @@ public:
     while (!inner_pq.empty()) {
       inner_pq.setup_next_level();
 
-      const node::label_type level_label = inner_pq.current_level();
-      node::id_type level_size           = 0u;
+      const node::level_type level = inner_pq.current_level();
+      node::id_type level_size     = 0u;
 
       while (!inner_pq.empty_level()) {
         // Give node a new name
-        const node::uid_type u(level_label, level_size++);
+        const node::uid_type u(level, level_size++);
 
         // Get target of next request
         adiar_assert(!inner_pq.top().target.first().is_flagged(),
@@ -136,7 +136,7 @@ public:
         }
       }
 
-      aw.push(level_info(level_label, level_size));
+      aw.push(level_info(level, level_size));
       af->max_1level_cut = std::max(af->max_1level_cut, inner_pq.size());
     }
 
@@ -177,7 +177,7 @@ public:
   /// \brief Whether it wants to sweep on some level.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bool
-  has_sweep(node::pointer_type::label_type l) const
+  has_sweep(node::pointer_type::level_type l) const
   {
     return (l % _nesting_modulo) == 0u;
   }
@@ -276,8 +276,8 @@ public:
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  constexpr inline node::label_type
-  map_level(node::label_type x) const
+  constexpr inline node::level_type
+  map_level(node::level_type x) const
   {
     return x;
   }
@@ -303,25 +303,25 @@ public:
     while (!inner_pq.empty()) {
       inner_pq.setup_next_level();
 
-      const node::label_type level_label = inner_pq.current_level();
-      node::id_type level_size           = 0u;
+      const node::level_type level = inner_pq.current_level();
+      node::id_type level_size     = 0u;
 
       while (!inner_pq.empty_level()) {
         // Get target of next request
         const node::pointer_type next = inner_pq.top().target.first();
         node::uid_type t;
 
-        if (next.label() % _nesting_modulo == 1) {
+        if (next.level() % _nesting_modulo == 1) {
           // Collapse immediately to a terminal
-          t = node::uid_type(level_label % (_nesting_modulo + 1) > 0);
+          t = node::uid_type(level % (_nesting_modulo + 1) > 0);
         } else {
           // Create a simple (i, _, _) node with two terminals.
-          t = node::uid_type(level_label, level_size++);
+          t = node::uid_type(level, level_size++);
 
-          const node::pointer_type t0((level_label) % (_nesting_modulo) > 1);
+          const node::pointer_type t0((level) % (_nesting_modulo) > 1);
           aw.push_terminal({ t, false, t0 });
 
-          const node::pointer_type t1((level_label + 1) % (_nesting_modulo) > 1);
+          const node::pointer_type t1((level + 1) % (_nesting_modulo) > 1);
           aw.push_terminal({ t, true, t1 });
         }
 
@@ -335,7 +335,7 @@ public:
           }
         }
       }
-      if (level_size > 0) { aw.push(level_info(level_label, level_size)); }
+      if (level_size > 0) { aw.push(level_info(level, level_size)); }
     }
 
     return __bdd(af, ep);
@@ -359,7 +359,7 @@ public:
   /// \brief Whether it wants to sweep on some level.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   bool
-  has_sweep(node::pointer_type::label_type l) const
+  has_sweep(node::pointer_type::level_type l) const
   {
     return (l % _nesting_modulo) == 0u;
   }
@@ -2128,7 +2128,7 @@ go_bandit([]() {
     });
 
     describe("nested_sweeping::aux algorithms", []() {
-      describe("__reduce_level__fast(..., label, ...)", []() {
+      describe("__reduce_level__fast(..., level, ...)", []() {
         using pq_t = reduce_priority_queue<1, memory_mode::Internal>;
 
         it("does not suppress an entire level of redundant nodes", []() {
@@ -3279,7 +3279,7 @@ go_bandit([]() {
         });
       });
 
-      describe("__reduce_level__fast(..., in_label, out_label, ...)", []() {
+      describe("__reduce_level__fast(..., in_level, out_level, ...)", []() {
         using pq_t = reduce_priority_queue<1, memory_mode::Internal>;
 
         it("does not canonically sort output [bottom level]", []() {
@@ -5646,8 +5646,8 @@ go_bandit([]() {
           {}
 
           ////////////////////////////////////////////////////////////////////////////////////////////////
-          constexpr inline bdd::label_type
-          map_level(bdd::label_type x) const
+          constexpr inline bdd::level_type
+          map_level(bdd::level_type x) const
           {
             return x + this->_shift;
           }

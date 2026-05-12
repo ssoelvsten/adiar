@@ -29,7 +29,7 @@ namespace adiar::internal
   /// \brief A total mapping function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename T>
-  using replace_func = function<typename T::label_type(typename T::label_type)>;
+  using replace_func = function<typename T::level_type(typename T::level_type)>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Inference of the most precise replacement-type.
@@ -41,12 +41,12 @@ namespace adiar::internal
   replace_type
   __replace__infer_type(LevelInfoStream& ls, const ReplaceFunction& m)
   {
-    using label_type        = typename Policy::label_type;
-    using signed_label_type = typename Policy::signed_label_type;
+    using level_type        = typename Policy::level_type;
+    using signed_level_type = typename Policy::signed_level_type;
     using result_type       = typename ReplaceFunction::result_type;
 
-    constexpr bool is_total_map   = is_same<result_type, label_type>;
-    constexpr bool is_partial_map = is_same<result_type, optional<label_type>>;
+    constexpr bool is_total_map   = is_same<result_type, level_type>;
+    constexpr bool is_partial_map = is_same<result_type, optional<level_type>>;
 
     static_assert(is_total_map || is_partial_map);
 
@@ -54,20 +54,20 @@ namespace adiar::internal
     bool shift    = true;
     bool monotone = true;
 
-    label_type prev_before = Policy::max_label + 1;
-    label_type prev_after  = Policy::max_label + 1;
+    level_type prev_before = Policy::max_label + 1;
+    level_type prev_after  = Policy::max_label + 1;
 
-    signed_label_type prev_diff = 0;
+    signed_level_type prev_diff = 0;
 
     while (ls.can_pull()) {
-      const label_type next_before     = ls.pull().level();
+      const level_type next_before     = ls.pull().level();
       const result_type next_after_opt = m(next_before);
 
       if constexpr (is_partial_map) {
         if (!next_after_opt.has_value()) { continue; }
       }
 
-      label_type next_after;
+      level_type next_after;
       if constexpr (is_partial_map) {
         if (!next_after_opt.has_value()) { continue; }
         next_after = *next_after_opt;
@@ -76,8 +76,8 @@ namespace adiar::internal
       }
 
       if (shift) {
-        const signed_label_type next_diff =
-          static_cast<signed_label_type>(next_before) - static_cast<signed_label_type>(next_after);
+        const signed_level_type next_diff =
+          static_cast<signed_level_type>(next_before) - static_cast<signed_level_type>(next_after);
 
         shift &= Policy::max_label < prev_before || prev_diff == next_diff;
         prev_diff = next_diff;
@@ -142,8 +142,8 @@ namespace adiar::internal
   {
     adiar_assert(!dd->is_terminal());
 
-    const typename Policy::signed_label_type topvar         = dd_topvar(dd);
-    const typename Policy::signed_label_type shifted_topvar = m(topvar);
+    const typename Policy::signed_level_type topvar         = dd_topvar(dd);
+    const typename Policy::signed_level_type shifted_topvar = m(topvar);
 
     return typename Policy::dd_type(
       dd.file_ptr(), dd.is_negated(), dd.shift() + (shifted_topvar - topvar));
@@ -221,8 +221,8 @@ namespace adiar::internal
         : _m(m)
       {}
 
-      constexpr inline typename Policy::label_type
-      map_level(typename Policy::label_type x) const
+      constexpr inline typename Policy::level_type
+      map_level(typename Policy::level_type x) const
       {
         return this->_m(x);
       }

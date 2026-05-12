@@ -53,11 +53,11 @@ namespace adiar::internal
   class single_quantify_policy : public Policy
   {
   private:
-    const typename Policy::label_type _level;
+    const typename Policy::level_type _level;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    single_quantify_policy(typename Policy::label_type level)
+    single_quantify_policy(typename Policy::level_type level)
       : _level(level)
     {}
 
@@ -65,7 +65,7 @@ namespace adiar::internal
     /// \brief Start product construction at the desired level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     inline bool
-    split(typename Policy::label_type level) const
+    split(typename Policy::level_type level) const
     {
       return this->_level == level;
     }
@@ -78,7 +78,7 @@ namespace adiar::internal
   typename Policy::__dd_type
   quantify(const exec_policy& ep,
            const typename Policy::dd_type& in,
-           const typename Policy::label_type label)
+           const typename Policy::level_type level)
   {
 #ifdef ADIAR_STATS
     stats_quantify.runs += 1u;
@@ -86,7 +86,7 @@ namespace adiar::internal
 
     // -------------------------------------------------------------------------
     // Case: Terminal / Disjunct Levels
-    if (dd_isterminal(in) || !has_level(in, label)) {
+    if (dd_isterminal(in) || !has_level(in, level)) {
 #ifdef ADIAR_STATS
       stats_quantify.skipped += 1u;
 #endif
@@ -99,7 +99,7 @@ namespace adiar::internal
     stats_quantify.singleton_sweeps += 1u;
 #endif
 
-    single_quantify_policy<Policy> policy(label);
+    single_quantify_policy<Policy> policy(level);
     return __prod2u(ep, in, policy);
   }
 
@@ -121,10 +121,10 @@ namespace adiar::internal
     {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief What the labels should be mapped to (themselves).
+    /// \brief What the levels should be mapped to (themselves).
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    constexpr inline typename Policy::label_type
-    map_level(typename Policy::label_type x) const
+    constexpr inline typename Policy::level_type
+    map_level(typename Policy::level_type x) const
     {
       return x;
     }
@@ -186,7 +186,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Predicate for whether a level should be swept on (or not).
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    using pred_t = predicate<typename Policy::label_type>;
+    using pred_t = predicate<typename Policy::level_type>;
 
   private:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ namespace adiar::internal
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void
-    setup_level(typename Policy::label_type level)
+    setup_level(typename Policy::level_type level)
     {
       _pred_result = _pred(level) == Policy::quantify_onset;
     }
@@ -256,7 +256,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Predicate for whether a level should be swept on (or not).
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    using pred_t = predicate<typename Policy::label_type>;
+    using pred_t = predicate<typename Policy::level_type>;
 
   private:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +275,7 @@ namespace adiar::internal
     /// \brief Whether the predicate wants to sweep on the given level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     bool
-    has_sweep(const typename Policy::label_type x)
+    has_sweep(const typename Policy::level_type x)
     {
       return _pred(x) == Policy::quantify_onset;
     }
@@ -311,7 +311,7 @@ namespace adiar::internal
     struct var_data
     {
       /// \brief The to-be quantified variable.
-      typename Policy::label_type level;
+      typename Policy::level_type level;
 
       /// \brief Number of nodes below this level (not inclusive)
       size_t nodes_below;
@@ -347,7 +347,7 @@ namespace adiar::internal
   template <typename Policy>
   inline quantify__pred_profile<Policy>
   __quantify__pred_profile(const typename Policy::dd_type& dd,
-                           const predicate<typename Policy::label_type>& pred)
+                           const predicate<typename Policy::level_type>& pred)
   {
     // TODO: tighten 'shallow' to only be above shallowest widest level (inclusive)
     // TODO: tighten 'deep' to not be 'shallow'
@@ -369,7 +369,7 @@ namespace adiar::internal
 
       nodes_below -= li.width();
 
-      if (pred(li.label()) == Policy::quantify_onset) {
+      if (pred(li.level()) == Policy::quantify_onset) {
         res.quant_all_vars += 1u;
         res.quant_all_size += li.width();
         res.quant_deep_vars += nodes_below < shallow_threshold;
@@ -404,14 +404,14 @@ namespace adiar::internal
   //       - initial '__quantify__get_deepest' should not terminate early but
   //         determine whether any variable may "survive".
   template <typename Policy>
-  inline typename Policy::label_type
+  inline typename Policy::level_type
   __quantify__get_deepest(const typename Policy::dd_type& dd,
-                          const predicate<typename Policy::label_type>& pred)
+                          const predicate<typename Policy::level_type>& pred)
   {
     level_info_ifstream<true /* bottom-up */> lis(dd);
 
     while (lis.can_pull()) {
-      const typename Policy::label_type l = lis.pull().label();
+      const typename Policy::level_type l = lis.pull().level();
       if (pred(l) == Policy::quantify_onset) { return l; }
     }
     return Policy::max_label + 1;
@@ -424,7 +424,7 @@ namespace adiar::internal
   typename Policy::__dd_type
   quantify(const exec_policy& ep,
            typename Policy::dd_type dd,
-           const predicate<typename Policy::label_type>& pred)
+           const predicate<typename Policy::level_type>& pred)
   {
 #ifdef ADIAR_STATS
     stats_quantify.runs += 1u;
@@ -453,17 +453,17 @@ namespace adiar::internal
     case exec_policy::quantify::Singleton: {
       // -------------------------------------------------------------------------------------------
       // Case: Repeated single variable quantification
-      typename Policy::label_type label = pred_profile.deepest_var.level;
+      typename Policy::level_type level = pred_profile.deepest_var.level;
 
-      while (label <= Policy::max_label) {
-        dd = quantify<Policy>(ep, dd, label);
+      while (level <= Policy::max_label) {
+        dd = quantify<Policy>(ep, dd, level);
 #ifdef ADIAR_STATS
         // HACK: Undo the += 1 in the nested call
         stats_quantify.runs -= 1u;
 #endif
         if (dd_isterminal(dd)) { return dd; }
 
-        label = __quantify__get_deepest<Policy>(dd, pred);
+        level = __quantify__get_deepest<Policy>(dd, pred);
       }
       return dd;
     }
@@ -496,7 +496,7 @@ namespace adiar::internal
   typename Policy::__dd_type
   quantify(const exec_policy& ep,
            typename Policy::__dd_type&& __dd,
-           const predicate<typename Policy::label_type>& pred)
+           const predicate<typename Policy::level_type>& pred)
   {
     switch (ep.template get<exec_policy::quantify::algorithm>()) {
     case exec_policy::quantify::Singleton: {
@@ -544,7 +544,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Generator of the levels to sweep on (or not to sweep on) in descending order.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    using generator_t = generator<typename Policy::label_type>;
+    using generator_t = generator<typename Policy::level_type>;
 
   private:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -555,7 +555,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Buffer for to hold onto the generated next level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    optional<typename Policy::label_type> _next_level;
+    optional<typename Policy::level_type> _next_level;
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -570,7 +570,7 @@ namespace adiar::internal
     /// \brief Whether the generator wants to do a Nested Sweep on the given level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     bool
-    has_sweep(const typename Policy::label_type x)
+    has_sweep(const typename Policy::level_type x)
     {
       return x == next_level(x) ? Policy::quantify_onset : !Policy::quantify_onset;
     }
@@ -588,8 +588,8 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The next level to start a Nested Sweep.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    typename Policy::label_type
-    next_level(const typename Policy::label_type l)
+    typename Policy::level_type
+    next_level(const typename Policy::level_type l)
     {
       while (_next_level.has_value() && l < _next_level.value()) { _next_level = _lvls(); }
       return _next_level.value_or(Policy::max_label + 1);
@@ -606,15 +606,15 @@ namespace adiar::internal
   //       clean up
   //       - Make return type 'optional' rather than larger than 'max_label'
   template <typename Policy>
-  inline typename Policy::label_type
+  inline typename Policy::level_type
   __quantify__get_deepest(const typename Policy::dd_type& dd,
-                          const typename Policy::label_type bot_level,
-                          const optional<typename Policy::label_type> top_level)
+                          const typename Policy::level_type bot_level,
+                          const optional<typename Policy::level_type> top_level)
   {
     level_info_ifstream<true /* bottom-up */> lis(dd);
 
     while (lis.can_pull()) {
-      const typename Policy::label_type l = lis.pull().label();
+      const typename Policy::level_type l = lis.pull().level();
       if ((!top_level || top_level.value() < l) && l < bot_level) { return l; }
     }
     return Policy::max_label + 1;
@@ -635,7 +635,7 @@ namespace adiar::internal
       // -------------------------------------------------------------------------------------------
       // Case: Repeated single variable quantification
       // TODO: correctly handle Policy::quantify_onset
-      optional<typename Policy::label_type> on_level = lvls();
+      optional<typename Policy::level_type> on_level = lvls();
 
       if (Policy::quantify_onset) {
         if (!on_level) {
@@ -647,7 +647,7 @@ namespace adiar::internal
 
         // Quantify all but the last 'on_level'. Hence, look one ahead with
         // 'next_on_level' to see whether it is the last one.
-        optional<typename Policy::label_type> next_on_level = lvls();
+        optional<typename Policy::level_type> next_on_level = lvls();
         while (next_on_level) {
           dd = quantify<Policy>(ep, dd, on_level.value());
 #ifdef ADIAR_STATS
@@ -669,9 +669,9 @@ namespace adiar::internal
         // TODO: only designed for 'OR' at this point in time
         if (!on_level) { return typename Policy::dd_type(dd->number_of_terminals[true] > 0); }
 
-        // Quantify everything below 'label'
+        // Quantify everything below 'level'
         for (;;) {
-          const typename Policy::label_type off_level =
+          const typename Policy::level_type off_level =
             __quantify__get_deepest<Policy>(dd, Policy::max_label, on_level.value());
 
           if (Policy::max_label < off_level) { break; }
@@ -685,12 +685,12 @@ namespace adiar::internal
         }
 
         // Quantify everything strictly in between 'bot_level' and 'top_level'
-        optional<typename Policy::label_type> bot_level = on_level;
-        optional<typename Policy::label_type> top_level = lvls();
+        optional<typename Policy::level_type> bot_level = on_level;
+        optional<typename Policy::level_type> top_level = lvls();
 
         while (bot_level) {
           for (;;) {
-            const typename Policy::label_type off_level =
+            const typename Policy::level_type off_level =
               __quantify__get_deepest<Policy>(dd, bot_level.value(), top_level);
 
             if (Policy::max_label < off_level) { break; }
@@ -718,7 +718,7 @@ namespace adiar::internal
         // Obtain the bottom-most onset level that exists in the diagram.
         // TODO: Move into helper function.
 
-        optional<typename Policy::label_type> transposition_level = lvls();
+        optional<typename Policy::level_type> transposition_level = lvls();
         if (!transposition_level) {
 #ifdef ADIAR_STATS
           stats_quantify.skipped += 1u;
@@ -728,7 +728,7 @@ namespace adiar::internal
 
         {
           level_info_ifstream<true> in_meta(dd);
-          typename Policy::label_type dd_level = in_meta.pull().level();
+          typename Policy::level_type dd_level = in_meta.pull().level();
 
           for (;;) {
             // Go forward in the diagram's levels, until we are at or above

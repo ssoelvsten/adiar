@@ -48,7 +48,7 @@ namespace adiar::internal
       while (ns.can_pull()) {
         const node n = ns.pull();
 
-        out << "\tn" << n.uid()._raw << " [label=<x<SUB>" << n.label();
+        out << "\tn" << n.uid()._raw << " [label=<x<SUB>" << n.level();
         if (include_id) { out << ", " << n.id(); }
         out << "</SUB>>, style=rounded];\n";
       }
@@ -91,7 +91,7 @@ namespace adiar::internal
         out << "\t{ rank=same; "
             << "n" << current_node.uid()._raw << " ";
 
-        while (ns.can_pull() && current_node.label() == ns.peek().label()) {
+        while (ns.can_pull() && current_node.level() == ns.peek().level()) {
           out << "n" << ns.pull().uid()._raw << " ";
         }
         out << "}"
@@ -158,8 +158,8 @@ namespace adiar::internal
     while (as.can_pull_internal()) {
       const arc a = as.pull_internal();
       out << "\t"
-          << "n" << a.target().label() << "_" << a.target().id() << " -> "
-          << "n" << a.source().label() << "_" << a.source().id()
+          << "n" << a.target().level() << "_" << a.target().id() << " -> "
+          << "n" << a.source().level() << "_" << a.source().id()
           << " [style=" << (a.out_idx() ? "solid" : "dashed") << ", color=blue];" << std::endl;
     }
 
@@ -171,7 +171,7 @@ namespace adiar::internal
     while (as.can_pull_terminal()) {
       const arc a = as.pull_terminal();
       out << "\t"
-          << "n" << a.source().label() << "_" << a.source().id() << " -> "
+          << "n" << a.source().level() << "_" << a.source().id() << " -> "
           << "s" << a.target().value() << " [style=" << (a.out_idx() ? "solid" : "dashed")
           << ", color=red];" << std::endl;
     }

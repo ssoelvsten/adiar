@@ -55,10 +55,10 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The level at which this nodes source belongs to.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    arc::label_type
+    arc::level_type
     level() const
     {
-      return source().label();
+      return source().level();
     }
   };
 
@@ -271,7 +271,7 @@ namespace adiar::internal
                            const bool terminal_val);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Reduce a single level (while also mapping it to a new label).
+  /// \brief Reduce a single level (while also mapping it to a new level).
   ///
   /// \returns width of output level
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,8 +281,8 @@ namespace adiar::internal
             typename arc_ifstream_t>
   size_t
   __reduce_level(arc_ifstream_t& arcs,
-                 const typename Policy::label_type in_label,
-                 const typename Policy::label_type out_label,
+                 const typename Policy::level_type in_level,
+                 const typename Policy::level_type out_level,
                  pq_t& reduce_pq,
                  node_ofstream& out,
                  const size_t sorters_memory,
@@ -297,7 +297,7 @@ namespace adiar::internal
     sorter_t<mapping, reduce_uid_lt> red2_mapping(sorters_memory, unreduced_width, 2);
 
     // Pull out all nodes from reduce_pq and terminal_arcs for this level
-    while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().label() == in_label)
+    while ((arcs.can_pull_terminal() && arcs.peek_terminal().source().level() == in_level)
            || reduce_pq.can_pull()) {
       // TODO (MDD):
       // TODO (QMDD):
@@ -307,7 +307,7 @@ namespace adiar::internal
       const arc e_low  = __reduce_get_next(reduce_pq, arcs);
 
       const node n = node_of(e_low, e_high);
-      adiar_assert(n.label() == in_label, "Label is for desired level");
+      adiar_assert(n.level() == in_level, "The extracted node is for this level");
 
       // Apply Reduction rule 1
       const typename Policy::pointer_type reduction_rule_ret = Policy::reduction_rule(n);
@@ -345,7 +345,7 @@ namespace adiar::internal
       if (out_node.low() != unflag(next_node.low())
           || out_node.high() != unflag(next_node.high())) {
         adiar_assert(0 <= out_id, "Should still have more ids left");
-        out_node = node(out_label, out_id--, unflag(next_node.low()), unflag(next_node.high()));
+        out_node = node(out_level, out_id--, unflag(next_node.low()), unflag(next_node.high()));
         out.unsafe_push(out_node);
 
         __reduce_cut_add(next_node.low().is_flagged() ? tainted_1level_cut : local_1level_cut,
@@ -363,7 +363,7 @@ namespace adiar::internal
 
     // Add number of nodes to level information, if any nodes were pushed to the output.
     const size_t reduced_width = Policy::max_id - out_id;
-    if (reduced_width > 0) { out.unsafe_push(level_info(out_label, reduced_width)); }
+    if (reduced_width > 0) { out.unsafe_push(level_info(out_level, reduced_width)); }
 
     // Sort mappings for Reduction rule 2 back in order of arcs.internal
     red2_mapping.sort();
@@ -433,7 +433,7 @@ namespace adiar::internal
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Reduce a single level (without mapping it to a new label).
+  /// \brief Reduce a single level (without mapping it to a new level).
   ///
   /// \returns width of output level
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -441,10 +441,10 @@ namespace adiar::internal
             template <typename, typename> typename sorter_t,
             typename pq_t,
             typename arc_ifstream_t>
-  //[[deprecated("Use '__reduce_label' with a separate 'in_label' and 'out_label'")]]
+  //[[deprecated("Use '__reduce_level' with a separate 'in_level' and 'out_level'")]]
   size_t
   __reduce_level(arc_ifstream_t& arcs,
-                 const typename Policy::label_type label,
+                 const typename Policy::level_type level,
                  pq_t& reduce_pq,
                  node_ofstream& out,
                  const size_t sorters_memory,
@@ -452,7 +452,7 @@ namespace adiar::internal
                  statistics::reduce_t& stats = stats_reduce)
   {
     return __reduce_level<Policy, sorter_t, pq_t, arc_ifstream_t>(
-      arcs, label, label, reduce_pq, out, sorters_memory, unreduced_width, stats);
+      arcs, level, level, reduce_pq, out, sorters_memory, unreduced_width, stats);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -469,15 +469,15 @@ namespace adiar::internal
 
     if (!reduce_pq.empty()) {
       adiar_assert(!arcs.can_pull_terminal() || !reduce_pq.has_current_level()
-                     || arcs.peek_terminal().source().label() < reduce_pq.current_level(),
+                     || arcs.peek_terminal().source().level() < reduce_pq.current_level(),
                    "All terminal arcs for 'current_level' should be processed");
 
       adiar_assert(!arcs.can_pull_internal() || !reduce_pq.has_current_level()
-                     || arcs.peek_internal().target().label() < reduce_pq.current_level(),
+                     || arcs.peek_internal().target().level() < reduce_pq.current_level(),
                    "All internal arcs for 'current_level' should be processed");
 
       if (arcs.can_pull_terminal()) {
-        reduce_pq.setup_next_level(arcs.peek_terminal().source().label());
+        reduce_pq.setup_next_level(arcs.peek_terminal().source().level());
       } else {
         reduce_pq.setup_next_level();
       }
@@ -487,11 +487,11 @@ namespace adiar::internal
       //       stored in another priority queue.
 
       adiar_assert(!arcs.can_pull_terminal() || !reduce_pq.has_current_level()
-                     || arcs.peek_terminal().source().label() < reduce_pq.current_level(),
+                     || arcs.peek_terminal().source().level() < reduce_pq.current_level(),
                    "All terminal arcs for 'current_level' should be processed");
 
       adiar_assert(!arcs.can_pull_internal() || !reduce_pq.has_current_level()
-                     || arcs.peek_internal().target().label() < reduce_pq.current_level(),
+                     || arcs.peek_internal().target().level() < reduce_pq.current_level(),
                    "All internal arcs for 'current_level' should be processed");
 
     } else if (!out.has_pushed()) {
@@ -555,7 +555,7 @@ namespace adiar::internal
         out.unsafe_set_number_of_terminals(!terminal_val, terminal_val);
         __reduce_cut_add(out_file->max_1level_cut, 0u, !terminal_val, terminal_val);
       } else {
-        const typename Policy::label_type out_level = policy.map_level(e_low.source().level());
+        const typename Policy::level_type out_level = policy.map_level(e_low.source().level());
 
         out.unsafe_push(node(out_level, Policy::max_id, e_low.target(), e_high.target()));
 
@@ -590,8 +590,8 @@ namespace adiar::internal
       adiar_assert(arcs.can_pull_terminal() || !reduce_pq.empty(),
                    "If there is a level, then there should also be something for it.");
       const level_info current_level_info         = levels.pull();
-      const typename Policy::label_type in_level  = current_level_info.level();
-      const typename Policy::label_type out_level = policy.map_level(in_level);
+      const typename Policy::level_type in_level  = current_level_info.level();
+      const typename Policy::level_type out_level = policy.map_level(in_level);
 
       adiar_assert(!reduce_pq.has_current_level() || in_level == reduce_pq.current_level(),
                    "level and priority queue should be in sync");
@@ -690,8 +690,8 @@ namespace adiar::internal
   class default_reduce_policy : public DdPolicy
   {
   public:
-    constexpr inline typename DdPolicy::label_type
-    map_level(typename DdPolicy::label_type x) const
+    constexpr inline typename DdPolicy::level_type
+    map_level(typename DdPolicy::level_type x) const
     {
       return x;
     }

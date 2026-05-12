@@ -149,7 +149,7 @@ namespace adiar::internal
   dd_support(const DD& dd, const consumer<typename DD::label_type>& cb)
   {
     level_info_ifstream<> info_ifstream(dd);
-    while (info_ifstream.can_pull()) { cb(info_ifstream.pull().label()); }
+    while (info_ifstream.can_pull()) { cb(info_ifstream.pull().level()); }
   }
 }
 

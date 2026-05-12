@@ -109,7 +109,7 @@ namespace adiar::internal
       // Set up next level
       pq.setup_next_level();
 
-      const typename Policy::label_type level = pq.current_level();
+      const typename Policy::level_type level = pq.current_level();
       typename Policy::id_type level_size     = 0;
 
       policy.setup_level(level);
@@ -123,7 +123,7 @@ namespace adiar::internal
         const node n = ns.seek(pq.top().target[0]);
 
         adiar_assert(pq.top().target == n.uid());
-        adiar_assert(n.uid().label() == level);
+        adiar_assert(n.uid().level() == level);
 
         const select_rec rec = policy.process(n);
 

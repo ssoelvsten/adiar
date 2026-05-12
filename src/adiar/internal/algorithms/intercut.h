@@ -75,8 +75,8 @@ namespace adiar::internal
   // Helper functions
   template <typename Policy>
   bool
-  cut_terminal(const typename Policy::label_type curr_level,
-               const typename Policy::label_type cut_level,
+  cut_terminal(const typename Policy::level_type curr_level,
+               const typename Policy::level_type cut_level,
                const bool terminal_value)
   {
     return curr_level < cut_level && cut_level <= Policy::max_label
@@ -96,8 +96,8 @@ namespace adiar::internal
             pq_t& pq,
             const typename Policy::pointer_type source,
             const typename Policy::pointer_type target,
-            const typename Policy::label_type curr_level,
-            const typename Policy::label_type next_cut)
+            const typename Policy::level_type curr_level,
+            const typename Policy::level_type next_cut)
     {
       if (target.is_terminal() && !cut_terminal<Policy>(curr_level, next_cut, target.value())) {
         aw.push_terminal(arc(source, target));
@@ -118,8 +118,8 @@ namespace adiar::internal
             pq_t& /*pq*/,
             const ptr_uint64 source,
             const ptr_uint64 target,
-            const ptr_uint64::label_type /*curr_level*/,
-            const ptr_uint64::label_type /*next_cut*/)
+            const ptr_uint64::level_type /*curr_level*/,
+            const ptr_uint64::level_type /*next_cut*/)
     {
       aw.push_internal(arc(source, target));
     }
@@ -129,19 +129,19 @@ namespace adiar::internal
   inline void
   intercut_in__pq(arc_ofstream& aw,
                   PriorityQueue& pq,
-                  const typename Policy::label_type out_label,
+                  const typename Policy::level_type out_level,
                   const typename Policy::pointer_type target,
                   const typename Policy::pointer_type out_target,
-                  const typename Policy::label_type l)
+                  const typename Policy::level_type l)
   {
-    adiar_assert(out_label <= out_target.level(),
+    adiar_assert(out_level <= out_target.level(),
                  "should forward/output a node on this level or ahead.");
 
-    while (pq.can_pull() && pq.top().level() == out_label && pq.top().target[0] == target) {
+    while (pq.can_pull() && pq.top().level() == out_level && pq.top().target[0] == target) {
       const typename Policy::pointer_type parent = pq.pull().data.source;
 
       if (OutPolicy::ignore_nil && parent.is_nil()) { continue; }
-      OutPolicy::forward(aw, pq, parent, out_target, out_label, l);
+      OutPolicy::forward(aw, pq, parent, out_target, out_level, l);
     }
   }
 
@@ -149,23 +149,23 @@ namespace adiar::internal
   typename Policy::__dd_type
   __intercut(const exec_policy& ep,
              const typename Policy::dd_type& dd,
-             const generator<typename Policy::label_type>& xs,
+             const generator<typename Policy::level_type>& xs,
              const size_t pq_memory,
              const size_t max_pq_size)
   {
     node_ifstream<> in_nodes(dd);
     node n = in_nodes.pull();
 
-    // Copy the labels into a B-sized vector. This way, we can read it twice: once for the levels in
+    // Copy the levels into a B-sized vector. This way, we can read it twice: once for the levels in
     // the priority queue and secondly for a lookahead of where to cut next.
     //
     // Alternatively, we could also hack it by wrapping `xs` with a side-effect of updating a
     // variable in this scope. But, the resulting code complexity does not seem worth it.
-    internal_vector<typename Policy::label_type> hit_levels(dd::max_label);
+    internal_vector<typename Policy::level_type> hit_levels(dd::max_label);
     for (auto x = xs(); x; x = xs()) { hit_levels.push_back(x.value()); }
 
-    typename internal_vector<typename Policy::label_type>::iterator ls = hit_levels.begin();
-    if (ls == hit_levels.end()) { return Policy::on_empty_labels(dd); }
+    typename internal_vector<typename Policy::level_type>::iterator ls = hit_levels.begin();
+    if (ls == hit_levels.end()) { return Policy::on_empty_levels(dd); }
 
     if (n.is_terminal()) { return Policy::on_terminal_input(n.value(), dd, hit_levels); }
 
@@ -186,21 +186,21 @@ namespace adiar::internal
       // Set up next level
       intercut_pq.setup_next_level();
 
-      const typename Policy::label_type out_label = intercut_pq.current_level();
+      const typename Policy::level_type out_level = intercut_pq.current_level();
       typename Policy::id_type out_id             = 0;
 
       // Derive whether this level needs to be cut and what is the next level. Note, that `ls` is
       // always kept ahead of the current level (until it is empty).
-      const bool hit_level = ls != hit_levels.end() && out_label == *ls;
+      const bool hit_level = ls != hit_levels.end() && out_level == *ls;
       if (hit_level) { ++ls; }
-      const typename Policy::label_type next_hit =
+      const typename Policy::level_type next_hit =
         ls == hit_levels.end() ? with_level::no_level : *ls;
 
       // Update max 1-level cut
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, intercut_pq.size());
 
       // Resolve requests with targets at this level
-      while (!intercut_pq.empty_level() && intercut_pq.peek().target[0].level() == out_label) {
+      while (!intercut_pq.empty_level() && intercut_pq.peek().target[0].level() == out_level) {
         while (n.uid() < intercut_pq.top().target[0]) { n = in_nodes.pull(); }
 
         adiar_assert(n.uid() == intercut_pq.top().target[0], "should always find desired node");
@@ -211,51 +211,51 @@ namespace adiar::internal
           const intercut_rec_skipto rs = std::get<intercut_rec_skipto>(r);
 
           if (rs.tgt.is_terminal() && intercut_pq.top().data.source.is_nil()
-              && !cut_terminal<Policy>(out_label, next_hit, rs.tgt.value())) {
+              && !cut_terminal<Policy>(out_level, next_hit, rs.tgt.value())) {
             return Policy::terminal(rs.tgt.value());
           }
           // TODO: The 'rs.tgt.is_terminal() && cut_terminal(...)' case can be handled even better
-          //       with 'Policy::on_terminal_input' but where the label file are only of
-          //       the remaining labels.
+          //       with 'Policy::on_terminal_input' but where the level file are only of
+          //       the remaining levels.
 
           intercut_in__pq<Policy, intercut_out__pq<Policy>>(
-            aw, intercut_pq, out_label, n.uid(), rs.tgt, next_hit);
+            aw, intercut_pq, out_level, n.uid(), rs.tgt, next_hit);
         } else {
           const intercut_rec_output ro = std::get<intercut_rec_output>(r);
-          const node::uid_type out_uid(out_label, out_id++);
+          const node::uid_type out_uid(out_level, out_id++);
 
           intercut_out__pq<Policy>::forward(
-            aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_label, next_hit);
+            aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_level, next_hit);
 
           intercut_out__pq<Policy>::forward(
-            aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_label, next_hit);
+            aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_level, next_hit);
 
           intercut_in__pq<Policy, intercut_out__ofstream>(
-            aw, intercut_pq, out_label, n.uid(), out_uid, next_hit);
+            aw, intercut_pq, out_level, n.uid(), out_uid, next_hit);
         }
       }
 
       // Resolve requests with targets beyond this level, i.e. edges that should be cut.
       while (!intercut_pq.empty_level()) {
-        adiar_assert(out_label <= next_hit,
-                     "the last iteration in this case is for the very last label to cut on");
+        adiar_assert(out_level <= next_hit,
+                     "the last iteration in this case is for the very last level to cut on");
 
         const intercut_request request = intercut_pq.top();
         const intercut_rec_output ro   = Policy::hit_cut(request.target[0]);
-        const node::uid_type out_uid(out_label, out_id++);
+        const node::uid_type out_uid(out_level, out_id++);
 
         intercut_out__pq<Policy>::forward(
-          aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_label, next_hit);
+          aw, intercut_pq, out_uid.as_ptr(false), ro.low, out_level, next_hit);
 
         intercut_out__pq<Policy>::forward(
-          aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_label, next_hit);
+          aw, intercut_pq, out_uid.as_ptr(true), ro.high, out_level, next_hit);
 
         intercut_in__pq<Policy, intercut_out__ofstream>(
-          aw, intercut_pq, out_label, request.target[0], out_uid, next_hit);
+          aw, intercut_pq, out_level, request.target[0], out_uid, next_hit);
       }
 
       // Update meta data
-      if (out_id > 0) { aw.push(level_info(out_label, out_id)); }
+      if (out_id > 0) { aw.push(level_info(out_level, out_id)); }
     }
 
     return typename Policy::__dd_type(out_arcs, ep);
@@ -275,7 +275,7 @@ namespace adiar::internal
   typename Policy::__dd_type
   intercut(const exec_policy& ep,
            const typename Policy::dd_type& dd,
-           const generator<typename Policy::label_type>& xs)
+           const generator<typename Policy::level_type>& xs)
   {
     // Compute amount of memory available for auxiliary data structures after having opened all
     // streams.

@@ -67,7 +67,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     narc_ifstream(levelized_file<arc>& file,
                   [[maybe_unused]] const bool negate                         = false,
-                  [[maybe_unused]] const node::signed_label_type level_shift = 0)
+                  [[maybe_unused]] const node::signed_level_type level_shift = 0)
       : _ifstream(/*need to sort before attach*/)
     {
       adiar_assert(negate == false);
@@ -80,7 +80,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     narc_ifstream(const shared_ptr<levelized_file<arc>>& file,
                   [[maybe_unused]] const bool negate                         = false,
-                  [[maybe_unused]] const node::signed_label_type level_shift = 0)
+                  [[maybe_unused]] const node::signed_level_type level_shift = 0)
       : _ifstream(/*need to sort before attach*/)
     {
       adiar_assert(negate == false);

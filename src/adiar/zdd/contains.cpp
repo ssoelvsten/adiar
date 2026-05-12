@@ -30,7 +30,7 @@ namespace adiar
     inline zdd::pointer_type
     visit(const zdd::node_type& n)
     {
-      visited_label = n.label();
+      visited_label = n.level();
 
       const zdd::pointer_type next_ptr =
         l.has_value() && l.value() == visited_label ? n.high() : n.low();
@@ -45,7 +45,7 @@ namespace adiar
 
         // Will we miss the next to-be visited level?
         if (next_ptr.is_node() && l.has_value() && visited_label < l.value()
-            && l.value() < next_ptr.label()) {
+            && l.value() < next_ptr.level()) {
           return zdd::pointer_type::nil();
         }
       }

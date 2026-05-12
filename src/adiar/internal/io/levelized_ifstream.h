@@ -199,7 +199,7 @@ namespace adiar::internal
     /// \brief Construct attached to a file<level_info>.
     ///
     /// \param shift_levels
-    ///    Number of variable labels (and levels) to shift by.
+    ///    Number of variable levels to shift by.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     level_info_ifstream(const file<level_info>& f, level_info::signed_level_type shift = 0)
       : _shift(shift)
@@ -211,7 +211,7 @@ namespace adiar::internal
     /// \brief Construct attached to a file<level_info>.
     ///
     /// \param shift_levels
-    ///    Number of variable labels (and levels) to shift by.
+    ///    Number of levels to shift by.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     level_info_ifstream(const adiar::shared_ptr<file<level_info>>& f,
                         level_info::signed_level_type shift = 0)

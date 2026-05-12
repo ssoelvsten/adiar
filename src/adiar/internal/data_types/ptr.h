@@ -19,7 +19,7 @@ namespace adiar::internal
   // TODO (ADD (64-bit)):
   // TODO (10+ TiB Decision Diagrams):
   //   Create a new 'ptr_templ' class that does not compress all information into a single 64-bit
-  //   unsigned integer. The 'label_type' and 'id_type' should be provided as template parameters
+  //   unsigned integer. The 'level_type' and 'id_type' should be provided as template parameters
   //   and the 'max_id' and 'max_label' should be derived based on
   //   'std::numeric_limits<XXXX_t>::max()'.
   //
@@ -188,7 +188,7 @@ namespace adiar::internal
     /// \brief Type able to hold the node's level.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // TODO:
-    //   Template with 'label bits' and derive with `std::conditional_type` the
+    //   Template with 'level bits' and derive with `std::conditional_type` the
     //   smallest type that can fit all the requested number of bits.
     using level_type = uint32_t;
 
@@ -336,7 +336,7 @@ namespace adiar::internal
     /* ========================================== NODES ========================================= */
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    // befriend label modifying functions that need access to protected values.
+    // befriend level modifying functions that need access to protected values.
     friend ptr_uint64
     unsafe_replace(const ptr_uint64& p, const level_type new_level);
 
@@ -363,16 +363,6 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
   public:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Type able to hold the label of a variable.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    using label_type = level_type;
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Type able to hold the label of a variable.
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    using signed_label_type = signed_level_type;
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type of a level identifier.
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -426,40 +416,46 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief  The maximal possible value for a unique identifier's label.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr label_type max_label = max_level - 2u;
+    static constexpr level_type max_label = max_level - 2u;
     static_assert(max_label < max_level);
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Constructor for a pointer to an internal node (label, id) with weight 0.
+    /// \brief Constructor for a pointer to an internal node (level, id) with weight 0.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    constexpr ptr_uint64(const label_type label, const id_type id)
-      : _raw((static_cast<raw_type>(label) << level_shift)
+    constexpr ptr_uint64(const level_type level, const id_type id)
+      : _raw((static_cast<raw_type>(level) << level_shift)
              | (static_cast<raw_type>(id) << (data_shift + out_idx_bits)))
     {
       // TODO: Add Debug checks for non-constexpr context
-      // adiar_assert(label <= max_label, "Cannot represent given label");
-      // adiar_assert(id    <= max_id,    "Cannot represent given id");
+      //
+      // adiar_assert(level <= max_label,
+      //              "Level exceeds 'max_label', i.e. the number of representable internal nodes");
+      //
+      // adiar_assert(id    <= max_id, "ID exceeds 'max_id'");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Constructor for a pointer to an internal node (label, id) with
+    /// \brief Constructor for a pointer to an internal node (level, id) with
     ///        given weight.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    constexpr ptr_uint64(const label_type label, const id_type id, const out_idx_type out_idx)
-      : _raw((static_cast<raw_type>(label) << level_shift)
+    constexpr ptr_uint64(const level_type level, const id_type id, const out_idx_type out_idx)
+      : _raw((static_cast<raw_type>(level) << level_shift)
              | (static_cast<raw_type>(id) << (data_shift + out_idx_bits))
              | (static_cast<raw_type>(out_idx) << data_shift))
     {
       // TODO: Add Debug checks for non-constexpr context
-      // adiar_assert(label   <= max_label,   "Cannot represent given label");
+      // adiar_assert(level <= max_label,
+      //              "Level exceeds 'max_label', i.e. the number of representable internal nodes");
+      //
       // adiar_assert(id      <= max_id,      "Cannot represent given id");
-      // adiar_assert(out_idx <= max_out_idx, "Cannot represent given id");
+      //
+      // adiar_assert(out_idx <= max_out_idx, "Cannot represent given idx");
     }
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Whether a pointer is for an internal node (label, id).
+    /// \brief Whether a pointer is for an internal node (level, id).
     ////////////////////////////////////////////////////////////////////////////////////////////////
     inline bool
     is_node() const
@@ -475,19 +471,7 @@ namespace adiar::internal
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Extract the label from an internal node (label, id).
-    ///
-    /// \pre `is_node()` evaluates to `true.`
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    inline label_type
-    label() const
-    {
-      adiar_assert(is_node());
-      return this->level();
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    /// \brief Extract the level identifier from an internal node (label, id).
+    /// \brief Extract the level identifier from an internal node (level, id).
     ///
     /// \pre `is_node()` evaluates to `true.`
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -870,14 +854,14 @@ namespace adiar::internal
     adiar_assert(p.is_node());
     adiar_assert(new_level <= ptr_uint64::max_label);
 
-    constexpr ptr_uint64::raw_type non_labels_mask =
+    constexpr ptr_uint64::raw_type non_levels_mask =
       ~(static_cast<ptr_uint64::raw_type>(ptr_uint64::max_level) << ptr_uint64::level_shift);
 
-    const ptr_uint64::raw_type non_labels_bits = p._raw & non_labels_mask;
-    const ptr_uint64::raw_type labels_bits     = static_cast<ptr_uint64::raw_type>(new_level)
+    const ptr_uint64::raw_type non_levels_bits = p._raw & non_levels_mask;
+    const ptr_uint64::raw_type levels_bits     = static_cast<ptr_uint64::raw_type>(new_level)
       << ptr_uint64::level_shift;
 
-    return non_labels_bits | labels_bits;
+    return non_levels_bits | levels_bits;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

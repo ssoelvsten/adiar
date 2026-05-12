@@ -33,10 +33,10 @@ namespace adiar
 
   public:
     void
-    setup_next_level(const bdd::label_type next_level)
+    setup_next_level(const bdd::level_type next_level)
     {
       using result_type           = typename LevelPredicate::result_type;
-      constexpr bool is_total_map = is_convertible<result_type, label_type>;
+      constexpr bool is_total_map = is_convertible<result_type, level_type>;
 
       if constexpr (is_total_map) {
         this->_prune_level = this->_pred(next_level);
@@ -272,10 +272,10 @@ namespace adiar
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Variable remapping of.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    inline bdd::label_type
-    map_level(bdd::label_type x) const
+    inline bdd::level_type
+    map_level(bdd::level_type x) const
     {
-      const optional<bdd::label_type> new_x = this->_m(x);
+      const optional<bdd::level_type> new_x = this->_m(x);
       return new_x.has_value() ? new_x.value() : bdd::max_label + 1;
     }
 

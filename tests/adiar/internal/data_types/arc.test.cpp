@@ -18,7 +18,7 @@ go_bandit([]() {
           const arc a = { ptr_uint64(42, 2, 0), terminal_F };
 
           AssertThat(a.source().is_node(), Is().True());
-          AssertThat(a.source().label(), Is().EqualTo(42u));
+          AssertThat(a.source().level(), Is().EqualTo(42u));
           AssertThat(a.source().id(), Is().EqualTo(2u));
 
           AssertThat(a.out_idx(), Is().EqualTo(0u));
@@ -31,7 +31,7 @@ go_bandit([]() {
           const arc a = { ptr_uint64(2, 0, 1), terminal_T };
 
           AssertThat(a.source().is_node(), Is().True());
-          AssertThat(a.source().label(), Is().EqualTo(2u));
+          AssertThat(a.source().level(), Is().EqualTo(2u));
           AssertThat(a.source().id(), Is().EqualTo(0u));
 
           AssertThat(a.out_idx(), Is().EqualTo(1u));
@@ -44,13 +44,13 @@ go_bandit([]() {
           const arc a = { ptr_uint64(2, 0, 1), ptr_uint64(3, 1) };
 
           AssertThat(a.source().is_node(), Is().True());
-          AssertThat(a.source().label(), Is().EqualTo(2u));
+          AssertThat(a.source().level(), Is().EqualTo(2u));
           AssertThat(a.source().id(), Is().EqualTo(0u));
 
           AssertThat(a.out_idx(), Is().EqualTo(1u));
 
           AssertThat(a.target().is_node(), Is().True());
-          AssertThat(a.target().label(), Is().EqualTo(3u));
+          AssertThat(a.target().level(), Is().EqualTo(3u));
           AssertThat(a.target().id(), Is().EqualTo(1u));
         });
       });
@@ -60,7 +60,7 @@ go_bandit([]() {
           const arc a = { uid_uint64(42, 2), 0, terminal_F };
 
           AssertThat(a.source().is_node(), Is().True());
-          AssertThat(a.source().label(), Is().EqualTo(42u));
+          AssertThat(a.source().level(), Is().EqualTo(42u));
           AssertThat(a.source().id(), Is().EqualTo(2u));
 
           AssertThat(a.out_idx(), Is().EqualTo(0u));
@@ -73,7 +73,7 @@ go_bandit([]() {
           const arc a = { uid_uint64(2, 0), 1, terminal_T };
 
           AssertThat(a.source().is_node(), Is().True());
-          AssertThat(a.source().label(), Is().EqualTo(2u));
+          AssertThat(a.source().level(), Is().EqualTo(2u));
           AssertThat(a.source().id(), Is().EqualTo(0u));
 
           AssertThat(a.out_idx(), Is().EqualTo(1u));
@@ -86,13 +86,13 @@ go_bandit([]() {
           const arc a = { uid_uint64(2, 0), 1, ptr_uint64(3, 1) };
 
           AssertThat(a.source().is_node(), Is().True());
-          AssertThat(a.source().label(), Is().EqualTo(2u));
+          AssertThat(a.source().level(), Is().EqualTo(2u));
           AssertThat(a.source().id(), Is().EqualTo(0u));
 
           AssertThat(a.out_idx(), Is().EqualTo(1u));
 
           AssertThat(a.target().is_node(), Is().True());
-          AssertThat(a.target().label(), Is().EqualTo(3u));
+          AssertThat(a.target().level(), Is().EqualTo(3u));
           AssertThat(a.target().id(), Is().EqualTo(1u));
         });
       });

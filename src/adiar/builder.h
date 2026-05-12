@@ -250,10 +250,10 @@ namespace adiar
       }
       if (label > Policy::max_label) { throw invalid_argument("Nodes must have a valid label"); }
       if (label > current_label) { throw invalid_argument("Nodes must be added bottom-up"); }
-      if (low.uid.is_node() && low.uid.label() <= label) {
+      if (low.uid.is_node() && low.uid.level() <= label) {
         throw invalid_argument("Low child must point to a node with higher label");
       }
-      if (high.uid.is_node() && high.uid.label() <= label) {
+      if (high.uid.is_node() && high.uid.level() <= label) {
         throw invalid_argument("High child must point to a node with higher label");
       }
 
