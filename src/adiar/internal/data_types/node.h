@@ -55,6 +55,11 @@ namespace adiar::internal
     using terminal_type = pointer_type::terminal_type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Type of this node's variable level.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    using level_type = pointer_type::level_type;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type of this node's variable label.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     using label_type = pointer_type::label_type;
@@ -62,7 +67,12 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief The maximal possible value for a unique identifier's label.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    static constexpr label_type max_label = pointer_type::max_label;
+    static constexpr level_type max_label = pointer_type::max_label;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Type for a difference of levels.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    using signed_level_type = pointer_type::signed_level_type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Type for a difference of levels.
@@ -226,7 +236,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Construct *internal* node `((label, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const label_type label, const id_type id, const pointer_type& l, const pointer_type& h)
+    node(const level_type label, const id_type id, const pointer_type& l, const pointer_type& h)
       : _uid(label, id)
       , _children{ l, h }
     {
@@ -240,7 +250,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Construct *internal* node `((label, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const label_type label, const id_type id, const node& l, const pointer_type& h)
+    node(const level_type label, const id_type id, const node& l, const pointer_type& h)
       : node(label, id, l.uid(), h)
     {
       adiar_assert(outdegree == 2, "Constructor is for binary node only.");
@@ -249,7 +259,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Construct *internal* node `((label, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const label_type label, const id_type id, const pointer_type& l, const node& h)
+    node(const level_type label, const id_type id, const pointer_type& l, const node& h)
       : node(label, id, l, h.uid())
     {
       adiar_assert(outdegree == 2, "Constructor is for binary node only.");
@@ -258,7 +268,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Construct *internal* node `((label, id), low, high)`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    node(const label_type label, const id_type id, const node& l, const node& h)
+    node(const level_type label, const id_type id, const node& l, const node& h)
       : node(label, id, l.uid(), h.uid())
     {
       adiar_assert(outdegree == 2, "Constructor is for binary node only.");
@@ -270,7 +280,7 @@ namespace adiar::internal
     /// \pre `is_terminal()` evaluates to `false`.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // TODO: Rename to `level()` when introducing variable ordering
-    inline label_type
+    inline level_type
     label() const
     {
       adiar_assert(!is_terminal());
@@ -540,7 +550,7 @@ namespace adiar::internal
   /// \brief Shift the level of the node and its children by `levels` amount.
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline node
-  shift_replace(const node& n, const node::signed_label_type levels)
+  shift_replace(const node& n, const node::signed_level_type levels)
   {
     const node::uid_type n_uid(shift_replace(n.uid().as_ptr(), levels));
     const node::pointer_type n_low(shift_replace(n.low(), levels));
