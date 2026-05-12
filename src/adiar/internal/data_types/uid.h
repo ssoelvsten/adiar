@@ -213,6 +213,16 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Uid>
   inline Uid
+  unsafe_replace(const Uid& u, const typename Uid::level_type new_level)
+  {
+    return Uid::unsafe(unsafe_replace(static_cast<typename Uid::pointer_type>(u), new_level));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the level with the one given.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Uid>
+  inline Uid
   replace(const Uid& u, const typename Uid::level_type new_level)
   {
     return Uid::unsafe(replace(static_cast<typename Uid::pointer_type>(u), new_level));
@@ -220,14 +230,12 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replaces the level with the one given.
-  ///
-  /// \pre `u.is_node()`
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Uid>
   inline Uid
   essential_replace(const Uid& u, const typename Uid::level_type new_level)
   {
-    return replace(u, new_level);
+    return Uid::unsafe(replace(static_cast<typename Uid::pointer_type>(u), new_level));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

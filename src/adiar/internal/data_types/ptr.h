@@ -337,7 +337,7 @@ namespace adiar::internal
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // befriend label modifying functions that need access to protected values.
     friend ptr_uint64
-    replace(const ptr_uint64& p, const level_type new_level);
+    unsafe_replace(const ptr_uint64& p, const level_type new_level);
 
     friend ptr_uint64
     essential_replace(const ptr_uint64& p, const level_type new_level);
@@ -864,7 +864,7 @@ namespace adiar::internal
   /// \pre `p.is_node()`
   //////////////////////////////////////////////////////////////////////////////////////////////////
   inline ptr_uint64
-  replace(const ptr_uint64& p, const ptr_uint64::level_type new_level)
+  unsafe_replace(const ptr_uint64& p, const ptr_uint64::level_type new_level)
   {
     adiar_assert(p.is_node());
     adiar_assert(new_level <= ptr_uint64::max_label);
@@ -877,6 +877,15 @@ namespace adiar::internal
       << ptr_uint64::level_shift;
 
     return non_labels_bits | labels_bits;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replaces the level with the one given.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  inline ptr_uint64
+  replace(const ptr_uint64& p, const ptr_uint64::level_type new_level)
+  {
+    return p.is_node() ? unsafe_replace(p, new_level) : p;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
