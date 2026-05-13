@@ -2602,13 +2602,13 @@ public:
       vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>> map_lists = jump_down_map_split<Policy>(dd, m);
       if(map_lists[0].size() > 1){
 #ifdef ADIAR_STATS
-      stats_replace.initial_jump_down_sweeps += 1u;
+      stats_replace.jump_down_scans += 1u;
 #endif
         //TODO: more sophisticated check here
         __bdd after_jumps = replace_outer_down<Policy>(ep, dd, map_lists[0], map_lists[1], replace_type::Jump_Down_Inhabited);
         if (map_lists[2].empty()) {
 #ifdef ADIAR_STATS
-      stats_replace.skipped_nested_sweeps += 1u;
+      stats_replace.nested_sweeps -= 1u;
 #endif
           //same BIG CLAIM up here shouldn't be possible that there are no inner sweeps but things still need to be relabled..?
           return after_jumps;
@@ -2621,7 +2621,7 @@ public:
         return nested_sweep<>(ep, after_jumps, inner_impl);
       } else {
 #ifdef ADIAR_STATS
-      stats_replace.skipped_initial_jump_down_sweeps += 1u;
+      stats_replace.skipped_initial_jump_down_scans += 1u;
       stats_replace.nested_sweeps += 1u;
 #endif
         return replace_nested_sweep<Policy>(dd,m,ep);
@@ -2638,13 +2638,13 @@ public:
       if(map_lists[0].size() > 1){
         //TODO: more sophisticated check here
 #ifdef ADIAR_STATS
-      stats_replace.initial_adj_swap_sweeps  += 1u;
+      stats_replace.adj_swap_scans  += 1u;
 #endif
         __bdd after_swaps = replace_outer_down<Policy>(ep, dd, map_lists[0], map_lists[1], replace_type::Non_Monotone_Adj);
         if (map_lists[2].empty()){ //Notice this is not necessary but we skip all the nested sweeping setup by making it
           //BIG CLAIM: when we have permutation, if there are no sweep levels then nothing is relabled by outer reduce either so we just return after_swaps..?
 #ifdef ADIAR_STATS
-      stats_replace.skipped_nested_sweeps += 1u;
+      stats_replace.nested_sweeps -= 1u;
 #endif
           return after_swaps;
         } 
@@ -2657,7 +2657,7 @@ public:
         return nested_sweep<>(ep, after_swaps, inner_impl);
       } else {
 #ifdef ADIAR_STATS
-      stats_replace.skipped_initial_adj_swap_sweeps += 1u;
+      stats_replace.skipped_initial_adj_swap_scans += 1u;
       stats_replace.nested_sweeps += 1u;
 #endif
         return replace_nested_sweep<Policy>(dd,m,ep);
