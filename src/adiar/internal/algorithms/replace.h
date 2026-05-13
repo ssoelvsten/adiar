@@ -2613,16 +2613,12 @@ public:
           //same BIG CLAIM up here shouldn't be possible that there are no inner sweeps but things still need to be relabled..?
           return after_jumps;
         }
-#ifdef ADIAR_STATS
-      stats_replace.nested_sweeps += 1u;
-#endif
         nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
                                                       make_generator(map_lists[3].begin(), map_lists[3].end()));
         return nested_sweep<>(ep, after_jumps, inner_impl);
       } else {
 #ifdef ADIAR_STATS
       stats_replace.skipped_initial_jump_down_scans += 1u;
-      stats_replace.nested_sweeps += 1u;
 #endif
         return replace_nested_sweep<Policy>(dd,m,ep);
       }
@@ -2648,9 +2644,6 @@ public:
 #endif
           return after_swaps;
         } 
-#ifdef ADIAR_STATS
-      stats_replace.nested_sweeps += 1u;
-#endif
         //else - we need to do at least one sweep so build our things
         nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
                                                       make_generator(map_lists[3].begin(), map_lists[3].end()));
@@ -2658,7 +2651,6 @@ public:
       } else {
 #ifdef ADIAR_STATS
       stats_replace.skipped_initial_adj_swap_scans += 1u;
-      stats_replace.nested_sweeps += 1u;
 #endif
         return replace_nested_sweep<Policy>(dd,m,ep);
       }
