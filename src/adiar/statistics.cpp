@@ -838,9 +838,9 @@ namespace adiar
       << endl;
     indent_level--;
 
-    o << "TEST: " << endl 
-      << "skipped initial adj_swaps : " << internal::stats_replace.skipped_initial_adj_swap_scans << endl
-      << "skipped initial JDs : " << internal::stats_replace.skipped_initial_adj_swap_scans << endl
+    o << indent << bold_on << "skipped initial work: "<< bold_off << endl 
+      << indent << indent << "skipped initial adj_swaps : " << internal::stats_replace.skipped_initial_adj_swap_scans << endl
+      << indent << indent << "skipped initial JDs : " << internal::stats_replace.skipped_initial_jump_down_scans << endl
       << endl;
 
     indent_level--;
