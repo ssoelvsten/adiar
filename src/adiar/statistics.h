@@ -611,11 +611,8 @@ namespace adiar
       uintwide nested_sweeps = 0;
 
       //mixed_approach specific stats
-      uintwide initial_adj_swap_sweeps = 0; //number of times it was worth running an intial swap sweep
-      uintwide skipped_nested_sweeps = 0;
-      uintwide skipped_initial_adj_swap_sweeps = 0;
-      uintwide initial_jump_down_sweeps = 0;
-      uintwide skipped_initial_jump_down_sweeps = 0;
+      uintwide skipped_initial_adj_swap_scans = 0;
+      uintwide skipped_initial_jump_down_scans = 0;
 
       struct nested_policy_t
       {

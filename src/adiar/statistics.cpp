@@ -838,6 +838,11 @@ namespace adiar
       << endl;
     indent_level--;
 
+    o << "TEST: " << endl 
+      << "skipped initial adj_swaps : " << internal::stats_replace.skipped_initial_adj_swap_scans << endl
+      << "skipped initial JDs : " << internal::stats_replace.skipped_initial_adj_swap_scans << endl
+      << endl;
+
     indent_level--;
 
     __printstat_alg_base(o, stats_struct);
