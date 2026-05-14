@@ -31,6 +31,23 @@ void fixed_printdot(__bdd bdd, std::string fn) {
   print_dot(arcs, fn);
 }
 
+bdd 
+quadratic_builder_double(int N){
+  const auto bot = bdd_bot();
+  const auto top = bdd_top();
+
+  auto a1 = top;
+  auto b1 = top;
+
+  for (int i = N-1; 0 <= i; --i) {
+    const int a_var = (2 * i + 1)*2;
+    a1 = bdd_ite(bdd_ithvar(a_var), bot, a1);
+    const int b_var = (2 * i)*2;
+    b1 = bdd_ite(bdd_ithvar(b_var), b1, a1);
+  }
+  return b1;
+}
+
 void print_list (vector<memory_mode::Internal, bdd_policy::label_type> l){
   std::cout << "[ ";
   for (auto e : l){
@@ -1119,6 +1136,19 @@ go_bandit([]() {
             bdd out_ns = bdd_replace(standard, m,replace_type::Non_Monotone);
             bdd_printdot(out, "result2.dot");
             bdd_printdot(out_ns, "result2_ns.dot");
+            AssertThat(bdd_equal(out, out_ns), Is().True());
+          });
+
+          it("jumps up layers [quad]", [&]() {
+            bdd quad_50 = quadratic_builder_double(50);
+            //50:1; 100:51; 150:101
+            const mapping_type m = [](const int x) { if (x == 50) {return 1;}
+                                                           if (x == 100) {return 51;}
+                                                           if (x == 150) {return 101;}
+                                                           else return x; };
+            AssertThat(replace__infer_type<bdd_policy>(quad_50,m), Is().EqualTo(replace_type::Jump_Up));
+            bdd out = bdd_replace(quad_50, m,replace_type::Jump_Up);
+            bdd out_ns = bdd_replace(quad_50, m,replace_type::Non_Monotone);
             AssertThat(bdd_equal(out, out_ns), Is().True());
           });
 
