@@ -1090,8 +1090,15 @@ struct  jump_up_arc : public arc {
   //level for pq
   arc::label_type level() const {
     //if source above jump target (xi), let level be xi st. it's handled at level xi
-    return std::max(source().label(), xi);
+    //std::cout << "finding level for " << this->to_string() << ", it is" << std::max(source().level(), xi) << "\n";
+    return std::max(source().level(), xi);
   }
+
+  arc::label_type label() const {
+    return std::max(source().level(), xi);
+  }
+
+
   //printing to include payload..?
   std::string
     to_string() const
@@ -1100,7 +1107,7 @@ struct  jump_up_arc : public arc {
       const std::string arrow =
         !this->source().is_node() || this->source().out_idx() ? " ---> " : " - -> ";
       const std::string payload = (this->payload == assignment::None) ? "NONE" : ((this->payload == assignment::True) ? "T" : "⊥");
-      stream << this->source() << arrow << this->target() << ", p: " << payload ;
+      stream << this->source() << arrow << this->target() << ", p: " << payload  << ", xi:" << xi;
       return stream.str();
     }
 };
@@ -1140,11 +1147,8 @@ struct jump_up_queue_lt //for pq
     operator()(const jump_up_arc& a, const jump_up_arc& b)
     {
       // We want: sort by source then payload then low/high child
-      // should this take into account the weird xi stuff? no right? thats just for pq
-      if (a.source().level() >  b.source().level()) {return true;} //if one source is greater it should be first
-      if (a.source().level() <  b.source().level()) {return false;} //if one source is greater it should be first
-      if (a.source().id() > b.source().id()) {return true;}
-      if (a.source().id() < b.source().id()) {return false;}
+      if (a.level() != b.level()) {return a.level() > b.level();}
+      if (essential(a.source()) != essential(b.source())) {return essential(a.source()) > essential(b.source());}
       //if we get to here the sources must have same uids..
       //so now- we decide: no payload < false payload < true payload (follows ternary type ints)
       if (a.payload < b.payload ) {return true;}
@@ -1585,8 +1589,8 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       if (debug_enabled) std::cout << "width of current layer " << unreduced_width << "\n";
       sorter_t<jump_up_node_ws, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 1);
 
-      //temp files
       while(pq.can_pull()){
+        std::cout << "enters while again (xi level)\n";
         //special case: moving to root layer..
         const bool jump_to_root = pq.top().source().level() == cur_xi;
         const jump_up_arc r1 = pq.pull();
@@ -1607,7 +1611,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
               //push node and req
               const node::uid_type out_uid(cur_xi, out_id--);
               const jump_up_node_ws res_node = {{out_uid, unflag(r1.target()), unflag(r2.target())}, assignment::None,r1.source()};
-              if (debug_enabled) std::cout << " to build " << res_node << /*", and req" << n_req.to_string() <<*/ "\n";
+              if (debug_enabled) std::cout << " to build " << res_node << "\n";
               child_grouping.push(res_node);
             }
           } else {
@@ -2184,10 +2188,6 @@ replace(const typename Policy::dd_type& dd,
     res.push_back(sweep_starts), res.push_back(sweep_targets);
     res.push_back(mapping_levels);
 
-    //sanity check on mapping levels...
-    for(typename Policy::label_type e : mapping_levels){
-      std:: cout << e << ",";
-    }
     return res;
   }
 
