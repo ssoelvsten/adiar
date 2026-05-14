@@ -1123,6 +1123,15 @@ struct jump_up_node : public node {
   {}
   jump_up_node&
   operator=(const jump_up_node& n) = default;
+
+  std::string
+  to_string() const {
+    const std::string payload = (this->_payload == assignment::None) ? "NONE" : ((this->_payload == assignment::True) ? "T" : "⊥");
+    std::stringstream stream;
+    stream << this << "p: " << payload ;
+    return stream.str();
+  }
+
 };
 
 //specifically for keeping canonicity when making nodes on jump target level 
@@ -1151,8 +1160,7 @@ struct jump_up_queue_lt //for pq
       if (essential(a.source()) != essential(b.source())) {return essential(a.source()) > essential(b.source());}
       //if we get to here the sources must have same uids..
       //so now- we decide: no payload < false payload < true payload (follows ternary type ints)
-      if (a.payload < b.payload ) {return true;}
-      if (a.payload > b.payload ) {return false;}
+      if (a.payload != b.payload) {return a.payload < b.payload;}
       //if we get here thay also have same payload..
       //sort on arc type
       return a.out_idx() > b.out_idx();
@@ -1238,6 +1246,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       }
     }
   }
+  
   //making generators..
   generator<typename Policy::label_type> level_gen = make_generator(jump_starts.begin(), jump_starts.end());
   generator<typename Policy::label_type> target_gen_for_pq = make_generator(jump_targets.begin(), jump_targets.end());
@@ -1324,7 +1333,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
           red2_mapping.push({ next_node.uid(), next_node.high(), assignment::True });
           if (debug_enabled) std::cout << "pushed F2 mapping: (" << next_node.uid() << "-->" << next_node.low() << ", p: ⊥)\n";
           if (debug_enabled) std::cout << "pushed F2 mapping: (" << next_node.uid() << "-->" << next_node.high() << ", p: T)\n";
-          //notice: outputting no nodes, so no updated to cuts
+          //notice: outputting no nodes, so no updated to cuts 
         }
       }
 
@@ -1416,24 +1425,36 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
             if (debug_enabled) std::cout << "pushed node" << n << "\n";
           }
         } else {
-          //diff payloads means either one of them is none, or there is an additional none to pull
+          //diff payloads means either: 
+          // (a) first is none so we should pull an additional 
+          // (b) we have first false, second true and we can pull a third which is a none (this would be a crossing arc and would have xi = 0)
           const jump_up_arc e_3 = _jump_get_next(pq, arcs);
           //case distinction to figure out what is low and high...
-          adiar_assert(e_1.out_idx(), "somehow first pulled is not a high edge??");
-          if (debug_enabled) std::cout << "pulled arcs: " << e_1.to_string() << ", " << e_2.to_string() << ", " << e_3.to_string() << "\n" ;
+          if (debug_enabled) std::cout << "found reqs: " << e_1.to_string() << ", " << e_2.to_string() << ", " << e_3.to_string() << "\n";
+          adiar_assert(e_1.payload == assignment::None || e_3.payload == assignment::None, "neither e1 or e3 is none??");
+          //if (debug_enabled) std::cout << "pulled arcs: " << e_1.to_string() << ", " << e_2.to_string() << ", " << e_3.to_string() << "\n" ;
           jump_up_node n1, n2;
-          if (e_2.out_idx()) {
-            //then third pulled must be none
-            if (debug_enabled) std::cout << "we conclude that third is none and thus low edge\n";
-            n1 = j_node_of(e_3, e_1);
-            n2 = j_node_of(e_3, e_2);
+          if (e_1.payload == assignment::None){
+            //then first must be paired with the two others
+             if (e_1.out_idx()) {
+                n1 = j_node_of(e_2, e_1);
+                n2 = j_node_of(e_3, e_1);
+            } else {
+                n1 = j_node_of(e_1, e_2);
+                n2 = j_node_of(e_1, e_3);
+            }
           } else {
-            //first pulled must be none?
-            if (debug_enabled) std::cout << "we conclude that first is none and thus second and third low edge\n";
-            n1 = j_node_of(e_2, e_1);
-            n2 = j_node_of(e_3, e_1);
+            // third must be none and should be paired with the two others
+            if (e_3.out_idx()) {
+                n1 = j_node_of(e_1, e_3);
+                n2 = j_node_of(e_2, e_3);
+            } else {
+                n1 = j_node_of(e_3, e_1);
+                n2 = j_node_of(e_3, e_2);
+            }
           }
-          if (debug_enabled) std::cout << "built nodes: " << n1 << ", " << n2 << "\n" ;
+       
+          if (debug_enabled) std::cout << "built nodes: " << n1.to_string()  << ", " << n2.to_string() << "\n" ;
           //check red 1
           if (unflag(n1.low()) == unflag(n1.high())){
             if (!red1_mapping.is_open()) { red1_mapping.open(); }
@@ -1590,7 +1611,6 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       sorter_t<jump_up_node_ws, reduce_node_children_lt> child_grouping(sorters_mem, unreduced_width, 1);
 
       while(pq.can_pull()){
-        std::cout << "enters while again (xi level)\n";
         //special case: moving to root layer..
         const bool jump_to_root = pq.top().source().level() == cur_xi;
         const jump_up_arc r1 = pq.pull();
@@ -1693,7 +1713,7 @@ replace_jump_up_sweep(const shared_levelized_file<arc>& dd,
       xj = level_gen();
       if (debug_enabled) std::cout <<  "updated xj to be " << xj.value_or(5000) << "\n";
       //update lvl info
-      const size_t reduced_width = Policy::max_id - out_id;
+      const size_t reduced_width = Policy::max_id - id;
       if (reduced_width > 0) { out.unsafe_push(level_info(level, reduced_width)); }
     }
   }
