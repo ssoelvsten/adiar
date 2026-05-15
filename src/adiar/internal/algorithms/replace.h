@@ -473,7 +473,7 @@ class pq_sorter_decorator{
   cor_req_t<1> getNext(PQ1& pq1 , PQ2& pq2)
   {
     if (pq1.can_pull()) {
-      ptr_uint64 l_uid(pq1.top().data.level, 0);  //for treating level like uid for comp
+      ptr_uint64 l_uid(pq1.top().data.level,  pq1.top().target.first().is_node() ? pq1.top().target.first().id() : 0);  //for treating level like uid for comp
       ptr_uint64 min_pq1 = std::min(pq1.top().target.first() , l_uid);
 
       if(pq2.empty() || min_pq1 < pq2.top().target.second()) {
@@ -487,6 +487,8 @@ class pq_sorter_decorator{
     if(debug_enabled) std::cout << "takes req " << pq2.top() << " from pq2\n";
     return pq2.top();
   }
+
+
 
   //------------------------------------- correctify logic for single level ------------------------------------------
 
@@ -536,7 +538,7 @@ class pq_sorter_decorator{
     };
 
     auto compute_tseek = [&](const cor_req_t<1>& r) -> ptr_uint64 {
-      const ptr_uint64 level_uid(r.data.level, 0);
+      const ptr_uint64 level_uid(r.data.level, r.target.first().is_node() ? r.target.first().id() : 0);
       return (r.empty_carry())
         ? std::min(r.target.first(), level_uid)
         : r.target.second();
@@ -550,7 +552,7 @@ class pq_sorter_decorator{
       const ptr_uint64 tseek = compute_tseek(r);  //updating tseek, v
 
       //CASE found correct layer!
-      //FIXED 2.0 now pass along comparator type in template to allow variance
+      //FIXED 2.0 now pass along comparator type in template to allow variance (standard is lt)
       if (comp(r.target.first().level(), r.data.level)){   
         if (debug_enabled) std::cout << "enters copy case\n";
 
