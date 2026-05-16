@@ -32,93 +32,6 @@ namespace adiar::internal
   using replace_func = function<typename T::level_type(typename T::level_type)>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Inference of the most precise replacement-type.
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Infer the replace type.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy, typename LevelInfoStream, typename ReplaceFunction>
-  replace_type
-  __replace__infer_type(LevelInfoStream& ls, const ReplaceFunction& m)
-  {
-    using level_type        = typename Policy::level_type;
-    using signed_level_type = typename Policy::signed_level_type;
-    using result_type       = typename ReplaceFunction::result_type;
-
-    constexpr bool is_total_map   = is_same<result_type, level_type>;
-    constexpr bool is_partial_map = is_same<result_type, optional<level_type>>;
-
-    static_assert(is_total_map || is_partial_map);
-
-    bool identity = true;
-    bool shift    = true;
-    bool monotone = true;
-
-    level_type prev_before = Policy::max_label + 1;
-    level_type prev_after  = Policy::max_label + 1;
-
-    signed_level_type prev_diff = 0;
-
-    while (ls.can_pull()) {
-      const level_type next_before     = ls.pull().level();
-      const result_type next_after_opt = m(next_before);
-
-      if constexpr (is_partial_map) {
-        if (!next_after_opt.has_value()) { continue; }
-      }
-
-      level_type next_after;
-      if constexpr (is_partial_map) {
-        if (!next_after_opt.has_value()) { continue; }
-        next_after = *next_after_opt;
-      } else {
-        next_after = next_after_opt;
-      }
-
-      if (shift) {
-        const signed_level_type next_diff =
-          static_cast<signed_level_type>(next_before) - static_cast<signed_level_type>(next_after);
-
-        shift &= Policy::max_label < prev_before || prev_diff == next_diff;
-        prev_diff = next_diff;
-      }
-
-      identity &= next_before == next_after;
-      monotone &= Policy::max_label < prev_before || prev_after < next_after;
-
-      prev_before = next_before;
-      prev_after  = next_after;
-    }
-
-    if (!monotone) { return replace_type::Non_Monotone; }
-    if (!shift) { return replace_type::Monotone; }
-    if (!identity) { return replace_type::Shift; }
-    return replace_type::Identity;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Infer the replace type.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy, typename ReplaceFunction>
-  replace_type
-  replace__infer_type(const typename Policy::dd_type& dd, const ReplaceFunction& m)
-  {
-    level_info_ifstream<false> ls(dd);
-    return __replace__infer_type<Policy>(ls, m);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /// \brief Infer the replace type.
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename Policy, typename ReplaceFunction>
-  replace_type
-  replace__infer_type(const typename Policy::__dd_type& __dd, const ReplaceFunction& m)
-  {
-    level_info_ifstream<true> ls(__dd);
-    return __replace__infer_type<Policy>(ls, m);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Algorithms: `Shift`
   //
   // If the decision diagram is already fully reduced and the variable ordering is a mere `Shift`,
@@ -303,6 +216,95 @@ namespace adiar::internal
   // TODO
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Inference of the most precise replacement-type
+
+  namespace __replace {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Infer the replace type.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy, typename LevelInfoStream, typename ReplaceFunction>
+    replace_type
+    infer_replace_type(LevelInfoStream& ls, const ReplaceFunction& m)
+    {
+      using level_type        = typename Policy::level_type;
+      using signed_level_type = typename Policy::signed_level_type;
+      using result_type       = typename ReplaceFunction::result_type;
+
+      constexpr bool is_total_map   = is_same<result_type, level_type>;
+      constexpr bool is_partial_map = is_same<result_type, optional<level_type>>;
+
+      static_assert(is_total_map || is_partial_map);
+
+      bool identity = true;
+      bool shift    = true;
+      bool monotone = true;
+
+      level_type prev_before = Policy::max_label + 1;
+      level_type prev_after  = Policy::max_label + 1;
+
+      signed_level_type prev_diff = 0;
+
+      while (ls.can_pull()) {
+        const level_type next_before     = ls.pull().level();
+        const result_type next_after_opt = m(next_before);
+
+        if constexpr (is_partial_map) {
+          if (!next_after_opt.has_value()) { continue; }
+        }
+
+        level_type next_after;
+        if constexpr (is_partial_map) {
+          if (!next_after_opt.has_value()) { continue; }
+          next_after = *next_after_opt;
+        } else {
+          next_after = next_after_opt;
+        }
+
+        if (shift) {
+          const signed_level_type next_diff =
+            static_cast<signed_level_type>(next_before) - static_cast<signed_level_type>(next_after);
+
+          shift &= Policy::max_label < prev_before || prev_diff == next_diff;
+          prev_diff = next_diff;
+        }
+
+        identity &= next_before == next_after;
+        monotone &= Policy::max_label < prev_before || prev_after < next_after;
+
+        prev_before = next_before;
+        prev_after  = next_after;
+      }
+
+      if (!monotone) { return replace_type::Non_Monotone; }
+      if (!shift) { return replace_type::Monotone; }
+      if (!identity) { return replace_type::Shift; }
+      return replace_type::Identity;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Infer the replace type.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Policy, typename ReplaceFunction>
+  replace_type
+  infer_replace_type(const typename Policy::dd_type& dd, const ReplaceFunction& m)
+  {
+    level_info_ifstream<false> ls(dd);
+    return __replace::infer_replace_type<Policy>(ls, m);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Infer the replace type.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Policy, typename ReplaceFunction>
+  replace_type
+  infer_replace_type(const typename Policy::__dd_type& __dd, const ReplaceFunction& m)
+  {
+    level_info_ifstream<true> ls(__dd);
+    return __replace::infer_replace_type<Policy>(ls, m);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Public interface
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,7 +326,7 @@ namespace adiar::internal
     }
 
     const replace_type inferred_type =
-      m_type == replace_type::Auto ? replace__infer_type<Policy>(dd, m) : m_type;
+      m_type == replace_type::Auto ? infer_replace_type<Policy>(dd, m) : m_type;
 
     // Map internal nodes
     switch (inferred_type) {
@@ -378,7 +380,7 @@ namespace adiar::internal
     }
 
     const replace_type inferred_type =
-      m_type == replace_type::Auto ? replace__infer_type<Policy>(__dd, m) : m_type;
+      m_type == replace_type::Auto ? infer_replace_type<Policy>(__dd, m) : m_type;
 
     // Otherwise, map while reducing
     switch (inferred_type) {
