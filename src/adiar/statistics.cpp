@@ -823,9 +823,13 @@ namespace adiar
     o << indent << bold_on << label << "case O(sort(N+T))" << bold_off << reduce_runs << " = "
       << internal::percent_frac(reduce_runs, total_runs) << percent << endl;
     indent_level++;
-     o << indent << label << "jump down" << internal::stats_replace.jump_down_scans << " = "
-      << internal::percent_frac(internal::stats_replace.jump_down_scans, total_runs) << percent
-      << endl;
+    o << indent << label << "jump down" << internal::stats_replace.jump_down_scans << " = "
+    << internal::percent_frac(internal::stats_replace.jump_down_scans, total_runs) << percent
+    << endl;
+  
+    o << indent << label << "jump down" << internal::stats_replace.jump_up_scans << " = "
+    << internal::percent_frac(internal::stats_replace.jump_up_scans, total_runs) << percent
+    << endl;
 
     indent_level--;
     o << indent << endl;
