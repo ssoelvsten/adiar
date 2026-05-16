@@ -49,11 +49,11 @@ namespace adiar
     /* (Single-sweep version of 'Non_Monotone'): Variable remapping, only moving some variables down
                                                  without crossing other variables that are moving.
     */
-    // Jump_Down = 5, // TODO
+    Jump_Down = 5,
 
     /* Variable remapping, only swapping variables that are adjacent to each other.
      */
-    // Swap_Adjacent = 4, // TODO
+    Adjacent_Swap = 4,
 
     /** For any `x < y` then the mapped values preserve that order, i.e. `m(x) < m(y)`. */
     Monotone = 3,

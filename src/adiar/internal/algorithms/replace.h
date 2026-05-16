@@ -10,11 +10,16 @@
 
 #include <adiar/internal/algorithms/reduce.h>
 #include <adiar/internal/assert.h>
+#include <adiar/internal/data_structures/levelized_priority_queue.h>
+#include <adiar/internal/data_structures/priority_queue.h>
+#include <adiar/internal/data_structures/vector.h>
+#include <adiar/internal/data_types/request.h>
 #include <adiar/internal/dd_func.h>
 #include <adiar/internal/io/levelized_ifstream.h>
 #include <adiar/internal/io/node_file.h>
 #include <adiar/internal/io/node_ifstream.h>
 #include <adiar/internal/io/node_ofstream.h>
+#include <adiar/internal/io/node_raccess.h>
 
 namespace adiar::internal
 {
@@ -28,8 +33,8 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief A total mapping function.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename T>
-  using replace_func = function<typename T::level_type(typename T::level_type)>;
+  template <typename Policy>
+  using replace_func = function<typename Policy::level_type(typename Policy::level_type)>;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Algorithms: `Shift`
@@ -168,7 +173,435 @@ namespace adiar::internal
   // This sweep is guaranteed to preserve the reducedness of the input! That is, if one does not
   // care about the output being *sorted*, then one can use the fast `reduce` operation.
 
-  // TODO
+  namespace __replace
+  {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Request for jump down sweeps.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <uint8_t NodesCarried>
+    class jdown_request : public request_data<2, with_parent_and_level, NodesCarried>
+    {
+      using base_type = request_data<2, with_parent_and_level, NodesCarried>;
+
+    public:
+      // Reuse constructors from parent
+      using base_type::base_type;
+
+      //////////////////////////////////////////////////////////////////////////////////////////////
+      /// \brief   The level at which this request should be resolved.
+      ///
+      /// \details To support pushing levels to an occupied level, we double the levels; odd values
+      ///          are then treated as target levels "in-between". Since one cannot jump from 0 to
+      ///          0, we treat the odd *prior* level as the target. This, for example, allows one to
+      ///          jump from 0->2 and 2->4 without having any overlaps.
+      //////////////////////////////////////////////////////////////////////////////////////////////
+      typename base_type::level_type
+      level() const
+      {
+        const typename base_type::level_type base_level = base_type::level();
+        return base_level - (this->data.level() < this->target.level());
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Wrapper of a `replace_func` into a policy.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // TODO: Template with a comparator to also support bottom-up `Jump_Up` sweeps. Furthermore,
+    //       depending on the comparator, we should +1 or -1 on the target level.
+    template <typename Policy>
+    class jump_policy : public Policy
+    {
+    private:
+      using level_type    = typename Policy::level_type;
+      using vector_type   = internal_vector<level_type>;
+      using iterator_type = typename vector_type::iterator;
+
+      /// \brief List of all levels prior to replacement.
+      vector_type _before;
+
+      /// \brief Single-read Iterator of `_before` to infer whether a level needs to jump.
+      iterator_type _before_iter;
+
+      /// \brief List of all levels after replacement.
+      vector_type _after;
+
+      /// \brief Single-read Iterator of `_after` to infer where a level needs to jump to.
+      iterator_type _after_iter;
+
+      /// \brief Sorted list of all levels after replacement; this only contains the ones that were
+      ///        replaced with something other than itself.
+      vector_type _jump_targets;
+
+    public:
+      static size_t
+      memory_usage(typename Policy::dd_type& dd)
+      {
+        return 3 * vector_type::memory_usage(dd->levels());
+      }
+
+      static constexpr level_type no_level = Policy::pointer_type::nil_level;
+
+    public:
+      jump_policy(const typename Policy::dd_type& dd, const replace_func<Policy>& m)
+        : _before(dd->levels())
+        , _after(dd->levels())
+        , _jump_targets(dd->levels())
+      {
+        level_info_ifstream ls(dd);
+
+        while (ls.can_pull()) {
+          this->_before.push_back(ls.pull().level());
+          this->_after.push_back(m(this->_before.back()));
+        }
+        this->_before_iter = this->_before.begin();
+        this->_after_iter  = this->_after.begin();
+
+        iterator_type i = this->_after.begin();
+        if (i != this->_after.end()) {
+          for (; i + 1 != this->_after.end(); ++i) {
+            if (*i < *(i + 1)) { continue; }
+            this->_jump_targets.push_back(*i);
+          }
+        }
+        std::sort(this->_jump_targets.begin(), this->_jump_targets.end());
+      }
+
+      /// \brief Creates access to the (offset) levels for the levelized priority queue.
+      template <typename PriorityQueue, typename T>
+      std::array<typename PriorityQueue::level_input_type, 2>
+      pq_levels(const T&) const
+      {
+        const generator<level_type> before_gen =
+          [_begin = this->_before.begin(),
+           _end   = this->_before.end()]() mutable -> optional<level_type> {
+          if (_begin == _end) { return {}; }
+          return 2 * (*_begin++);
+        };
+
+        const generator<level_type> jumps_gen =
+          [_begin = this->_jump_targets.begin(),
+           _end   = this->_jump_targets.end()]() mutable -> optional<level_type> {
+          if (_begin == _end) { return {}; }
+          return 2 * (*_begin++) - 1;
+        };
+
+        return { before_gen, jumps_gen };
+      }
+
+      /// \brief Whether the current level (from the levelized priority queue) is a target level
+      ///        for a jump.
+      bool
+      is_jump_target(const level_type& x)
+      {
+        return x % 2 != 0;
+      }
+
+      /// \brief Whether the current level (from the levelized priority queue) needs to be moved
+      ///        with a jump (or can merely be remapped).
+      ///
+      /// \details This together with `map_level` may only be called in order of the levels.
+      ///
+      /// \pre `is_jump_target() == false`
+      bool
+      needs_jump(const level_type& x)
+      {
+        adiar_assert(!this->is_jump_target(x));
+        adiar_assert(this->_before_iter != this->_before.end());
+        adiar_assert(this->_after_iter != this->_after.end());
+
+        const level_type unshifted_level = x / 2;
+        while (unshifted_level != *this->_before_iter) {
+          this->_before_iter++;
+          this->_after_iter++;
+
+          adiar_assert(this->_before_iter != this->_before.end());
+          adiar_assert(this->_after_iter != this->_after.end());
+        }
+
+        const typename vector_type::iterator curr = this->_after_iter;
+        const typename vector_type::iterator next = this->_after_iter + 1;
+
+        return next == this->_after.end() ? false : *next < *curr;
+      }
+
+      /// \brief Convert the level (from levelized priority queue) back to its intended output
+      ///        level.
+      ///
+      /// \pre `needs_jump(x)` has already been called to forward the iterators to `x`.
+      level_type
+      map_level(const level_type& x)
+      {
+        const bool is_jump_target = this->is_jump_target(x);
+        const level_type unshifted_level = x / 2 + is_jump_target;
+        // If it is the target of a jump, compute the result directly from `x`.
+        if (is_jump_target) { return unshifted_level; }
+
+        // Otherwise, find the level in `_before` and `_after`.
+        adiar_assert(this->_before_iter != this->_before.end());
+        adiar_assert(*this->_before_iter == unshifted_level);
+        /*
+        while (unshifted_level != *this->_before_iter) {
+          this->_before_iter++;
+          this->_after_iter++;
+        }
+        adiar_assert(this->_before_iter != this->_before.end());
+        adiar_assert(this->_after_iter != this->_after.end());
+        */
+
+        return *this->_after_iter;
+      }
+    };
+
+    /// \brief Type of the primary priority queue.
+    template <size_t LookAhead, memory_mode MemoryMode>
+    using jdown_pq1_type = levelized_node_priority_queue<jdown_request<0>,
+                                                         request_data_first_lt<jdown_request<0>>,
+                                                         LookAhead,
+                                                         MemoryMode,
+                                                         2,
+                                                         0>;
+
+    /// \brief Type of the secondary priority queue to further forward requests across a level.
+    template <memory_mode MemoryMode>
+    using jdown_pq2_type =
+      priority_queue<MemoryMode, jdown_request<1>, request_data_second_lt<jdown_request<1>>>;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Upper bound on the primary priority queue for the `Jump_Down` case
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
+    size_t
+    jdown__ilevel_upper_bound(const In& in)
+    {
+      const safe_size_t internal       = Cut::get(in, cut::type::Internal);
+      const safe_size_t internal_true  = Cut::get(in, cut::type::Internal_True);
+      const safe_size_t internal_false = Cut::get(in, cut::type::Internal_False);
+
+      const safe_size_t false_only = internal_false - internal;
+      const safe_size_t true_only  = internal_true - internal;
+
+      return to_size(internal * internal + 2 * false_only * true_only
+                     + 2 * (false_only + true_only) * internal + ConstSizeInc);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Upper bound on the primary priority queue for the `Adjacent_Swap` case
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
+    size_t
+    adjswap__ilevel_upper_bound(const In& in)
+    {
+      return to_size(2 * Cut::get(in, cut::type::All) + ConstSizeInc);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy, typename PriorityQueue_1, typename PriorityQueue_2>
+    inline typename Policy::__dd_type
+    jdown_pq(const exec_policy& /*ep*/,
+             const typename Policy::dd_type& dd,
+             Policy& /*policy*/,
+             const PriorityQueue_1& /*pq1*/,
+             const PriorityQueue_2& /*pq2*/)
+    {
+      // TODO: Sweep logic!
+
+      return dd;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy, typename PriorityQueue_1, typename PriorityQueue_2>
+    inline typename Policy::__dd_type
+    jdown_pq(const exec_policy& ep,
+             const typename Policy::dd_type& dd,
+             const replace_func<Policy>& m,
+             const size_t pq1_memory,
+             const size_t pq1_max_size,
+             const size_t pq2_memory,
+             const size_t pq2_max_size)
+    {
+      jump_policy<Policy> policy(dd, m);
+
+      PriorityQueue_1 pq1(policy.template pq_levels<PriorityQueue_1>(dd),
+                          pq1_memory,
+                          pq1_max_size,
+                          stats_replace.lpq);
+      // TODO: Root request!
+
+      PriorityQueue_2 pq2(pq2_memory, pq2_max_size);
+
+      return jdown_pq(ep, dd, policy, pq1, pq2);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy>
+    inline typename Policy::__dd_type
+    jdown_pq(const exec_policy& ep,
+             const typename Policy::dd_type& dd,
+             const replace_func<Policy>& m,
+             const size_t pq1_bound,
+             const size_t pq2_bound)
+    {
+      // Compute amount of memory available for auxiliary data structures after having opened all
+      // streams.
+      //
+      // We then may derive an upper bound on the size of auxiliary data structures and check
+      // whether we can run them with a faster internal memory variant.
+      const size_t aux_available_memory = memory_available()
+        // Input stream
+        - node_ifstream<>::memory_usage()
+        // Output stream
+        - arc_ofstream::memory_usage();
+
+      constexpr size_t data_structures_in_pq_1 =
+        jdown_pq1_type<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
+
+      constexpr size_t data_structures_in_pq_2 =
+        jdown_pq2_type<memory_mode::Internal>::data_structures;
+
+      const size_t pq_1_internal_memory =
+        (aux_available_memory / (data_structures_in_pq_1 + data_structures_in_pq_2))
+        * data_structures_in_pq_1;
+
+      const size_t pq_1_memory_fits =
+        jdown_pq1_type<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::memory_fits(
+          pq_1_internal_memory);
+
+      const size_t pq_2_internal_memory = aux_available_memory - pq_1_internal_memory;
+
+      const size_t pq_2_memory_fits =
+        jdown_pq2_type<memory_mode::Internal>::memory_fits(pq_2_internal_memory);
+
+      const bool internal_only =
+        ep.template get<exec_policy::memory>() == exec_policy::memory::Internal;
+      const bool external_only =
+        ep.template get<exec_policy::memory>() == exec_policy::memory::External;
+
+      const size_t max_pq_1_size =
+        internal_only ? std::min(pq_1_memory_fits, pq1_bound) : pq1_bound;
+
+      const size_t max_pq_2_size =
+        internal_only ? std::min(pq_2_memory_fits, pq2_bound) : pq2_bound;
+
+      if (!external_only && max_pq_1_size <= no_lookahead_bound(2)) {
+#ifdef ADIAR_STATS
+        stats_replace.lpq.unbucketed += 1u;
+#endif
+        using PriorityQueue_1 = jdown_pq1_type<0, memory_mode::Internal>;
+        using PriorityQueue_2 = jdown_pq2_type<memory_mode::Internal>;
+
+        return jdown_pq<Policy, PriorityQueue_1, PriorityQueue_2>(
+          ep, dd, m, pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
+      } else if (!external_only && max_pq_1_size <= pq_1_memory_fits
+                 && max_pq_2_size <= pq_2_memory_fits) {
+#ifdef ADIAR_STATS
+        stats_replace.lpq.internal += 1u;
+#endif
+        using PriorityQueue_1 = jdown_pq1_type<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
+        using PriorityQueue_2 = jdown_pq2_type<memory_mode::Internal>;
+
+        return jdown_pq<Policy, PriorityQueue_1, PriorityQueue_2>(
+          ep, dd, m, pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
+      } else {
+#ifdef ADIAR_STATS
+        stats_replace.lpq.external += 1u;
+#endif
+        using PriorityQueue_1 = jdown_pq1_type<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
+        using PriorityQueue_2 = jdown_pq2_type<memory_mode::External>;
+
+        const size_t pq_1_memory = aux_available_memory / 2;
+        const size_t pq_2_memory = pq_1_memory;
+
+        return jdown_pq<Policy, PriorityQueue_1, PriorityQueue_2>(
+          ep, dd, m, pq_1_memory, max_pq_1_size, pq_2_memory, max_pq_2_size);
+      }
+    }
+
+    // TODO: Random-access optimization
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename Policy>
+    inline typename Policy::__dd_type
+    jdown(const exec_policy& ep,
+          const typename Policy::dd_type& dd,
+          const replace_func<Policy>& m,
+          const size_t pq1_bound,
+          const size_t pq2_bound)
+    {
+      // -------------------------------------------------------------------------------------------
+      // Case: Terminal
+      adiar_assert(!dd->is_terminal());
+
+      // -------------------------------------------------------------------------------------------
+      // Case: Do the product construction (with random access)
+      //
+      // Use random access if requested or the width fits half(ish) of the memory otherwise
+      // dedicated to the secondary priority queue.
+
+      constexpr size_t data_structures_in_pq_2 =
+        jdown_pq2_type<memory_mode::Internal>::data_structures;
+
+      constexpr size_t data_structures_in_pqs = data_structures_in_pq_2
+        + jdown_pq1_type<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>::data_structures;
+
+      const size_t ra_threshold =
+        (memory_available() * data_structures_in_pq_2) / 2 * (data_structures_in_pqs);
+
+      if ( // If user has forced Random Access
+        ep.template get<exec_policy::access>() == exec_policy::access::Random_Access
+        || ( // Heuristically, if it is indexable and it fits
+          ep.template get<exec_policy::access>() == exec_policy::access::Auto && dd->indexable
+          && node_raccess::memory_usage(dd->width) <= ra_threshold)) {
+        // TODO
+        /*
+          #ifdef ADIAR_STATS
+          stats_replace.jump_down.ra.runs += 1u;
+          #endif
+          return jdown_ra<jdown_pq1_type>(ep, dd, policy, pq1_bound)
+        */
+      }
+
+      // -------------------------------------------------------------------------------------------
+      // Case: Do the product construction (with priority queues)
+
+#ifdef ADIAR_STATS
+      // TODO: stats_replace.jump_down.pq.runs += 1u;
+#endif
+      return jdown_pq<Policy>(ep, dd, m, pq1_bound, pq2_bound);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replace the level of all nodes in a single top-down sweep.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Policy>
+  inline typename Policy::__dd_type
+  replace__jdown(const exec_policy& ep,
+                 const typename Policy::dd_type& dd,
+                 const replace_func<Policy>& m)
+  {
+    const size_t pq1_bound = __replace::jdown__ilevel_upper_bound<Policy, get_2level_cut, 2u>(dd);
+    const size_t pq2_bound = __replace::jdown__ilevel_upper_bound<Policy, get_1level_cut, 0u>(dd);
+
+    return __replace::jdown<Policy>(ep, dd, m, pq1_bound, pq2_bound);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Replace the level of all nodes in a single top-down sweep.
+  ///
+  /// \details Knowing that this is an adjacent swap, we can decrease the upper bound on the size of
+  ///          the priority queues compared to the `Jump_Down` case.
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename Policy>
+  inline typename Policy::__dd_type
+  replace__adjswap(const exec_policy& ep,
+                   const typename Policy::dd_type& dd,
+                   const replace_func<Policy>& m)
+  {
+    const size_t pq1_bound = __replace::adjswap__ilevel_upper_bound<Policy, get_2level_cut, 2u>(dd);
+    const size_t pq2_bound = __replace::adjswap__ilevel_upper_bound<Policy, get_1level_cut, 0u>(dd);
+
+    return __replace::jdown<Policy>(ep, dd, m, pq1_bound, pq2_bound);
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Algorithms: `Jump_Up`
@@ -315,7 +748,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   template <typename Policy>
   typename Policy::__dd_type
-  replace(const exec_policy& /*ep*/,
+  replace(const exec_policy& ep,
           const typename Policy::dd_type& dd,
           const replace_func<Policy>& m,
           replace_type m_type)
@@ -343,6 +776,18 @@ namespace adiar::internal
       stats_replace.nested_sweeps += 1u;
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
+
+    case replace_type::Jump_Down:
+#ifdef ADIAR_STATS
+      // TODO
+#endif
+      return replace__jdown<Policy>(ep, dd, m);
+
+    case replace_type::Adjacent_Swap:
+#ifdef ADIAR_STATS
+      // TODO
+#endif
+      return replace__adjswap<Policy>(ep, dd, m);
 
     case replace_type::Monotone:
 #ifdef ADIAR_STATS
@@ -397,6 +842,18 @@ namespace adiar::internal
       stats_replace.nested_sweeps += 1u;
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
+
+    case replace_type::Jump_Down:
+#ifdef ADIAR_STATS
+      // TODO
+#endif
+      return replace__jdown<Policy>(ep, std::move(__dd), m);
+
+    case replace_type::Adjacent_Swap:
+#ifdef ADIAR_STATS
+      // TODO
+#endif
+      return replace__adjswap<Policy>(ep, std::move(__dd), m);
 
     case replace_type::Monotone:
     case replace_type::Shift:
