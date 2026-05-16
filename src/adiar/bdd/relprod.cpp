@@ -299,9 +299,8 @@ namespace adiar
   {
     __bdd tmp_1 = bdd_relprod__and(ep, states, relation, m);
 
-    const replace_type inferred_type = m_type == replace_type::Auto
-      ? internal::replace__infer_type<bdd_policy>(relation, m)
-      : m_type;
+    const replace_type inferred_type =
+      m_type == replace_type::Auto ? internal::infer_replace_type<bdd_policy>(relation, m) : m_type;
 
     switch (inferred_type) {
       // LCOV_EXCL_START
