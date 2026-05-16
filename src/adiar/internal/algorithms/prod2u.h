@@ -270,9 +270,9 @@ namespace adiar::internal
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Sweep logic with random access
-  template <typename NodeRandomAccess, typename Policy, typename PriorityQueue>
+  template <typename Policy, typename PriorityQueue>
   typename Policy::__dd_type
-  __prod2u_ra(const exec_policy& ep, NodeRandomAccess& in_nodes, Policy& policy, PriorityQueue& pq)
+  __prod2u_ra(const exec_policy& ep, node_raccess& in_nodes, Policy& policy, PriorityQueue& pq)
   {
     // Set up output
     shared_levelized_file<arc> out_arcs;
@@ -377,8 +377,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Execution of a single quantification sweep with two priority queues.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename NodeStream,
-            typename PriorityQueue_1,
+  template <typename PriorityQueue_1,
             typename PriorityQueue_2,
             typename Policy,
             typename In>
@@ -394,7 +393,7 @@ namespace adiar::internal
     // TODO (optimisation):
     //   Use '.seek(...)' with 'in_nodes' instead such that it only needs to be
     //   opened once in the caller of this function.
-    NodeStream in_nodes(in);
+    node_ifstream<> in_nodes(in);
     typename Policy::node_type v = in_nodes.pull();
 
     // Set up output
@@ -531,7 +530,7 @@ namespace adiar::internal
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Set up of priority queue for a single top-down sweep with random access.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename NodeRandomAccess, typename PriorityQueue, typename In, typename Policy>
+  template <typename PriorityQueue, typename In, typename Policy>
   typename Policy::__dd_type
   __prod2u_ra(const exec_policy& ep,
               const In& in,
@@ -539,7 +538,7 @@ namespace adiar::internal
               const size_t pq_memory,
               const size_t max_pq_size)
   {
-    NodeRandomAccess in_nodes(in);
+    node_raccess in_nodes(in);
 
     // Set up cross-level priority queue with a request for the root
     PriorityQueue pq({ in }, pq_memory, max_pq_size, stats_prod2u.lpq);
@@ -552,8 +551,7 @@ namespace adiar::internal
   /// \brief Memory computations to decide types of priority queue for a single sweep with random
   ///        access.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename NodeRandomAccess,
-            template <size_t, memory_mode> typename PriorityQueueTemplate,
+  template <template <size_t, memory_mode> typename PriorityQueueTemplate,
             typename In,
             typename Policy>
   typename Policy::__dd_type
@@ -566,7 +564,7 @@ namespace adiar::internal
     // we can run them with a faster internal memory variant.
     const size_t pq_memory = memory_available()
       // Input stream
-      - NodeRandomAccess::memory_usage(in)
+      - node_raccess::memory_usage(in)
       // Output stream
       - arc_ofstream::memory_usage();
 
@@ -589,29 +587,28 @@ namespace adiar::internal
 #endif
       using PriorityQueue = PriorityQueueTemplate<0, memory_mode::Internal>;
 
-      return __prod2u_ra<NodeRandomAccess, PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
+      return __prod2u_ra<PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
     } else if (!external_only && max_pq_size <= pq_memory_fits) {
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.internal += 1u;
 #endif
       using PriorityQueue = PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
 
-      return __prod2u_ra<NodeRandomAccess, PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
+      return __prod2u_ra<PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
     } else {
 #ifdef ADIAR_STATS
       stats_prod2u.lpq.external += 1u;
 #endif
       using PriorityQueue = PriorityQueueTemplate<ADIAR_LPQ_LOOKAHEAD, memory_mode::External>;
 
-      return __prod2u_ra<NodeRandomAccess, PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
+      return __prod2u_ra<PriorityQueue>(ep, in, policy, pq_memory, max_pq_size);
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Set up of priority queues for a single top-down sweep with two priority queues.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename NodeStream,
-            typename PriorityQueue_1,
+  template <typename PriorityQueue_1,
             typename PriorityQueue_2,
             typename Policy,
             typename In>
@@ -628,7 +625,7 @@ namespace adiar::internal
     typename Policy::pointer_type root;
 
     { // Detach and garbage collect node_ifstream<>
-      NodeStream in_nodes(in);
+      node_ifstream<> in_nodes(in);
       root = in_nodes.pull().uid();
     }
 
@@ -639,14 +636,13 @@ namespace adiar::internal
     // Set up per-level priority queue
     PriorityQueue_2 pq_2(pq_2_memory, max_pq_2_size);
 
-    return __prod2u_pq<NodeStream, PriorityQueue_1, PriorityQueue_2>(ep, in, policy, pq_1, pq_2);
+    return __prod2u_pq<PriorityQueue_1, PriorityQueue_2>(ep, in, policy, pq_1, pq_2);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Memory computations to decide types of both priority queues for a single sweep.
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  template <typename NodeStream,
-            template <size_t, memory_mode> typename PriorityQueue_1_Template,
+  template <template <size_t, memory_mode> typename PriorityQueue_1_Template,
             typename Policy,
             typename In>
   typename Policy::__dd_type
@@ -659,7 +655,7 @@ namespace adiar::internal
     // we can run them with a faster internal memory variant.
     const size_t aux_available_memory = memory_available()
       // Input stream
-      - NodeStream::memory_usage()
+      - node_ifstream<>::memory_usage()
       // Output stream
       - arc_ofstream::memory_usage();
 
@@ -706,7 +702,7 @@ namespace adiar::internal
       using PriorityQueue_1 = PriorityQueue_1_Template<0, memory_mode::Internal>;
       using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal>;
 
-      return __prod2u_pq<NodeStream, PriorityQueue_1, PriorityQueue_2>(
+      return __prod2u_pq<PriorityQueue_1, PriorityQueue_2>(
         ep, in, policy, pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
     } else if (!external_only && max_pq_1_size <= pq_1_memory_fits
                && max_pq_2_size <= pq_2_memory_fits) {
@@ -716,7 +712,7 @@ namespace adiar::internal
       using PriorityQueue_1 = PriorityQueue_1_Template<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal>;
       using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal>;
 
-      return __prod2u_pq<NodeStream, PriorityQueue_1, PriorityQueue_2>(
+      return __prod2u_pq<PriorityQueue_1, PriorityQueue_2>(
         ep, in, policy, pq_1_internal_memory, max_pq_1_size, pq_2_internal_memory, max_pq_2_size);
     } else {
 #ifdef ADIAR_STATS
@@ -728,7 +724,7 @@ namespace adiar::internal
       const size_t pq_1_memory = aux_available_memory / 2;
       const size_t pq_2_memory = pq_1_memory;
 
-      return __prod2u_pq<NodeStream, PriorityQueue_1, PriorityQueue_2>(
+      return __prod2u_pq<PriorityQueue_1, PriorityQueue_2>(
         ep, in, policy, pq_1_memory, max_pq_1_size, pq_2_memory, max_pq_2_size);
     }
   }
@@ -769,7 +765,7 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
       stats_prod2u.ra.runs += 1u;
 #endif
-      return __prod2u_ra<node_raccess, prod2u_priority_queue_1_node_t>(ep, in, policy);
+      return __prod2u_ra<prod2u_priority_queue_1_node_t>(ep, in, policy);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -777,7 +773,7 @@ namespace adiar::internal
 #ifdef ADIAR_STATS
     stats_prod2u.pq.runs += 1u;
 #endif
-    return __prod2u_pq<node_ifstream<>, prod2u_priority_queue_1_node_t>(ep, in, policy);
+    return __prod2u_pq<prod2u_priority_queue_1_node_t>(ep, in, policy);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -909,13 +905,13 @@ namespace adiar::internal
         using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::Internal>;
         PriorityQueue_2 pq_2(inner_remaining_memory, max_pq_2_size);
 
-        return __prod2u_pq<node_ifstream<>, PriorityQueue_1, PriorityQueue_2>(
+        return __prod2u_pq<PriorityQueue_1, PriorityQueue_2>(
           ep, outer_file, *this, pq_1, pq_2);
       } else {
         using PriorityQueue_2 = prod2u_priority_queue_2_t<memory_mode::External>;
         PriorityQueue_2 pq_2(inner_remaining_memory, max_pq_2_size);
 
-        return __prod2u_pq<node_ifstream<>, PriorityQueue_1, PriorityQueue_2>(
+        return __prod2u_pq<PriorityQueue_1, PriorityQueue_2>(
           ep, outer_file, *this, pq_1, pq_2);
       }
     }
