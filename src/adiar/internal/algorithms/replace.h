@@ -297,8 +297,10 @@ namespace adiar::internal
   */
   // The main weakness of this operation is if something has to be moved up, i.e. multiple
   // `Jump_Down` operations are used to effectively create a single `Jump_Up`. To mitigate this, we
-  // want to preface the nested sweep with one or more `Jump_Up` and `Adjacent_Swap` operations.
-  // Furthermore, we can incorporate the `Jump_Up` logic inside the Outer Reduce.
+  // want to preface the nested sweep with one or more `Jump_Up` and `Jump_Down` operations.
+  //
+  // Furthermore, we could incorporate the `Jump_Up` logic inside the Outer Reduce. But, that would
+  // be too much engineering work.
 
   // TODO
 
