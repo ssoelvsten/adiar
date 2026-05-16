@@ -5,6 +5,7 @@
 #include <string>
 
 #include <adiar/functional.h>
+
 #include <adiar/internal/assert.h>
 #include <adiar/internal/data_types/ptr.h>
 #include <adiar/internal/data_types/tuple.h>

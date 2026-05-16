@@ -461,7 +461,7 @@ go_bandit([]() {
     });
 
     describe("replace(const node&, function<int(int)>)", [&]() {
-      const function<int(int)> m = [](int x) { return 2*x; };
+      const function<int(int)> m = [](int x) { return 2 * x; };
 
       it("doubles levels of node and its children", [&]() {
         const node in  = node(0, 1, node::pointer_type(1, 2), node::pointer_type(2, 3));

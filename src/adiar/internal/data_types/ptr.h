@@ -7,6 +7,7 @@
 #include <string>
 
 #include <adiar/functional.h>
+
 #include <adiar/internal/assert.h>
 
 namespace adiar::internal
@@ -872,7 +873,6 @@ namespace adiar::internal
   {
     return p.is_node() ? unsafe_replace(p, new_level) : p;
   }
-
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Replaces the level with the one provided by the map function.

@@ -164,7 +164,8 @@ namespace adiar::internal
   private:
     static_assert(0 < LookAhead, "LookAhead must at least be of one level");
 
-    static_assert(LookAhead < ptr_uint64::max_label, "A larger LookAhead than max_label is wasteful");
+    static_assert(LookAhead < ptr_uint64::max_label,
+                  "A larger LookAhead than max_label is wasteful");
 
     static_assert(buckets < out_of_buckets_idx,
                   "LookAhead must not be so large to also include '-1'");
@@ -172,9 +173,8 @@ namespace adiar::internal
     static_assert(out_of_buckets_idx + 1 == 0,
                   "Overflow to '0' is necessary for internal logic to work");
 
-    static_assert(
-      ptr_uint64::max_label + 1 > ptr_uint64::max_label,
-      "'level_type' should leave a window of at least one above 'max_label'");
+    static_assert(ptr_uint64::max_label + 1 > ptr_uint64::max_label,
+                  "'level_type' should leave a window of at least one above 'max_label'");
 
   private:
     static size_t

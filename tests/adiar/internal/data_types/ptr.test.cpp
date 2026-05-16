@@ -854,7 +854,7 @@ go_bandit([]() {
           });
 
           it("preserves 'nil' as-is", [&]() {
-            const ptr_uint64 in = ptr_uint64::nil();
+            const ptr_uint64 in  = ptr_uint64::nil();
             const ptr_uint64 out = replace(in, 8);
             AssertThat(out, Is().EqualTo(ptr_uint64::nil()));
           });
@@ -882,7 +882,7 @@ go_bandit([]() {
           });
 
           it("preserves 'nil' as-is", [&]() {
-            const ptr_uint64 in = ptr_uint64::nil();
+            const ptr_uint64 in  = ptr_uint64::nil();
             const ptr_uint64 out = replace(in, m);
             AssertThat(out, Is().EqualTo(ptr_uint64::nil()));
           });
