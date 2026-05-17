@@ -1086,6 +1086,16 @@ go_bandit([]() {
           });
         });
 
+        it("swaps adjacent levels with label difference > 1 [bdd_1]", [&](){
+          const mapping_type m = [](const int x) {if (x == 2) {return 4;} 
+                                                        if (x == 4) {return 2;} 
+                                                        return x; };
+          AssertThat(replace__infer_type<bdd_policy>(bdd_1, m) == replace_type::Swap_Adjacent, Is().True());
+          bdd out = bdd_replace(bdd_1, m);
+          bdd out_ns = bdd_replace(bdd_1, m, replace_type::Non_Monotone);
+          AssertThat(out == out_ns, Is().True());
+        });
+
         describe("Jump-up cases", [&](){
 
           it("jumps bottom layer up [bdd_1_ext]", [&](){
