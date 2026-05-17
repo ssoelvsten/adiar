@@ -492,32 +492,12 @@ class pq_sorter_decorator{
 
   //------------------------------------- correctify logic for single level ------------------------------------------
 
-  //helper type for diff cases
-  enum class label_indicator : signed char
-  {
-    NORMAL = 1, // label should just be the current level
-    SHIFT_BACK = 2, // for use in swap_adj - label should be current level / 2
-    DEC= 3, //adj_swap -> level -1 (for xj, extar layers)
-  };
-
-  template<typename Policy>
-  typename Policy::label_type
-  create_label(const label_indicator li, const typename Policy::label_type label){
-    switch (li) {
-      case label_indicator::NORMAL: return label;
-      case label_indicator::SHIFT_BACK: return label/2;
-      case label_indicator::DEC: return label -1;
-    }
-    adiar_unreachable();
-    return 0;
-  }
-
   template <typename Policy, typename correct_level_comp = std::greater<>, typename In, typename Out, typename PQ1, typename PQ2>
   inline void
   correctify_single_level(In& in, Out& aw,
                           PQ1& pq1, PQ2& pq2,
                           typename Policy::node_type& v,
-                          const label_indicator li)
+                          const  typename Policy::label_type out_label)
   {
     using label_t   = typename Policy::label_type;
     using uid_t     = typename Policy::uid_type;
@@ -573,7 +553,6 @@ class pq_sorter_decorator{
         update_label_and_id(tseek);
 
         //push copy reqs
-        const label_t out_label = create_label<Policy>(li, label);
         const uid_t out_uid(out_label, id);
 
         const label_t nil_lbl = node::pointer_type::nil().level();
@@ -623,7 +602,6 @@ class pq_sorter_decorator{
         tuple<ptr_t> rlow = reqs[0]; 
         tuple<ptr_t> rhigh = reqs[1]; 
 
-        const label_t out_label = create_label<Policy>(li, label);
         const uid_t out_uid(out_label, id);
 
         // Forward outgoing
@@ -635,7 +613,6 @@ class pq_sorter_decorator{
         internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
       }
       
-      const label_t out_label = create_label<Policy>(li, label);
       if (id >= 0) { aw.push(level_info(out_label, id+1)); }
       if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
       
@@ -736,7 +713,7 @@ class pq_sorter_decorator{
         continue;
       }
       // CASE normal layer --> Do normal correctify for this level
-      correctify_single_level<Policy>(in, aw, pq1, pq2,  v, label_indicator::NORMAL);
+      correctify_single_level<Policy>(in, aw, pq1, pq2,  v, cur_label);
     }
     return typename Policy::__dd_type(out_arcs,ep); 
   }
@@ -818,13 +795,13 @@ class pq_sorter_decorator{
         if (debug_enabled ) std::cout << "found in-between level " << lvl << "\n";
         // in-between layer
         // handle like normal but decrement level
-        correctify_single_level<Policy>(in, aw, dpq, pq2, v, label_indicator::DEC);
+        correctify_single_level<Policy>(in, aw, dpq, pq2, v, lvl-1); //should actually be -1 
       } else if (lvl == next_target) {
         if (debug_enabled ) std::cout << "found target level " << lvl << "\n";
         // jump-target
         // (1) handle "old version" of level normally (but decrement)
         // (2) insert new level: always in correct layer case
-        correctify_single_level<Policy>(in, aw, dpq, pq2, v, label_indicator::DEC);
+        correctify_single_level<Policy>(in, aw, dpq, pq2, v, lvl-1); //should actually be -1 
 
         out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, dpq.size());
         sorter.sort(); 
@@ -865,7 +842,7 @@ typename Policy::label_type id = 0;
       } else {
         //uninvolved layer - just do regular correctify
         if (debug_enabled ) std::cout << "found uninvolved level " << lvl << "\n";
-        correctify_single_level<Policy>(in, aw, dpq, pq2, v, label_indicator::NORMAL);
+        correctify_single_level<Policy>(in, aw, dpq, pq2, v, lvl);
       }
     }
     if (debug_enabled) std::cout << "finished big loop!";
@@ -957,14 +934,14 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
         //(1) handle level xj as correctify but
         //    (a) never in correct layer case!
         //    (b) when pushing reqs, if level is min, push to pq3 instead (handled by the new policy)
-        //    (c) out_label should be next_swap aka current level -1 (handled by label_indicator)
-        correctify_single_level<Policy,std::greater_equal<>>(in, aw, apq, pq2, v,  label_indicator::DEC);
+        //    (c) out_label should be next_swap 
+        correctify_single_level<Policy,std::greater_equal<>>(in, aw, apq, pq2, v,  next_swap.value());
         //make sure to update cut since we just continue here 
         out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, apq.size());
         //(2) handle the extra level as correctify but
         //    (a) always in correct layer case!
         //    (b) pulls requests from sorter
-        //    (c) out_label should be current level -1 aka next_target
+        //    (c) out_label should be next_target
         sorter.sort();
         typename Policy::label_type id = 0;
         if (debug_enabled)std::cout << "starting work for extra level \n";
@@ -1005,7 +982,7 @@ replace_adj_swap_sweep_1(const typename Policy::dd_type& dd,
 
       } else {
          if (debug_enabled) std::cout << "found regular level: " << label << "\n";
-         correctify_single_level<Policy,std::greater_equal<>>(in, aw, apq, pq2, v,  label_indicator::NORMAL);
+         correctify_single_level<Policy,std::greater_equal<>>(in, aw, apq, pq2, v,  label);
       }
 
     }
@@ -2257,7 +2234,7 @@ replace(const typename Policy::dd_type& dd,
     while(!pq1.empty()){
       pq1.setup_next_level();
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq1.size());
-      correctify_single_level<Policy>(in_nodes, aw, pq1, pq2, v, label_indicator::NORMAL);
+      correctify_single_level<Policy>(in_nodes, aw, pq1, pq2, v, pq1.current_level());
   }
      if(debug_enabled) std::cout << "exited big loop!\n";
      return typename Policy::__dd_type(out_arcs,ep);
@@ -2371,8 +2348,8 @@ class nested_sweeping_replace : public Policy
 private:
     bool use_list;
     int index;
-    const vector<memory_mode::Internal, typename Policy::label_type> m_arr;
-    const replace_func<Policy> _m;                                
+    const vector<memory_mode::Internal, typename Policy::label_type> m_arr; //map to relabel after given as list
+    const replace_func<Policy> _m;                                // map to relabel after
     const generator<typename Policy::label_type> _nesting_levels; // generator for levels to sweep on
     const generator<typename Policy::label_type> _targets;        //target for sweeps - to init pq with
     optional<typename Policy::label_type> _next_level; //next level to sweep on
@@ -2442,7 +2419,7 @@ public:
 
     //heavily based on sweep_pq from the prod2u sweeping policy
     //main differences:
-    // - __cor_ilevel_upper_bound is different -> takes all arcs into account for cut??
+    // - __cor_ilevel_upper_bound is different -> takes all arcs into account for cut
     template <typename inner_pq_t>
     __bdd sweep_pq([[maybe_unused]]const exec_policy& ep,
                    [[maybe_unused]]const shared_levelized_file<node>& outer_file,
