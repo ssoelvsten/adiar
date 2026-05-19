@@ -2,6 +2,7 @@
 #include "../../test.h"
 #include "adiar/bdd.h"
 #include "adiar/bdd/bdd_policy.h"
+#include "adiar/exception.h"
 #include "adiar/exec_policy.h"
 #include "adiar/internal/algorithms/dot.h"
 #include "adiar/internal/algorithms/reduce.h"
@@ -29,6 +30,25 @@ void fixed_printdot(__bdd bdd, std::string fn) {
     }
   }
   print_dot(arcs, fn);
+}
+
+bdd
+diamond(int N)
+{
+  bdd_builder builder;
+  const auto bot = builder.add_node(false);
+  const auto top = builder.add_node(true);
+
+  auto a = top;
+
+  for (int i = N-1; 0 <= i; --i) {
+    const int a_var = 2 * i;
+    const int b_var = 2 * i + 1;
+    auto t1 = builder.add_node(b_var, bot, a);
+    auto t2 = builder.add_node(b_var, a, bot);
+    a = builder.add_node(a_var, t2, t1);
+  }
+  return builder.build();
 }
 
 bdd 
@@ -423,6 +443,24 @@ go_bandit([]() {
 
 
     describe("bdd_replace(const bdd&, <...>)", [&]() {
+
+      describe ("<map structure>", [&](){
+        it("rejects [2 -> 2, 4 -> 2] in bdd_1", [&](){
+          const mapping_type m = [](const int x) { 
+            if(x == 2) {return 2;}
+            if(x == 4) {return 2;}  
+            return x;};
+            AssertThrows(invalid_argument, bdd_replace(bdd_1, m));
+        });
+
+        it("doesn't reject [2 -> 2, 4 -> 2] in bdd_10", [&](){
+          const mapping_type m = [](const int x) { 
+            if(x == 2) {return 2;}
+            if(x == 4) {return 2;}  
+            return x;};
+            AssertThat(replace_map_is_valid<bdd_policy>(bdd_10, m), Is().True());
+        });
+      });
       describe("<non-monotonic>", [&]() {
         it("returns the original file for 'F'", [&]() {
           const mapping_type m = [](const int x) { return 4 - x; };
@@ -488,8 +526,7 @@ go_bandit([]() {
           AssertThat(out_nodes.can_pull(), Is().False());
         });
 
-        // TODO: Add more complex inputs that test for all relevant behaviours of applying the
-        //       Nested Sweeping framework to move levels.
+
         describe("Jump Down cases", [&]() {
           //TODO: check that level info file is created correctly
 
@@ -1748,6 +1785,57 @@ go_bandit([]() {
             AssertThat(res_got == res_expected, Is().True());
           });
 
+          it("jumps down to a layer with many nodes [fat_diamond]", [&]() {
+            //making fat diamond
+            bdd dim = diamond(3);
+            const mapping_type dim_fat_map = [](const int x) {
+              if (x == 0) {return 0;}
+              if (x == 1) {return 3;}
+              if (x == 2) {return 1;}
+              if (x == 3) {return 4;}
+              if (x == 4) {return 2;}
+              if (x == 5) {return 5;}
+              return x;
+            } ;
+            AssertThat(replace__infer_type<bdd_policy>(dim, dim_fat_map) == replace_type::Non_Monotone, Is().True());
+            bdd dim_fat = bdd_replace(dim, dim_fat_map, replace_type::Non_Monotone);
+            bdd_printdot(dim_fat, "dim_fat.dot");
+            //doing replace
+            const mapping_type m = [](const int x) {
+              if (x == 0) {return 2;}
+              if (x == 1) {return 0;}
+              if (x == 2) {return 1;}
+              if (x == 3) {return 5;}
+              if (x == 4) {return 3;}
+              if (x == 5) {return 4;}
+              return x;
+            } ;
+            bdd res_ns = bdd_replace(dim_fat, m, replace_type::Non_Monotone);
+            bdd res = bdd_replace(dim_fat, m, replace_type::Non_Monotone_JD);
+            bdd_printdot(res, "jd_res.dot");
+            bdd_printdot(res_ns, "ns_res.dot");
+            AssertThat(res == res_ns, Is().True());
+          });
+
+          it("can jump down to non-existent levels [bdd_1_ext]", [&](){
+            const mapping_type m = [](const int x) { if (x == 0) {return 1;} 
+                                                           if (x == 2) {return 3;}
+                                                           return x;
+            };
+            bdd out = bdd_replace(bdd_1_ext, m, adiar::replace_type::Non_Monotone_JD);
+            bdd out_ns = bdd_replace(bdd_1_ext, m, adiar::replace_type::Non_Monotone);
+            AssertThat(out == out_ns, Is().True());
+          });   
+
+          it("can jump down to non-existent (long jump length) [bdd_1_ext]", [&](){
+            const mapping_type m = [](const int x) { if (x == 0) {return 6;} 
+                                                           return x;
+            };
+            bdd out = bdd_replace(bdd_1_ext, m, adiar::replace_type::Non_Monotone_JD);
+            bdd out_ns = bdd_replace(bdd_1_ext, m, adiar::replace_type::Non_Monotone);
+            AssertThat(out == out_ns, Is().True());
+          }); 
+            
         });
 
         //TODO: more tests?!
@@ -2991,7 +3079,7 @@ go_bandit([]() {
 
           // Check only called once to determine type of mapping and then once to obtain the amount
           // to shift
-          AssertThat(m_calls, Is().EqualTo(1 + 1));
+          AssertThat(m_calls, Is().EqualTo(1 + 1 + 1)); // map_valid, infer, shift
 
           // Check it returns the same file but shifted
           AssertThat(out.file_ptr(), Is().EqualTo(bdd_x0_nf));
@@ -3820,7 +3908,7 @@ go_bandit([]() {
         };
         const bdd out = bdd_replace(__bdd(bdd_x0_nf), m, replace_type::Identity);
 
-        AssertThat(m_calls, Is().EqualTo(0));
+        AssertThat(m_calls, Is().EqualTo(1)); //changed to 1 since replace now always checks whether given map is valid
 
         AssertThat(out.file_ptr(), Is().EqualTo(bdd_x0_nf));
         AssertThat(out.is_negated(), Is().False());
