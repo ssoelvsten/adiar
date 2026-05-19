@@ -2104,35 +2104,26 @@ replace(const typename Policy::dd_type& dd,
     {return a.second > b.second;}
   };
 
-  //split map into jump-down and rest parts 
-  template<typename Policy>
-  vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
-  jump_down_map_split(const typename Policy::dd_type dd , const replace_func<Policy>& m){
+ template<typename Policy>
+ vector<memory_mode::Internal, vector<memory_mode::Internal, typename Policy::label_type>>
+ jump_down_map_split(const typename Policy::dd_type dd , const replace_func<Policy>& m) {
     using lbl_t = typename Policy::label_type;
-    //(0) definign some comps 
-    //(1) finding number of variables (TODO: make this a field somewhere to avoid a while loop here..)
-    int varcount =0;
-    { level_info_ifstream<> levels(dd);
-      while (levels.can_pull()){
-        levels.pull();
-        varcount++;
-      }
-    }
-    //(2) find all jump downs
-    sorter<memory_mode::Internal, pair<lbl_t, lbl_t>, target_increasing<Policy>> all_JDs(varcount*2, varcount);
+    size_t varcount = dd->levels();
+    std::cout << "found varcount =" << varcount << "\n";
+
+    std::vector<pair<lbl_t, lbl_t>> all_JDs;
     { level_info_ifstream<> levels(dd);
       while(levels.can_pull()){
         const lbl_t l = levels.pull().level();
-        if(m(l)>l) {all_JDs.push({l,m(l)}); }
+        if(m(l)>l) {all_JDs.push_back({l,m(l)}); }
       }
     }
-    //(3) find largest non-overlapping subset
-    all_JDs.sort();
+    
+    sort(all_JDs.begin(), all_JDs.end(), target_increasing<Policy>());
     vector<memory_mode::Internal, lbl_t> jump_starts(varcount), jump_ends(varcount);
     std::vector<pair<lbl_t, lbl_t>> chosen_JDs;
     lbl_t latest_added = 0;
-    while(all_JDs.can_pull()){
-      pair<lbl_t, lbl_t> pair = all_JDs.pull();
+    for(pair<lbl_t, lbl_t> pair : all_JDs){
       if (latest_added == 0 || pair.first > latest_added ){
         chosen_JDs.push_back(pair);
         jump_starts.push_back(pair.first);
@@ -2140,38 +2131,38 @@ replace(const typename Policy::dd_type& dd,
         latest_added = pair.second;
       }
     }
-    //(4) building out full mappign of pairs to create rest maps 
-    sorter<memory_mode::Internal, pair<lbl_t, lbl_t>, target_decreasing<Policy>> chosen_mapping_pairs(varcount*2, varcount);
+
+    std::vector<pair<lbl_t, lbl_t>> chosen_map_pairs;
     { level_info_ifstream<> levels(dd);
       auto next_JD = chosen_JDs.begin();
       while(levels.can_pull()){
         const lbl_t l = levels.pull().level();
         if (l == (*next_JD).first) {
           if (debug_enabled) std::cout << "(1) pushing pair " << (*next_JD).first << ", " << (*next_JD).second << " to chosen_map\n";
-          chosen_mapping_pairs.push(*next_JD);
+          chosen_map_pairs.push_back(*next_JD);
           next_JD++;
         }
         else if(l > (*next_JD).first && l < (*next_JD).second) {
            if (debug_enabled) std::cout << "(2) pushing pair " << l << ", " << l-1 << " to chosen_map\n";
-          chosen_mapping_pairs.push({l,l-1});}
+          chosen_map_pairs.push_back({l,l-1});}
         else if (l == (*next_JD).second){
            if (debug_enabled) std::cout << "(3) pushing pair " << l << ", " << l -1<< " to chosen_map\n";
-          chosen_mapping_pairs.push({l,l-1});
+          chosen_map_pairs.push_back({l,l-1});
           next_JD++;
         } else {
            if (debug_enabled) std::cout << "(4) pushing pair " << l << ", " << l << " to chosen_map\n";
-          chosen_mapping_pairs.push({l,l});
+          chosen_map_pairs.push_back({l,l});
         }
       }
     }
-    //(5) building the sweeping maps and map_level
-    chosen_mapping_pairs.sort();
+    sort(chosen_map_pairs.begin(), chosen_map_pairs.end(), target_decreasing<Policy>());
     vector<memory_mode::Internal, lbl_t> sweep_starts(varcount), sweep_ends(varcount), map_lvl(varcount);
     lbl_t min_seen = Policy::max_label;
+    size_t idx = 0;
     {level_info_ifstream<true> levels_reverse(dd);
       while(levels_reverse.can_pull()){
         const lbl_t l = levels_reverse.pull().level();
-        const lbl_t old_l = chosen_mapping_pairs.pull().first;
+        const lbl_t old_l = chosen_map_pairs[idx++].first;
         if (debug_enabled)  std::cout << "found l = " << l << ", old_l = "<< old_l << "\n";
         if(old_l < l){ 
           map_lvl.push_back(l);
@@ -2195,13 +2186,12 @@ replace(const typename Policy::dd_type& dd,
         }
       }
     }
-    //(6) output resulting vectors
     vector<memory_mode::Internal, vector<memory_mode::Internal, lbl_t>> res(5);
     res.push_back(jump_starts); res.push_back(jump_ends);
     res.push_back(sweep_starts); res.push_back(sweep_ends);
     res.push_back(map_lvl); 
     return res;
-  }
+ }
 
   //split map into adj_swap part and rest part
   template<typename Policy>
@@ -2422,7 +2412,7 @@ class nested_sweeping_replace : public Policy
 {
 private:
     bool use_list;
-    int index;
+    size_t index;
     const vector<memory_mode::Internal, typename Policy::label_type> m_arr; //map to relabel after given as list
     const replace_func<Policy> _m;                                // map to relabel after
     const generator<typename Policy::label_type> _nesting_levels; // generator for levels to sweep on
@@ -2691,6 +2681,8 @@ public:
           //same BIG CLAIM up here shouldn't be possible that there are no inner sweeps but things still need to be relabled..?
           return after_jumps;
         }
+       
+         if (debug_enabled) std::cout << "\n";
         nested_sweeping_replace<Policy> inner_impl(map_lists[4], make_generator(map_lists[2].begin(), map_lists[2].end()),
                                                       make_generator(map_lists[3].begin(), map_lists[3].end()));
         return nested_sweep<>(ep, after_jumps, inner_impl);
