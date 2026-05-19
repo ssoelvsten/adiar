@@ -176,6 +176,30 @@ namespace adiar::internal
     return replace_type::Identity;
   }
 
+  ///validate map
+  template <typename Policy, typename ReplaceFunction>
+  bool
+  replace_map_is_valid(const typename Policy::dd_type dd, const ReplaceFunction& m){
+    //ensure that given map does not map 2 existing levels to the same new level!
+    std::vector<typename Policy::label_type> all_mappings; 
+    { level_info_ifstream<> ls(dd);
+      while(ls.can_pull()){
+        typename Policy::label_type level = ls.pull().level();
+        all_mappings.push_back(m(level));
+      }
+    }
+   
+    sort(all_mappings.begin(), all_mappings.end());
+    //checking for dupes
+    typename Policy::label_type last_seen = node::pointer_type::nil_level;
+    for(typename Policy::label_type l : all_mappings){
+      if (l == last_seen) {return false;}
+      last_seen = l;
+    }
+    //if no dupes found we happy
+    return true;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /// \brief Infer the replace type.
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,7 +317,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = false;
+  constexpr bool debug_enabled = true;
 
   //types
   template <uint8_t nodes_carried>
@@ -497,7 +521,7 @@ class pq_sorter_decorator{
   correctify_single_level(In& in, Out& aw,
                           PQ1& pq1, PQ2& pq2,
                           typename Policy::node_type& v,
-                          const  typename Policy::label_type out_label)
+                          const typename Policy::label_type out_label)
   {
     using label_t   = typename Policy::label_type;
     using uid_t     = typename Policy::uid_type;
@@ -507,16 +531,10 @@ class pq_sorter_decorator{
     //does all the correctify stuff for single level - for use both in general non-monotone replace and special cases jump_down and adj_swap
     //vars
     label_t label = pq1.current_level();
-    label_t id = -1; 
+    label_t id = 0; 
     correct_level_comp comp = correct_level_comp{};
 
     // --- Helpers ------------------------------------------------------------
-    auto update_label_and_id = [&](const ptr_uint64& tseek) {
-      id = (label == tseek.label()) ? (id + 1) : 0; 
-      label = tseek.label() ;
-      if(debug_enabled) std::cout << "label, id: " << label << "," << id << "\n";
-    };
-
     auto compute_tseek = [&](const cor_req_t<1>& r) -> ptr_uint64 {
       const ptr_uint64 level_uid(r.data.level, r.target.first().is_node() ? r.target.first().id() : 0);
       return (r.empty_carry())
@@ -528,7 +546,7 @@ class pq_sorter_decorator{
 
     while (!pq1.empty_level() || pq2.has_top()) {
       const cor_req_t<1> r = getNext(pq1, pq2); //pull next req
-      if (debug_enabled) std::cout << "pulled req" << r << "\n";
+      //if (debug_enabled) std::cout << "pulled req" << r << "\n";
       const ptr_uint64 tseek = compute_tseek(r);  //updating tseek, v
 
       //CASE found correct layer!
@@ -550,10 +568,10 @@ class pq_sorter_decorator{
           continue;
         }
         //SUBCASE not surpressible
-        update_label_and_id(tseek);
+        //update_label_and_id(tseek);
 
         //push copy reqs
-        const uid_t out_uid(out_label, id);
+        const uid_t out_uid(out_label, id++);
 
         const label_t nil_lbl = node::pointer_type::nil().level();
         const tuple<ptr_t> tl = {r.target[0],node::pointer_type::nil()};
@@ -596,13 +614,13 @@ class pq_sorter_decorator{
 
       //CASE wrong layer
         if (debug_enabled) std::cout << "wrong layer case \n";
-        update_label_and_id(tseek);
+        //update_label_and_id(tseek);
 
         tuple<tuple<ptr_t>> reqs = reqFor<Policy>(r.target, v, r.node_carry[0][0], r.node_carry[0][1]);
         tuple<ptr_t> rlow = reqs[0]; 
         tuple<ptr_t> rhigh = reqs[1]; 
 
-        const uid_t out_uid(out_label, id);
+        const uid_t out_uid(out_label, id++);
 
         // Forward outgoing
         pusher<Policy, PQ1>(pq1, aw, out_uid.as_ptr(false), rlow, r.data.level);
@@ -613,7 +631,7 @@ class pq_sorter_decorator{
         internal_pusher<Policy, PQ2, 1>(pq2, aw, out_uid, r.target,  r.data.level);
       }
       
-      if (id >= 0) { aw.push(level_info(out_label, id+1)); }
+      if (id > 0) { aw.push(level_info(out_label, id)); }
       if(debug_enabled) std::cout << "finished work for level "  << label << "\n";
       
   }
@@ -748,11 +766,12 @@ class pq_sorter_decorator{
     //init generators
     const generator<typename Policy::label_type> jump_start_gen = make_generator(jump_starts.begin(), jump_starts.end());
     const generator<typename Policy::label_type> jump_target_gen = make_generator(jump_targets.begin(), jump_targets.end());
+    const generator<typename Policy::label_type> jump_target_gen_for_pq = make_generator(jump_targets.begin(), jump_targets.end());
     optional<typename Policy::label_type> next_jump_down = jump_start_gen();
     optional<typename Policy::label_type> next_target = jump_target_gen();
 
     //init PQs and sorter
-    PQ1 pq1({dd}, pq1_mem , max_pq1_size, stats_replace.lpq);
+    PQ1 pq1({dd, jump_target_gen_for_pq}, pq1_mem , max_pq1_size, stats_replace.lpq);
     PQ2 pq2(pq2_mem, max_pq2_size);
     sorter_t sorter(sorter_mem, max_sorter_size);
 
@@ -775,10 +794,58 @@ class pq_sorter_decorator{
     if (debug_enabled) std::cout << "init jump_down req: " << init_r << "\n";
     dpq.push(init_r);
 
+    //if the first is a jump and it jumps to an empty level right below it, life is cooked.. 
+    // in that case we should run the sorter *now* which would then push some stuff to the pq
+    if (pq1.empty()){
+      std::cout << "we enter the sorter stuff initially??\n";
+      sorter.sort();
+      typename Policy::label_type id = 0;
+      while(sorter.can_pull()) {
+        const cor_req_t<0> extra_r = sorter.top();
+          if (debug_enabled)std::cout << "found req " << extra_r << "\n";
+          if (extra_r.target[0] == extra_r.target[1]) {
+            if (debug_enabled)std::cout << "skip surpressible node! \n";
+            sorter.pull(); 
+            const cor_req_t<0> r1 = {{extra_r.target[0],node::pointer_type::nil()}, {}, {extra_r.data.source}};
+            if (debug_enabled)std::cout << "pushes req " << r1 << "\n";
+            dpq.push(r1);
+            continue;
+          }
+          
+          const typename Policy::uid_type out_uid(next_target.value(), id++);
+          pusher<Policy>(dpq, aw, out_uid.as_ptr(false), {extra_r.target[0], node::pointer_type::nil()}, node::pointer_type::nil().level());
+          pusher<Policy>(dpq, aw, out_uid.as_ptr(true),  {extra_r.target[1], node::pointer_type::nil()}, node::pointer_type::nil().level());
+
+          // forward incoming
+          //TODO find a way to use internal pusher here?
+          while (sorter.has_top() && sorter.top().target == extra_r.target){
+            const cor_req_t<0> r1 = sorter.pull();
+            if (debug_enabled) std::cout << "has pulled: " << r1 << "\n";
+            if (r1.data.source.level() != ptr_uint64::nil().level()) {
+              if (debug_enabled) std::cout << "has pushed internal: " << arc{unflag(r1.data.source), out_uid} << "\n";
+              aw.push_internal({r1.data.source, out_uid});
+            }
+          }
+      }
+      //updating all the things
+      if(id >= 0) {aw.push(level_info(next_target.value(), id+1));}
+      next_jump_down = jump_start_gen();
+      next_target = jump_target_gen();
+      sorter.reset();
+    }
+    
+
+
     while(!dpq.empty()){
-      dpq.setup_next_level();
+      if (next_target.has_value()){
+        dpq.setup_next_level(next_target.value());
+      } else {
+        dpq.setup_next_level();
+      }
+      
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq1.size());
       typename Policy::label_type lvl = dpq.current_level();
+      std::cout << "running for level: " << lvl << "\n";
 
       if(lvl == next_jump_down){
         if (debug_enabled ) std::cout << "found next jump_level " << lvl << "\n";
@@ -802,10 +869,10 @@ class pq_sorter_decorator{
         // (1) handle "old version" of level normally (but decrement)
         // (2) insert new level: always in correct layer case
         correctify_single_level<Policy>(in, aw, dpq, pq2, v, lvl-1); //should actually be -1 
-
+        if (debug_enabled)std::cout << "finished correctify... \n";
         out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, dpq.size());
         sorter.sort(); 
-typename Policy::label_type id = 0;
+        typename Policy::label_type id = 0;
         if (debug_enabled)std::cout << "starting work for extra level \n";
         while(sorter.can_pull()){
           const cor_req_t<0> extra_r = sorter.top();
@@ -818,7 +885,7 @@ typename Policy::label_type id = 0;
             dpq.push(r1);
             continue;
           }
- 
+          
           const typename Policy::uid_type out_uid(next_target.value(), id++);
           pusher<Policy>(dpq, aw, out_uid.as_ptr(false), {extra_r.target[0], node::pointer_type::nil()}, node::pointer_type::nil().level());
           pusher<Policy>(dpq, aw, out_uid.as_ptr(true),  {extra_r.target[1], node::pointer_type::nil()}, node::pointer_type::nil().level());
@@ -1078,7 +1145,7 @@ struct  jump_up_arc : public arc {
   }
 
 
-  //printing to include payload..?
+  //printing to include payload
   std::string
     to_string() const
     {
@@ -1763,16 +1830,18 @@ template <typename In>
       stats_replace.lpq.unbucketed += 1u;
 #endif
         //internal, no lookahead
-        using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,1u>;
+        
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
         using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>, false>;
 
         switch(rt){
           case replace_type::Non_Monotone_Adj : {
+            using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,1u>;
             return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, starts, ends, ep, 
           pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
           }
           case replace_type::Jump_Down_Inhabited :
+            using PQ1 = cor_lvl_priority_queue_t<0, memory_mode::Internal,2u>;
             return replace_jump_down_inhabited_sweep<Policy, PQ1, PQ2, sorter_t>(dd, starts,  ends,  ep,  
               pq1_memory,  max_pq_1_size,  pq2_memory,  max_pq_2_size,  sorter_memory,  sorter_max);
           default :
@@ -1787,15 +1856,17 @@ template <typename In>
 #ifdef ADIAR_STATS
       stats_replace.lpq.internal += 1u;
 #endif
-      using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
+      
       using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
       using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::Internal, cor_req_t<0>, request_first_lt<cor_req_t<0>>, false>;
       switch(rt){
           case replace_type::Non_Monotone_Adj : {
+            using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,1u>;
             return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, starts, ends, ep, 
           pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
           }
           case replace_type::Jump_Down_Inhabited :
+            using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::Internal,2u>;
             return replace_jump_down_inhabited_sweep<Policy, PQ1, PQ2, sorter_t>(dd, starts,  ends,  ep,  
               pq1_memory,  max_pq_1_size,  pq2_memory,  max_pq_2_size,  sorter_memory,  sorter_max);
           default :
@@ -1803,15 +1874,17 @@ template <typename In>
       }
     } else {
       //external case
-      using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,1u>;
+      
       using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
       using sorter_t = nested_sweeping::outer::roots_sorter<memory_mode::External, cor_req_t<0>, request_first_lt<cor_req_t<0>>, false>;
       switch(rt){
           case replace_type::Non_Monotone_Adj : {
+            using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,1u>;
             return replace_adj_swap_sweep_1<Policy, PQ1, PQ2, sorter_t>(dd, starts, ends, ep, 
           pq1_memory, max_pq_1_size, pq2_memory, max_pq_2_size, sorter_memory, sorter_max);
           }
           case replace_type::Jump_Down_Inhabited :
+            using PQ1 = cor_lvl_priority_queue_t<ADIAR_LPQ_LOOKAHEAD, memory_mode::External,2u>;
             return replace_jump_down_inhabited_sweep<Policy, PQ1, PQ2, sorter_t>(dd, starts,  ends,  ep,  
               pq1_memory,  max_pq_1_size,  pq2_memory,  max_pq_2_size,  sorter_memory,  sorter_max);
           default :
@@ -2075,7 +2148,9 @@ replace(const typename Policy::dd_type& dd,
         const lbl_t l = levels.pull().level();
         if (l == (*next_JD).first) {
           if (debug_enabled) std::cout << "(1) pushing pair " << (*next_JD).first << ", " << (*next_JD).second << " to chosen_map\n";
-          chosen_mapping_pairs.push(*next_JD);}
+          chosen_mapping_pairs.push(*next_JD);
+          next_JD++;
+        }
         else if(l > (*next_JD).first && l < (*next_JD).second) {
            if (debug_enabled) std::cout << "(2) pushing pair " << l << ", " << l-1 << " to chosen_map\n";
           chosen_mapping_pairs.push({l,l-1});}
@@ -2573,6 +2648,10 @@ public:
 #endif
       return dd;
     }
+
+    //ensuring that given map is valid
+    bool valid = replace_map_is_valid<Policy>(dd, m);
+    if (!valid) {throw invalid_argument("replace map should not map two seperate levels to the same new level");}
 
     const replace_type inferred_type =
       m_type == replace_type::Auto ? replace__infer_type<Policy>(dd, m) : m_type;
