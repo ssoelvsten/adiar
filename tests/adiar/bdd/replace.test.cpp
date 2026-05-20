@@ -52,7 +52,7 @@ diamond(int N)
 }
 
 bdd 
-quadratic_builder_double(int N){
+quadratic_builder_double(int N, int fac=1){
   const auto bot = bdd_bot();
   const auto top = bdd_top();
 
@@ -60,9 +60,9 @@ quadratic_builder_double(int N){
   auto b1 = top;
 
   for (int i = N-1; 0 <= i; --i) {
-    const int a_var = (2 * i + 1)*2;
+    const int a_var = (2 * i + 1)*fac;
     a1 = bdd_ite(bdd_ithvar(a_var), bot, a1);
-    const int b_var = (2 * i)*2;
+    const int b_var = (2 * i)*fac;
     b1 = bdd_ite(bdd_ithvar(b_var), b1, a1);
   }
   return b1;
@@ -1187,7 +1187,7 @@ go_bandit([]() {
           });
 
           it("jumps up layers [quad]", [&]() {
-            bdd quad_50 = quadratic_builder_double(50);
+            bdd quad_50 = quadratic_builder_double(50,2);
             //50:1; 100:51; 150:101
             const mapping_type m = [](const int x) { if (x == 50) {return 1;}
                                                            if (x == 100) {return 51;}
@@ -1586,8 +1586,8 @@ go_bandit([]() {
             //JD is the expected one
             AssertThat(res_lists[0][0] == 0 && res_lists[1][0] == 2, Is().True());
             //1 inner sweep
-            AssertThat(res_lists[2].size() == 2,Is().True());
-            AssertThat(res_lists[3].size() == 2,Is().True());
+            AssertThat(res_lists[2].size(), Is().EqualTo(2));
+            AssertThat(res_lists[3].size(), Is().EqualTo(2));
             //sweeps are expected ones
             AssertThat(res_lists[2][0] == 2 && res_lists[3][0] == 2, Is().True());
             AssertThat(res_lists[2][1] == 1 && res_lists[3][1] == 3, Is().True());
@@ -1636,6 +1636,94 @@ go_bandit([]() {
             AssertThat(res_lists[4][5] == 5, Is().True());
             AssertThat(res_lists[4][6] == 4, Is().True());
             AssertThat(res_lists[4][7] == 0, Is().True());
+          });
+
+          it("correctly identified jump_downs in map [doubel_quad]", [&](){
+            const replace_func<bdd_policy> m = [](const int x) { 
+              if (x == 0) {return 1;} //JD
+              if (x == 2) {return 2;} 
+              if (x == 4) {return 11;}
+              if (x == 6) {return 6;}
+              if (x == 8) {return 10;} //JD
+              if (x == 10) {return 8;} 
+              if (x == 12) {return 12;}
+              return x;
+            };
+
+            auto res_lists = jump_down_map_split<bdd_policy>(quadratic_builder_double(4,2), m);
+            //correct JDs
+            AssertThat(res_lists[0].size(), Is().EqualTo(2u));
+            AssertThat(res_lists[1].size(), Is().EqualTo(2u));
+            AssertThat(res_lists[0][0], Is().EqualTo(0u));
+            AssertThat(res_lists[1][0], Is().EqualTo(1u));
+            AssertThat(res_lists[0][1], Is().EqualTo(8u));
+            AssertThat(res_lists[1][1], Is().EqualTo(10u));
+
+            //correct inner sweeps
+            AssertThat(res_lists[2].size(), Is().EqualTo(1u));
+            AssertThat(res_lists[3].size(), Is().EqualTo(1u));
+            AssertThat(res_lists[2][0], Is().EqualTo(4u));
+            AssertThat(res_lists[3][0], Is().EqualTo(11u));
+
+            //correct full_map
+            AssertThat(res_lists[4][0], Is().EqualTo(14u));
+            AssertThat(res_lists[4][1], Is().EqualTo(12u));
+            AssertThat(res_lists[4][2], Is().EqualTo(10u));
+            AssertThat(res_lists[4][3], Is().EqualTo(8u));
+            AssertThat(res_lists[4][4], Is().EqualTo(6u));
+            AssertThat(res_lists[4][5], Is().EqualTo(11u));
+            AssertThat(res_lists[4][6], Is().EqualTo(2u));
+            AssertThat(res_lists[4][7], Is().EqualTo(1u));
+          });
+
+           it("correctly identified jump_downs in map (2) [doubel_quad]", [&](){
+            const replace_func<bdd_policy> m = [](const int x) { 
+              if (x == 0) {return 3;} //JD
+              if (x == 2) {return 2;} 
+              if (x == 4) {return 8;} //JD
+              if (x == 6) {return 6;}
+              if (x == 8) {return 12;} 
+              if (x == 10) {return 13;} //JD
+              if (x == 12) {return 1;}
+              if (x == 14) {return 14;}
+              return x;
+            };
+            
+            auto res_lists = jump_down_map_split<bdd_policy>(quadratic_builder_double(4,2), m);
+            //correct JDs
+            AssertThat(res_lists[0].size(), Is().EqualTo(3u));
+            AssertThat(res_lists[1].size(), Is().EqualTo(3u));
+            AssertThat(res_lists[0][0], Is().EqualTo(0u));
+            AssertThat(res_lists[1][0], Is().EqualTo(3u));
+            AssertThat(res_lists[0][1], Is().EqualTo(4u));
+            AssertThat(res_lists[1][1], Is().EqualTo(8u));
+            AssertThat(res_lists[0][2], Is().EqualTo(10u));
+            AssertThat(res_lists[1][2], Is().EqualTo(13u));
+
+            //correct inner sweeps
+            print_list(res_lists[2]);
+            AssertThat(res_lists[2].size(), Is().EqualTo(5u));
+            AssertThat(res_lists[3].size(), Is().EqualTo(5u));
+            AssertThat(res_lists[2][0], Is().EqualTo(8u));
+            AssertThat(res_lists[3][0], Is().EqualTo(8u));
+            AssertThat(res_lists[2][1], Is().EqualTo(7u));
+            AssertThat(res_lists[3][1], Is().EqualTo(12u));
+            AssertThat(res_lists[2][2], Is().EqualTo(5u));
+            AssertThat(res_lists[3][2], Is().EqualTo(6u));
+            AssertThat(res_lists[2][3], Is().EqualTo(3u));
+            AssertThat(res_lists[3][3], Is().EqualTo(3u));
+            AssertThat(res_lists[2][4], Is().EqualTo(1u));
+            AssertThat(res_lists[3][4], Is().EqualTo(2u));
+
+            //correct full_map
+            AssertThat(res_lists[4][0], Is().EqualTo(14u));
+            AssertThat(res_lists[4][1], Is().EqualTo(13u));
+            AssertThat(res_lists[4][2], Is().EqualTo(1u));
+            AssertThat(res_lists[4][3], Is().EqualTo(8u));
+            AssertThat(res_lists[4][4], Is().EqualTo(12u));
+            AssertThat(res_lists[4][5], Is().EqualTo(6u));
+            AssertThat(res_lists[4][6], Is().EqualTo(3u));
+            AssertThat(res_lists[4][7], Is().EqualTo(2u));
           });
 
           it("performs many adj_swaps and then nested sweeping [bdd_9]", [&]() {
