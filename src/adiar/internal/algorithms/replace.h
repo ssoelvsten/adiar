@@ -2137,27 +2137,27 @@ replace(const typename Policy::dd_type& dd,
           chosen_map_pairs.push_back({l,l});
         }
       } else {
-        auto next_JD = chosen_JDs.begin();
-        lbl_t JD_start = (*next_JD).first;
+        size_t idx = 0;
+        size_t max = jump_starts.size();
+        lbl_t JD_start = jump_starts[idx];
         lbl_t JD_target = 0; 
                 while(levels.can_pull()){
           const lbl_t l = levels.pull().level();
           if (debug_enabled) std::cout << "l = " << l << ", JD_start = " << JD_start << ", JD_target =" << JD_target << "\n";
 
           if (l == JD_start){
-            if (debug_enabled) std::cout << "(1) pushes " << JD_start << ", " << (*next_JD).second << "\n";
-            JD_target = (*next_JD).second;
-            chosen_map_pairs.push_back({l, JD_target});
-            next_JD++;
-            JD_start = (*next_JD).first;
-            
+              JD_target = jump_ends[idx];
+              if (debug_enabled)  std::cout << "(1) pushes " << JD_start << ", " << JD_target << "\n";
+              chosen_map_pairs.push_back({l, JD_target});
+              if (idx != max-1) idx++;
+              JD_start = jump_starts[idx];
           } else if (l <= JD_target && l != 0) {
-            if (debug_enabled) std::cout << "(2) pushes " << l << ", " << l-1 << "\n";
+            if (debug_enabled)  std::cout << "(2) pushes " << l << ", " << l-1 << "\n";
             chosen_map_pairs.push_back({l,l-1});
 
           } else {
-            if (debug_enabled) std::cout << "(3) pushes " << l << ", " << l << "\n";
-            //below last jump-down..?
+            if (debug_enabled)  std::cout << "(3) pushes " << l << ", " << l << "\n";
+            //outside JDs
             chosen_map_pairs.push_back({l,l});
           }
         }
