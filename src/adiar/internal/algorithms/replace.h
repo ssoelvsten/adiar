@@ -20,6 +20,7 @@
 #include <functional>
 #include <iostream>
 #include <sys/types.h>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -1073,13 +1074,7 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
     if (debug_enabled) std::cout << "started adj_swap stuff\n ";
     //TODO: store numebr of levels in level info file to avoid having to count them initially
     //and or : TODO have a constructor for adiar vectors that take a std:vector as input
-    int number_of_levels = 0;
-    {level_info_ifstream<> level_counter(dd);
-      while (level_counter.can_pull()){
-        level_counter.pull();
-        number_of_levels = number_of_levels +1;
-      }
-    }
+    size_t number_of_levels = dd->levels();
 
     if (debug_enabled) std::cout << "counted " << number_of_levels << "levels\n";
     //identifying swaps -> being put in this special case we already know we have only non-overlapping swaps
@@ -1777,7 +1772,9 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
     const safe_size_t max_cut_internal = Cut::get(in,cut::type::Internal);
     const safe_size_t max_cut_true = Cut::get(in,cut::type::Internal_True);
     const safe_size_t max_cut_false = Cut::get(in,cut::type::Internal_False);
-    return to_size(max_cut_true * max_cut_false + (max_cut_true - max_cut_internal)*(max_cut_false - max_cut_internal)   + ConstSizeInc);
+    const safe_size_t only_true = max_cut_true - max_cut_internal;
+    const safe_size_t only_false = max_cut_false - max_cut_internal;
+    return to_size(max_cut_true * max_cut_false + only_true*only_false   + ConstSizeInc);
   }
 
 template <typename In>
@@ -2109,7 +2106,7 @@ replace(const typename Policy::dd_type& dd,
  jump_down_map_split(const typename Policy::dd_type dd , const replace_func<Policy>& m) {
     using lbl_t = typename Policy::label_type;
     size_t varcount = dd->levels();
-    std::cout << "found varcount =" << varcount << "\n";
+    if (debug_enabled) std::cout << "found varcount =" << varcount << "\n";
 
     std::vector<pair<lbl_t, lbl_t>> all_JDs;
     { level_info_ifstream<> levels(dd);
@@ -2133,32 +2130,41 @@ replace(const typename Policy::dd_type& dd,
     }
 
     std::vector<pair<lbl_t, lbl_t>> chosen_map_pairs;
+    auto next_JD = chosen_JDs.begin();
     { level_info_ifstream<> levels(dd);
-      auto next_JD = chosen_JDs.begin();
-      lbl_t JD_start = (*next_JD).first;
-      lbl_t JD_target = 0; 
-      while(levels.can_pull()){
-        const lbl_t l = levels.pull().level();
-        if (debug_enabled) std::cout << "l = " << l << ", JD_start = " << JD_start << ", JD_target =" << JD_target << "\n";
-
-        if (l == JD_start){
-          if (debug_enabled) std::cout << "(1) pushes " << JD_start << ", " << (*next_JD).second << "\n";
-          JD_target = (*next_JD).second;
-          chosen_map_pairs.push_back({l, JD_target});
-          next_JD++;
-          JD_start = (*next_JD).first;
-          
-        } else if (l <= JD_target && l != 0) {
-          if (debug_enabled) std::cout << "(2) pushes " << l << ", " << l-1 << "\n";
-          chosen_map_pairs.push_back({l,l-1});
-
-        } else {
-          if (debug_enabled) std::cout << "(3) pushes " << l << ", " << l << "\n";
-          //below last jump-down..?
+      if (next_JD == chosen_JDs.end()){
+        //no jump ups! just build identity here
+        while(levels.can_pull()){
+          const lbl_t l = levels.pull().level();
           chosen_map_pairs.push_back({l,l});
+        }
+      } else {
+        lbl_t JD_start = (*next_JD).first;
+        lbl_t JD_target = 0; 
+        while(levels.can_pull()){
+          const lbl_t l = levels.pull().level();
+          if (debug_enabled) std::cout << "l = " << l << ", JD_start = " << JD_start << ", JD_target =" << JD_target << "\n";
+
+          if (l == JD_start){
+            if (debug_enabled) std::cout << "(1) pushes " << JD_start << ", " << (*next_JD).second << "\n";
+            JD_target = (*next_JD).second;
+            chosen_map_pairs.push_back({l, JD_target});
+            next_JD++;
+            JD_start = (*next_JD).first;
+            
+          } else if (l <= JD_target && l != 0) {
+            if (debug_enabled) std::cout << "(2) pushes " << l << ", " << l-1 << "\n";
+            chosen_map_pairs.push_back({l,l-1});
+
+          } else {
+            if (debug_enabled) std::cout << "(3) pushes " << l << ", " << l << "\n";
+            //below last jump-down..?
+            chosen_map_pairs.push_back({l,l});
+          }
         }
       }
     }
+    
     sort(chosen_map_pairs.begin(), chosen_map_pairs.end(), target_decreasing<Policy>());
     vector<memory_mode::Internal, lbl_t> sweep_starts(varcount), sweep_ends(varcount), map_lvl(varcount);
     lbl_t min_seen = Policy::max_label;
