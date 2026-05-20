@@ -1569,7 +1569,50 @@ go_bandit([]() {
             AssertThat(res_lists[4][6] == 7 , Is().True());
             AssertThat(res_lists[4][7] == 0 , Is().True());
           });
-          
+
+          it( "correctly identifies no adj_swaps in map (5) [bdd_9]", [&](){
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 7;} 
+              if (x == 2) {return 8;} 
+              if (x == 3) {return 2;}
+              if (x == 4) {return 4;}
+              if (x == 5) {return 9;} 
+              if (x == 6) {return 5;} 
+              if (x == 7) {return 1;}
+              return x;
+            };
+            auto res_lists = adj_map_split<bdd_policy>(bdd_9, m);
+            AssertThat(res_lists[0].size(), Is().EqualTo(0u));
+            AssertThat(res_lists[1].size(), Is().EqualTo(0u));
+
+            //checkign sweeps
+            AssertThat(res_lists[2].size(), Is().EqualTo(6u));
+            AssertThat(res_lists[3].size(), Is().EqualTo(6u));
+            AssertThat(res_lists[2][0], Is().EqualTo(6u));
+            AssertThat(res_lists[3][0], Is().EqualTo(5u));
+            AssertThat(res_lists[2][1], Is().EqualTo(5u));
+            AssertThat(res_lists[3][1], Is().EqualTo(9u));
+            AssertThat(res_lists[2][2], Is().EqualTo(4u));
+            AssertThat(res_lists[3][2], Is().EqualTo(4u));
+            AssertThat(res_lists[2][3], Is().EqualTo(3u));
+            AssertThat(res_lists[3][3], Is().EqualTo(2u));
+            AssertThat(res_lists[2][4], Is().EqualTo(2u));
+            AssertThat(res_lists[3][4], Is().EqualTo(8u));
+            AssertThat(res_lists[2][5], Is().EqualTo(1u));
+            AssertThat(res_lists[3][5], Is().EqualTo(7u));
+
+            //map
+            AssertThat(res_lists[4][0], Is().EqualTo(1u));
+            AssertThat(res_lists[4][1], Is().EqualTo(5u));
+            AssertThat(res_lists[4][2], Is().EqualTo(9u));
+            AssertThat(res_lists[4][3], Is().EqualTo(4u));
+            AssertThat(res_lists[4][4], Is().EqualTo(2u));
+            AssertThat(res_lists[4][5], Is().EqualTo(8u));
+            AssertThat(res_lists[4][6], Is().EqualTo(7u));
+            AssertThat(res_lists[4][7], Is().EqualTo(0u));
+            
+          });
           it("correctly identifies jump_downs in map (1) [bdd_b18]", [&]() {
             const mapping_type m = [](const int x) { 
               if (x == 0) {return 2;}
@@ -1676,7 +1719,7 @@ go_bandit([]() {
             AssertThat(res_lists[4][7], Is().EqualTo(1u));
           });
 
-           it("correctly identified jump_downs in map (2) [doubel_quad]", [&](){
+          it("correctly identified jump_downs in map (2) [doubel_quad]", [&](){
             const replace_func<bdd_policy> m = [](const int x) { 
               if (x == 0) {return 3;} //JD
               if (x == 2) {return 2;} 
@@ -1724,6 +1767,71 @@ go_bandit([]() {
             AssertThat(res_lists[4][5], Is().EqualTo(6u));
             AssertThat(res_lists[4][6], Is().EqualTo(3u));
             AssertThat(res_lists[4][7], Is().EqualTo(2u));
+          });
+
+          it( "correctly identifies no jump_downs in identity map [bdd_9]", [&](){
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 1) {return 1;} 
+              if (x == 2) {return 2;} 
+              if (x == 3) {return 3;}
+              if (x == 4) {return 4;}
+              if (x == 5) {return 5;} 
+              if (x == 6) {return 6;} 
+              if (x == 7) {return 7;}
+              return x;
+            };
+            auto res_lists = jump_down_map_split<bdd_policy>(bdd_9, m);
+            AssertThat(res_lists[0].size(), Is().EqualTo(0u));
+            AssertThat(res_lists[1].size(), Is().EqualTo(0u));
+
+            //checkign sweeps
+            AssertThat(res_lists[2].size(), Is().EqualTo(0u));
+            AssertThat(res_lists[3].size(), Is().EqualTo(0u));
+
+            //map
+            AssertThat(res_lists[4][0], Is().EqualTo(7u));
+            AssertThat(res_lists[4][1], Is().EqualTo(6u));
+            AssertThat(res_lists[4][2], Is().EqualTo(5u));
+            AssertThat(res_lists[4][3], Is().EqualTo(4u));
+            AssertThat(res_lists[4][4], Is().EqualTo(3u));
+            AssertThat(res_lists[4][5], Is().EqualTo(2u));
+            AssertThat(res_lists[4][6], Is().EqualTo(1u));
+            AssertThat(res_lists[4][7], Is().EqualTo(0u));
+            
+          });
+
+           it( "correctly identifies no jump_downs in a jump-up map[double_quad]", [&](){
+            const mapping_type m = [](const int x) { 
+              if (x == 0) {return 0;}
+              if (x == 2) {return 2;} 
+              if (x == 4) {return 1;} 
+              if (x == 6) {return 6;}
+              if (x == 8) {return 8;}
+              if (x == 10) {return 5;} 
+              return x;
+            };
+            auto res_lists = jump_down_map_split<bdd_policy>(quadratic_builder_double(3, 2), m);
+            AssertThat(res_lists[0].size(), Is().EqualTo(0u));
+            AssertThat(res_lists[1].size(), Is().EqualTo(0u));
+
+            //checkign sweeps
+            AssertThat(res_lists[2].size(), Is().EqualTo(3u));
+            AssertThat(res_lists[3].size(), Is().EqualTo(3u));
+            AssertThat(res_lists[2][0], Is().EqualTo(8u));
+            AssertThat(res_lists[3][0], Is().EqualTo(8u));
+            AssertThat(res_lists[2][1], Is().EqualTo(6u));
+            AssertThat(res_lists[3][1], Is().EqualTo(6u));
+            AssertThat(res_lists[2][2], Is().EqualTo(2u));
+            AssertThat(res_lists[3][2], Is().EqualTo(2u));
+
+            //map
+            AssertThat(res_lists[4][0], Is().EqualTo(5u));
+            AssertThat(res_lists[4][1], Is().EqualTo(8u));
+            AssertThat(res_lists[4][2], Is().EqualTo(6u));
+            AssertThat(res_lists[4][3], Is().EqualTo(1u));
+            AssertThat(res_lists[4][4], Is().EqualTo(2u));
+            AssertThat(res_lists[4][5], Is().EqualTo(0u));
           });
 
           it("performs many adj_swaps and then nested sweeping [bdd_9]", [&]() {
