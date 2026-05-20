@@ -846,7 +846,7 @@ class pq_sorter_decorator{
       
       out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq1.size());
       typename Policy::label_type lvl = dpq.current_level();
-      std::cout << "running for level: " << lvl << "\n";
+      if(debug_enabled) std::cout << "running for level: " << lvl << "\n";
 
       if(lvl == next_jump_down){
         if (debug_enabled ) std::cout << "found next jump_level " << lvl << "\n";
