@@ -2130,18 +2130,17 @@ replace(const typename Policy::dd_type& dd,
     }
 
     std::vector<pair<lbl_t, lbl_t>> chosen_map_pairs;
-    auto next_JD = chosen_JDs.begin();
     { level_info_ifstream<> levels(dd);
-      if (next_JD == chosen_JDs.end()){
-        //no jump ups! just build identity here
+      if (chosen_JDs.empty()){
         while(levels.can_pull()){
           const lbl_t l = levels.pull().level();
           chosen_map_pairs.push_back({l,l});
         }
       } else {
+        auto next_JD = chosen_JDs.begin();
         lbl_t JD_start = (*next_JD).first;
         lbl_t JD_target = 0; 
-        while(levels.can_pull()){
+                while(levels.can_pull()){
           const lbl_t l = levels.pull().level();
           if (debug_enabled) std::cout << "l = " << l << ", JD_start = " << JD_start << ", JD_target =" << JD_target << "\n";
 
@@ -2164,7 +2163,6 @@ replace(const typename Policy::dd_type& dd,
         }
       }
     }
-    
     sort(chosen_map_pairs.begin(), chosen_map_pairs.end(), target_decreasing<Policy>());
     vector<memory_mode::Internal, lbl_t> sweep_starts(varcount), sweep_ends(varcount), map_lvl(varcount);
     lbl_t min_seen = Policy::max_label;
@@ -2181,36 +2179,7 @@ replace(const typename Policy::dd_type& dd,
         min_seen = new_new_l;
       }
     }
-    /*
-    size_t idx = 0;
-    {level_info_ifstream<true> levels_reverse(dd);
-      while(levels_reverse.can_pull()){
-        const lbl_t l = levels_reverse.pull().level();
-        const lbl_t old_l = chosen_map_pairs[idx++].first;
-        if (debug_enabled)  std::cout << "found l = " << l << ", old_l = "<< old_l << "\n";
-        if(old_l < l){ 
-          map_lvl.push_back(l);
-          if(l > min_seen){
-            if (debug_enabled) std::cout << "sweeping level since " << l << ">" << min_seen << "\n";
-            sweep_starts.push_back(l);
-            sweep_ends.push_back(l);
-          } else {min_seen = l;}
-        }
-        else { //either an in-between layer or untouched by jump_starts (either way we do the same thing)
-          if(m(old_l) > min_seen){
-            if (debug_enabled) std::cout << "sweeping level since " << m(old_l) << ">" << min_seen << "\n";
-            sweep_starts.push_back(l);
-            sweep_ends.push_back(m(old_l));
-            map_lvl.push_back(m(old_l));
-          } else {
-            if (debug_enabled) std::cout << "not sweeping level since " << m(old_l) << "<=" << min_seen << "\n";
-            min_seen = m(old_l);
-            map_lvl.push_back(m(old_l));
-          }
-        }
-      }
-    }
-    */
+   
     vector<memory_mode::Internal, vector<memory_mode::Internal, lbl_t>> res(5);
     res.push_back(jump_starts); res.push_back(jump_ends);
     res.push_back(sweep_starts); res.push_back(sweep_ends);
