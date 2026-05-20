@@ -317,7 +317,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = true;
+  constexpr bool debug_enabled = false;
 
   //types
   template <uint8_t nodes_carried>
@@ -2135,22 +2135,26 @@ replace(const typename Policy::dd_type& dd,
     std::vector<pair<lbl_t, lbl_t>> chosen_map_pairs;
     { level_info_ifstream<> levels(dd);
       auto next_JD = chosen_JDs.begin();
+      lbl_t JD_start = (*next_JD).first;
+      lbl_t JD_target = 0; 
       while(levels.can_pull()){
         const lbl_t l = levels.pull().level();
-        if (l == (*next_JD).first) {
-          if (debug_enabled) std::cout << "(1) pushing pair " << (*next_JD).first << ", " << (*next_JD).second << " to chosen_map\n";
-          chosen_map_pairs.push_back(*next_JD);
+        if (debug_enabled) std::cout << "l = " << l << ", JD_start = " << JD_start << ", JD_target =" << JD_target << "\n";
+
+        if (l == JD_start){
+          if (debug_enabled) std::cout << "(1) pushes " << JD_start << ", " << (*next_JD).second << "\n";
+          JD_target = (*next_JD).second;
+          chosen_map_pairs.push_back({l, JD_target});
           next_JD++;
-        }
-        else if(l > (*next_JD).first && l < (*next_JD).second) {
-           if (debug_enabled) std::cout << "(2) pushing pair " << l << ", " << l-1 << " to chosen_map\n";
-          chosen_map_pairs.push_back({l,l-1});}
-        else if (l == (*next_JD).second){
-           if (debug_enabled) std::cout << "(3) pushing pair " << l << ", " << l -1<< " to chosen_map\n";
+          JD_start = (*next_JD).first;
+          
+        } else if (l <= JD_target && l != 0) {
+          if (debug_enabled) std::cout << "(2) pushes " << l << ", " << l-1 << "\n";
           chosen_map_pairs.push_back({l,l-1});
-          next_JD++;
+
         } else {
-           if (debug_enabled) std::cout << "(4) pushing pair " << l << ", " << l << " to chosen_map\n";
+          if (debug_enabled) std::cout << "(3) pushes " << l << ", " << l << "\n";
+          //below last jump-down..?
           chosen_map_pairs.push_back({l,l});
         }
       }
@@ -2158,6 +2162,20 @@ replace(const typename Policy::dd_type& dd,
     sort(chosen_map_pairs.begin(), chosen_map_pairs.end(), target_decreasing<Policy>());
     vector<memory_mode::Internal, lbl_t> sweep_starts(varcount), sweep_ends(varcount), map_lvl(varcount);
     lbl_t min_seen = Policy::max_label;
+    for(pair<lbl_t , lbl_t> p : chosen_map_pairs){
+      lbl_t old_l = p.first;
+      lbl_t new_l = p.second;
+      lbl_t new_new_l = m(old_l);
+      map_lvl.push_back(new_new_l);
+
+      if(new_new_l > min_seen){
+        sweep_starts.push_back(new_l);
+        sweep_ends.push_back(new_new_l);
+      } else {
+        min_seen = new_new_l;
+      }
+    }
+    /*
     size_t idx = 0;
     {level_info_ifstream<true> levels_reverse(dd);
       while(levels_reverse.can_pull()){
@@ -2186,6 +2204,7 @@ replace(const typename Policy::dd_type& dd,
         }
       }
     }
+    */
     vector<memory_mode::Internal, vector<memory_mode::Internal, lbl_t>> res(5);
     res.push_back(jump_starts); res.push_back(jump_ends);
     res.push_back(sweep_starts); res.push_back(sweep_ends);
