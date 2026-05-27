@@ -1072,8 +1072,6 @@ replace_adj_swap_sweep(const typename Policy::dd_type& dd,
                        const size_t sorter_max) {
       
     if (debug_enabled) std::cout << "started adj_swap stuff\n ";
-    //TODO: store numebr of levels in level info file to avoid having to count them initially
-    //and or : TODO have a constructor for adiar vectors that take a std:vector as input
     size_t number_of_levels = dd->levels();
 
     if (debug_enabled) std::cout << "counted " << number_of_levels << "levels\n";
@@ -1131,7 +1129,6 @@ struct  jump_up_arc : public arc {
   //level for pq
   arc::label_type level() const {
     //if source above jump target (xi), let level be xi st. it's handled at level xi
-    //std::cout << "finding level for " << this->to_string() << ", it is" << std::max(source().level(), xi) << "\n";
     return std::max(source().level(), xi);
   }
 
@@ -1772,9 +1769,15 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
     const safe_size_t max_cut_internal = Cut::get(in,cut::type::Internal);
     const safe_size_t max_cut_true = Cut::get(in,cut::type::Internal_True);
     const safe_size_t max_cut_false = Cut::get(in,cut::type::Internal_False);
+
     const safe_size_t only_true = max_cut_true - max_cut_internal;
     const safe_size_t only_false = max_cut_false - max_cut_internal;
-    return to_size(max_cut_true * max_cut_false + only_true*only_false   + ConstSizeInc);
+    
+    return to_size(max_cut_true * max_cut_false *2 + ConstSizeInc);
+    // possibly: all internal paired with all internal 
+    // + all internal paired with false (both {T, N} and {N, T})
+    // + all internal paired with true  (both {F, N} and {N, F})
+    // + all false paired with all true  (both {F, T} and {T, F})
   }
 
 template <typename In>
@@ -1785,7 +1788,8 @@ template <typename In>
     return to_size(in_size * in_size + 1u + 2u);
   }
 
-  //PQ setup for outer-down adj_swap sweep or dump_down_inhabited sweep prior to nested sweeping
+  //PQ setup for outer-down adj_swap sweep or jump_down_inhabited sweep prior to nested sweeping
+  // both need 2 PQs and sorter
   template<typename Policy>
   typename Policy::__dd_type
   replace_outer_down(
@@ -2032,7 +2036,7 @@ replace(const typename Policy::dd_type& dd,
       const size_t aux_available_memory = memory_available()
       // Input streams
       - arc_ifstream<>::memory_usage()
-      - level_info_ifstream<>::memory_usage()
+      - level_info_ifstream<>::memory_usage() //unlike other cases this is used during the iteration so is not freed before pq is initiated
       // Output streams
       - node_ofstream::memory_usage();
 
@@ -2144,20 +2148,21 @@ replace(const typename Policy::dd_type& dd,
                 while(levels.can_pull()){
           const lbl_t l = levels.pull().level();
           if (debug_enabled) std::cout << "l = " << l << ", JD_start = " << JD_start << ", JD_target =" << JD_target << "\n";
-
           if (l == JD_start){
+              //level is start of a jump
               JD_target = jump_ends[idx];
               if (debug_enabled)  std::cout << "(1) pushes " << JD_start << ", " << JD_target << "\n";
               chosen_map_pairs.push_back({l, JD_target});
-              if (idx != max-1) idx++;
+              if (idx != max-1) idx++;  //if not last jump update st jump-start is next one
               JD_start = jump_starts[idx];
           } else if (l <= JD_target && l != 0) {
+            //level is in-between jump start and jump target or is jump-target so should be moved up by one 
             if (debug_enabled)  std::cout << "(2) pushes " << l << ", " << l-1 << "\n";
             chosen_map_pairs.push_back({l,l-1});
-
           } else {
-            if (debug_enabled)  std::cout << "(3) pushes " << l << ", " << l << "\n";
             //outside JDs
+            if (debug_enabled)  std::cout << "(3) pushes " << l << ", " << l << "\n";
+            
             chosen_map_pairs.push_back({l,l});
           }
         }
@@ -2499,17 +2504,16 @@ public:
         ep.template get<exec_policy::memory>() == exec_policy::memory::Internal
         ? std::min(pq_2_memory_fits, pq_2_bound)
         : pq_2_bound;
-
-        if (ep.template get<exec_policy::memory>() != exec_policy::memory::External
+      // (2) run correctify sweep
+      if (ep.template get<exec_policy::memory>() != exec_policy::memory::External
           && max_pq_2_size <= pq_2_memory_fits) {
         using PQ2 = cor_priority_queue_2_t<memory_mode::Internal>;
         PQ2 pq2(inner_remaining_memory, max_pq_2_size);
-        // (2) run correctify sweep
+        
         return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(ep, outer_file, inner_pq, pq2);
       } else {
         using PQ2 = cor_priority_queue_2_t<memory_mode::External>;
         PQ2 pq2(inner_remaining_memory, max_pq_2_size);
-        // (2) run correctify sweep
         return replace_cor_scan_level<Policy, inner_pq_t, PQ2, shared_levelized_file<node>>(ep, outer_file, inner_pq, pq2);
       }
     }
@@ -2521,7 +2525,7 @@ public:
              inner_pq_t& pq,
              const size_t /*inner_remaining_memory*/)
     {   
-        if (debug_enabled) std::cout << "running ra sweep";
+        if (debug_enabled) std::cout << "running ra sweep\n";
         node_raccess in_nodes(outer_file);
         return cor_ra<node_raccess, Policy, inner_pq_t>(ep, in_nodes, pq);
     }
