@@ -316,15 +316,15 @@ namespace adiar
     case replace_type::Swap_Adjacent:
     case replace_type::Jump_Down:
     case replace_type::Jump_Down_Inhabited:
-    case replace_type::Jump_Up:
+    case replace_type::Jump_Up: {
 #ifdef ADIAR_STATS
       internal::stats_replace.nested_sweeps += 1u;
 #endif
       throw invalid_argument("Non-monotonic variable replacement not (yet) supported.");
-
+    }
     case replace_type::Monotone:
     case replace_type::Shift:
-    case replace_type::Identity:
+    case replace_type::Identity: {
 #ifdef ADIAR_STATS
       internal::stats_replace.monotonic_reduces += 1u;
       internal::stats_quantify.runs += 1u;
@@ -333,6 +333,7 @@ namespace adiar
 #endif
       relnext_quantify_replace_policy quantify_replace_policy(m);
       return internal::nested_sweep<>(ep, std::move(tmp_1), quantify_replace_policy);
+      } 
     }
     adiar_unreachable(); // LCOV_EXCL_LINE
   }
@@ -392,6 +393,9 @@ namespace adiar
       : m_type;
     
     switch(inferred_type) {
+      case replace_type::Auto :{
+        adiar_unreachable();
+      }
       case replace_type::Non_Monotone :
       case replace_type::Non_Monotone_Adj :
       case replace_type::Non_Monotone_JD :
@@ -411,11 +415,8 @@ namespace adiar
         const bdd tmp_3 = bdd_exists(ep, std::move(tmp_2), [&m](bdd::label_type x) { return !m(x).has_value(); });
         return tmp_3;
       }
-      case replace_type::Auto :{
-        adiar_unreachable();
-      }
     }
-
+    adiar_unreachable();
   }
 
   bdd

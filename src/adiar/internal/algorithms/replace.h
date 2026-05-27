@@ -1766,12 +1766,12 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
   size_t
   __cor_ilevel_upper_bound(const In& in)
   {
-    const safe_size_t max_cut_internal = Cut::get(in,cut::type::Internal);
+    //const safe_size_t max_cut_internal = Cut::get(in,cut::type::Internal);
     const safe_size_t max_cut_true = Cut::get(in,cut::type::Internal_True);
     const safe_size_t max_cut_false = Cut::get(in,cut::type::Internal_False);
 
-    const safe_size_t only_true = max_cut_true - max_cut_internal;
-    const safe_size_t only_false = max_cut_false - max_cut_internal;
+    //const safe_size_t only_true = max_cut_true - max_cut_internal;
+    //const safe_size_t only_false = max_cut_false - max_cut_internal;
     
     return to_size(max_cut_true * max_cut_false *2 + ConstSizeInc);
     // possibly: all internal paired with all internal 
