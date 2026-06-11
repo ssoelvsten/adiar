@@ -565,8 +565,8 @@ namespace adiar::internal
     const safe_size_t right_cut_terminals = cut::get(in_1, right_ct) - right_cut_internal;
 
     // Compute cut, where we make sure not to pair terminals with terminals.
-    return to_size(left_cut_internal * right_cut_internal + left_cut_terminals * right_cut_internal
-                   + left_cut_internal * right_cut_terminals + const_size_inc);
+    return to_size(left_cut_terminals * right_cut_internal + left_cut_internal * right_cut_terminals
+                   - left_cut_internal * right_cut_internal + const_size_inc);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
