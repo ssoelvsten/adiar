@@ -318,7 +318,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = true;
+  constexpr bool debug_enabled = false;
 
   //types
   template <uint8_t nodes_carried>
