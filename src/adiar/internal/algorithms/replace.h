@@ -318,7 +318,7 @@ namespace adiar::internal
   //
 
   // for allowing testing prints
-  constexpr bool debug_enabled = false;
+  constexpr bool debug_enabled = true;
 
   //types
   template <uint8_t nodes_carried>
@@ -482,12 +482,12 @@ class pq_sorter_decorator{
     }
     //low high must exist!
     if(v.uid() == tl) {
-      if(debug_enabled) std::cout << " \t lt is v case \n";
+      if(debug_enabled) std::cout << " \t tl is v case \n";
       return { {v.low(), low}, {v.high(), high}};
     }
 
     if(v.uid() == th) {
-      if(debug_enabled) std::cout << " \t lh is v case \n";
+      if(debug_enabled) std::cout << " \t th is v case \n";
       return { {low, v.low()}, {high, v.high()}};
     }
     throw invalid_argument("reqFor: Unexpected case missing!");
@@ -569,7 +569,6 @@ class pq_sorter_decorator{
           continue;
         }
         //SUBCASE not surpressible
-        //update_label_and_id(tseek);
 
         //push copy reqs
         const uid_t out_uid(out_label, id++);
@@ -600,15 +599,14 @@ class pq_sorter_decorator{
            && r.target[0].id() != r.target[1].id()) 
       {
         if(debug_enabled) std::cout << "enters pq2 push if-statement! r is" << r << "\n";
-        if(debug_enabled) std::cout << "top of pq1 is" << pq1.top() << "\n";
 
         const children_t children = v.children();
 
         while (pq1.has_top() && pq1.top().target == r.target) {
-          if(debug_enabled) std::cout << "enters pq2 while\n";
-          const cor_req_t<1> nr = {r.target, { children }, pq1.top().data};
-          pq2.push(nr);
-          pq1.pop();
+          const cor_req_t<0> pr = pq1.pull();
+          const cor_req_t<1> nr = {pr.target, { children }, pr.data};
+          if(debug_enabled) std::cout << "pushes " << nr << "to PQ2 \n";
+          pq2.push(nr);  
         }
         continue;
       }
@@ -1769,11 +1767,13 @@ template <typename Policy, typename Cut, size_t ConstSizeInc, typename In>
     //const safe_size_t max_cut_internal = Cut::get(in,cut::type::Internal);
     const safe_size_t max_cut_true = Cut::get(in,cut::type::Internal_True);
     const safe_size_t max_cut_false = Cut::get(in,cut::type::Internal_False);
+    const safe_size_t max_cut_internal_only = Cut::get(in, cut::type::Internal);
+    const safe_size_t internal_internal = (max_cut_internal_only * max_cut_internal_only);
 
     //const safe_size_t only_true = max_cut_true - max_cut_internal;
     //const safe_size_t only_false = max_cut_false - max_cut_internal;
     
-    return to_size(max_cut_true * max_cut_false *2 + ConstSizeInc);
+    return to_size((max_cut_true * max_cut_false *2) - internal_internal + ConstSizeInc);
     // possibly: all internal paired with all internal 
     // + all internal paired with false (both {T, N} and {N, T})
     // + all internal paired with true  (both {F, N} and {N, F})
@@ -2319,7 +2319,7 @@ replace(const typename Policy::dd_type& dd,
 
     while(!pq.empty()){
       pq.setup_next_level();
-      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq.size());
+      //out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq.size());
       typename Policy::label_type label = pq.current_level();
       typename Policy::id_type id             = 0;
       if(debug_enabled) std::cout << "starting level " << label << "\n";
@@ -2342,9 +2342,16 @@ replace(const typename Policy::dd_type& dd,
         if (r.target.first().level() >= r.data.level){
           if (r.target[0] == r.target[1]) {
             //supressible node
-            pq.pop();
+            /*pq.pop();
             cor_req_t<0> nr = {{r.target[0], node::pointer_type::nil()}, {}, {r.data.source}};
-            pq.push(nr);
+            pq.push(nr);*/
+            while(pq.has_top() && pq.top().target == r.target && pq.top().data.level == r.data.level){
+              cor_req_t<0> pr = pq.pull();
+              cor_req_t<0> nr = {{pr.target[0], node::pointer_type::nil()}, {}, {pr.data.source}};
+              pq.push(nr);
+              if(debug_enabled) std::cout << "found supressible, pushing req : " << nr << "\n";
+            }
+
             continue;
           }
           //forwarding
@@ -2399,6 +2406,7 @@ replace(const typename Policy::dd_type& dd,
 
       }
       if (id >= 0) { aw.push(level_info(label, id+1)); }
+      out_arcs->max_1level_cut = std::max(out_arcs->max_1level_cut, pq.size());
     }
     return typename Policy::__dd_type(out_arcs,ep);
   }
