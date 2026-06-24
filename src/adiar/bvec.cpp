@@ -48,9 +48,7 @@ namespace adiar
   const bdd&
   bvec::at(size_t index) const
   {
-    if (_bits.size() <= index) {
-      return this->default_value;
-    }
+    if (_bits.size() <= index) { return this->default_value; }
     return _bits.at(index);
   }
 

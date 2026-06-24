@@ -6,11 +6,40 @@ go_bandit([]() {
     describe("bvec_false()", []() {
       it("has 16 bits when asked",
          [&]() { AssertThat(bvec_false(16).bitlen(), Is().EqualTo(16u)); });
+
+      it("has all bits set to false", [&]() {
+        const bvec x = bvec_false(8);
+
+        AssertThat(x.at(0), Is().False());
+        AssertThat(x.at(1), Is().False());
+        AssertThat(x.at(2), Is().False());
+        AssertThat(x.at(3), Is().False());
+        AssertThat(x.at(4), Is().False());
+        AssertThat(x.at(5), Is().False());
+        AssertThat(x.at(6), Is().False());
+        AssertThat(x.at(7), Is().False());
+      });
     });
 
     describe("bvec_true()", []() {
       it("has 32 bits when asked",
          [&]() { AssertThat(bvec_true(32).bitlen(), Is().EqualTo(32u)); });
+
+      it("has all bits set to true", [&]() {
+        const bvec x = bvec_true(8);
+
+        AssertThat(x.at(0), Is().True());
+        AssertThat(x.at(1), Is().True());
+        AssertThat(x.at(2), Is().True());
+        AssertThat(x.at(3), Is().True());
+        AssertThat(x.at(4), Is().True());
+        AssertThat(x.at(5), Is().True());
+        AssertThat(x.at(6), Is().True());
+        AssertThat(x.at(7), Is().True());
+      });
+
+      it("has out-of-bound bit set to false",
+         [&]() { AssertThat(bvec_true(8).at(8), Is().False()); });
     });
 
     describe("bvec_const", []() {
@@ -46,9 +75,41 @@ go_bandit([]() {
         });
       });
 
-      describe("int encoding", []() {
-        it("is the binary encoding of 42 (101010)", [&]() {
-          //
+      describe("bit encoding", []() {
+        it("derives 0 ()", [&]() {
+          const bvec x = bvec_const(0);
+
+          // Check that all bits are zero
+          for (size_t i = 0; i < x.bitlen(); i++) {
+            AssertThat(x.at(i), Is().EqualTo(bdd_false()));
+          }
+        });
+
+        it("derives 1 (1)", [&]() {
+          const bvec x = bvec_const(1);
+
+          // Check that the first bit is set
+          AssertThat(x.at(0), Is().EqualTo(bdd_true()));
+
+          // Check that all bits are zero
+          for (size_t i = 1; i < x.bitlen(); i++) {
+            AssertThat(x.at(i), Is().EqualTo(bdd_false()));
+          }
+        });
+
+        it("derives 2 (01)", [&]() {
+          const bvec x = bvec_const(1);
+
+          // Check that the first bit is set
+          AssertThat(x.at(0), Is().EqualTo(bdd_true()));
+
+          // Check that all bits are zero
+          for (size_t i = 1; i < x.bitlen(); i++) {
+            AssertThat(x.at(i), Is().EqualTo(bdd_false()));
+          }
+        });
+
+        it("derives 42 (101010)", [&]() {
           const bvec x = bvec_const(42);
 
           // Check that encoding is 101010
@@ -65,14 +126,14 @@ go_bandit([]() {
           }
         });
 
-        it("is the binary encoding of -1 ", [&]() {
+        it("derives -1 (111...1)", [&]() {
           //
           const bvec x = bvec_const(-1);
 
           for (size_t i = 0; i < x.bitlen(); i++) { AssertThat(x.at(i), Is().EqualTo(bdd_true())); }
         });
 
-        it("is the binary encoding of -2^32", [&]() {
+        it("derives -2^32 (000..01)", [&]() {
           //
           const bvec x = bvec_const(INT32_MIN);
 
@@ -82,120 +143,6 @@ go_bandit([]() {
 
           AssertThat(x.at(x.bitlen() - 1), Is().EqualTo(bdd_true()));
         });
-      });
-    });
-
-    describe("bvec_and", []() {
-      describe("constants", []() {
-        it("computes 5 & 3 == 1 (101 & 011 == 001)", [&]() {
-          const bvec x = bvec_const((char)5);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)1); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_and(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-
-        it("computes 0 & 3 == 0 (000 & 011 == 000)", [&]() {
-          const bvec x = bvec_const((char)0);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)0); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_and(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-      });
-    });
-
-    describe("bvec_or", []() {
-      describe("constants", []() {
-        it("computes 5 | 3 == 7 (101 | 011 == 111)", [&]() {
-          const bvec x = bvec_const((char)5);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)7); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_or(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-
-        it("computes 0 | 3 == 3 (000 | 011 == 011)", [&]() {
-          const bvec x = bvec_const((char)0);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)3); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_or(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-      });
-    });
-
-    describe("bvec_xor", []() {
-      describe("constants", []() {
-        it("computes 5 ^ 3 == 6 (101 ^ 011 == 110)", [&]() {
-          const bvec x = bvec_const((char)5);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)6); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_xor(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-
-        it("computes 0 ^ 3 == 3 (000 ^ 011 == 011)", [&]() {
-          const bvec x = bvec_const((char)0);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)3); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_xor(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-
-        it("computes 255 ^ 3 == 252 (11111111 ^ 00000011 == 11111100)", [&]() {
-          const bvec x = bvec_const((char)255);
-          const bvec y = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((char)252); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_xor(x, y);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-      });
-    });
-
-    describe("bvec_not", []() {
-      describe("constants", []() {
-        it("computes ~3 == 252 for bitlength 8 (~00000011 == 11111100)", [&]() {
-          const bvec x = bvec_const((char)3);
-          const bvec expected =
-            bvec_const((u_char)252); // Is this expected, or should we check bdd structure?
-
-          const bvec res = bvec_not(x);
-
-          AssertThat(res, Is().EqualTo(expected));
-        });
-
-        it("computes ~3 == (65535 - 3) for bitlength 16 (~0000000000000011 == 1111111111111100)",
-           [&]() {
-             const bvec x        = bvec_const((short)3);
-             const bvec expected = bvec_const(
-               (short)(USHRT_MAX - 3)); // Is this expected, or should we check bdd structure?
-
-             const bvec res = bvec_not(x);
-
-             AssertThat(res, Is().EqualTo(expected));
-           });
       });
     });
 
@@ -261,6 +208,111 @@ go_bandit([]() {
         std::vector<bdd> raw2 = { bdd_false(), bdd_ithvar(11), bdd_true() };
 
         AssertThat(bvec_equal(bvec(raw1), bvec(raw2)), Is().False());
+      });
+    });
+
+    describe("bvec_and", []() {
+      describe("constants", []() {
+        it("computes 5 & 3 == 1 (101 & 011 == 001)", [&]() {
+          const bvec x        = bvec_const((char)5);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)1);
+
+          const bvec res = bvec_and(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+
+        it("computes 0 & 3 == 0 (000 & 011 == 000)", [&]() {
+          const bvec x        = bvec_const((char)0);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)0);
+
+          const bvec res = bvec_and(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+      });
+    });
+
+    describe("bvec_or", []() {
+      describe("constants", []() {
+        it("computes 5 | 3 == 7 (101 | 011 == 111)", [&]() {
+          const bvec x        = bvec_const((char)5);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)7);
+
+          const bvec res = bvec_or(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+
+        it("computes 0 | 3 == 3 (000 | 011 == 011)", [&]() {
+          const bvec x        = bvec_const((char)0);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)3);
+
+          const bvec res = bvec_or(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+      });
+    });
+
+    describe("bvec_xor", []() {
+      describe("constants", []() {
+        it("computes 5 ^ 3 == 6 (101 ^ 011 == 110)", [&]() {
+          const bvec x        = bvec_const((char)5);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)6);
+
+          const bvec res = bvec_xor(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+
+        it("computes 0 ^ 3 == 3 (000 ^ 011 == 011)", [&]() {
+          const bvec x        = bvec_const((char)0);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)3);
+
+          const bvec res = bvec_xor(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+
+        it("computes 255 ^ 3 == 252 (11111111 ^ 00000011 == 11111100)", [&]() {
+          const bvec x        = bvec_const((char)255);
+          const bvec y        = bvec_const((char)3);
+          const bvec expected = bvec_const((char)252);
+
+          const bvec res = bvec_xor(x, y);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+      });
+    });
+
+    describe("bvec_not", []() {
+      describe("constants", []() {
+        it("computes ~3 == 252 for bitlength 8 (~00000011 == 11111100)", [&]() {
+          const bvec x        = bvec_const((char)3);
+          const bvec expected = bvec_const((u_char)252);
+
+          const bvec res = bvec_not(x);
+
+          AssertThat(res, Is().EqualTo(expected));
+        });
+
+        it("computes ~3 == (65535 - 3) for bitlength 16 (~0000000000000011 == 1111111111111100)",
+           [&]() {
+             const bvec x        = bvec_const((short)3);
+             const bvec expected = bvec_const((short)(USHRT_MAX - 3));
+
+             const bvec res = bvec_not(x);
+
+             AssertThat(res, Is().EqualTo(expected));
+           });
       });
     });
 
