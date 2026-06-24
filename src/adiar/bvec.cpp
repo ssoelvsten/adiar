@@ -268,56 +268,49 @@ namespace adiar
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Arithmetic operations
 
+  template <bool Subtract>
   bvec
-  bvec_add(const bvec& x, const bvec& y)
+  __bvec_add(const bvec& x, const bvec& y)
   {
-    const size_t size   = std::max(x.size(), y.size()) + 1;
     const size_t bitlen = join_bitlen(x, y);
+    const size_t size   = Subtract && bitlen != bvec::variadic_bitlen
+        ? bitlen
+        : std::max(x.size(), y.size()) + !Subtract;
 
-    bdd carry = bdd_false();
+    bdd carry = bdd_const(Subtract);
 
     std::vector<bdd> res;
     res.reserve(size);
 
     for (size_t i = 0; i < size; ++i) {
-      const bdd xors = bdd_xor(bdd_xor(x.at(i), y.at(i)), carry);
-      res.push_back(xors);
-      if (i + 1 <= bitlen) {
-        adiar_assert(i != size - 1 || bitlen >= size, "is not last bit with overflow");
-        carry = bdd_or(bdd_and(carry, bdd_or(x.at(i), y.at(i))), bdd_and(x.at(i), y.at(i)));
-      }
+      const bdd x_bit = x.at(i);
+      const bdd y_bit = Subtract ? ~y.at(i) : y.at(i);
+
+      const bdd res_bit = x_bit ^ y_bit ^ carry;
+      res.push_back(res_bit);
+
+      carry = (carry & (x_bit | y_bit)) | (x_bit & y_bit);
     }
 
-    // This assumes that the vector constructor truncates size above bitlen and false prefix.
-    res.push_back(carry);
+    if constexpr (!Subtract) {
+      // This assumes that the vector constructor truncates size above bitlen and any false suffix
+      // to fix the possibly erronous highest bits.
+      res.push_back(carry);
+    }
 
     return bvec(bitlen, res);
   }
 
   bvec
+  bvec_add(const bvec& x, const bvec& y)
+  {
+    return __bvec_add<false>(x, y);
+  }
+
+  bvec
   bvec_sub(const bvec& x, const bvec& y)
   {
-    const size_t bitlen = std::max(x.bitlen(), y.bitlen());
-    const size_t size   = bitlen;
-
-    bdd carry = bdd_true();
-
-    std::vector<bdd> res;
-    res.reserve(size);
-
-    for (size_t i = 0; i < size; ++i) {
-      const bdd xors = x.at(i) ^ ~y.at(i) ^ carry;
-      res.push_back(xors);
-      if (i + 1 <= bitlen) {
-        adiar_assert(i != size - 1 || bitlen >= size, "is not last bit with overflow");
-        carry = (carry & (x.at(i) | ~y.at(i))) | (x.at(i) & ~y.at(i));
-      }
-    }
-
-    // This assumes that the vector constructor truncates size above bitlen and false prefix.
-    res.push_back(carry);
-
-    return bvec(bitlen, res);
+    return __bvec_add<true>(x, y);
   }
 
   // Helper

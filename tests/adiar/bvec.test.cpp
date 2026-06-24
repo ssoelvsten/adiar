@@ -809,6 +809,50 @@ go_bandit([]() {
         AssertThat(res.bitlen(), Is().EqualTo(16u));
         AssertThat(res.size(), Is().EqualTo(16u));
       });
+
+      it("compute bvec[_](6) - bvec[_](4)", [&]() {
+        const bvec x = bvec_const(6);
+        const bvec y = bvec_const(4);
+
+        const bvec expected = bvec_const(2);
+        const bvec res      = bvec_sub(x, y);
+        AssertThat(res, Is().EqualTo(expected));
+        AssertThat(res.bitlen(), Is().EqualTo(bvec::variadic_bitlen));
+        AssertThat(res.size(), Is().EqualTo(2u));
+      });
+
+      it("compute bvec[_](4) - bvec[_](6)", [&]() {
+        const bvec x = bvec_const(4);
+        const bvec y = bvec_const(6);
+
+        const bvec expected = bvec_const(3, -2);
+        const bvec res      = bvec_sub(x, y);
+        AssertThat(res, Is().EqualTo(expected));
+        AssertThat(res.bitlen(), Is().EqualTo(bvec::variadic_bitlen));
+        AssertThat(res.size(), Is().EqualTo(3u));
+      });
+
+      it("makes bvec[_](511) - bvec[8](42) variadic bit length", [&]() {
+        const bvec a = bvec_const(511);
+        const bvec b = bvec_const(8, 42);
+
+        const bvec expected = bvec_const(469);
+        const bvec res      = bvec_sub(a, b);
+        AssertThat(res, Is().EqualTo(expected));
+        AssertThat(res.bitlen(), Is().EqualTo(bvec::variadic_bitlen));
+        AssertThat(res.size(), Is().EqualTo(9u));
+      });
+
+      it("makes bvec[4](5) - bvec[_](320) variadic bit length", [&]() {
+        const bvec a = bvec_const(4, 5);
+        const bvec b = bvec_const(320);
+
+        const bvec expected = bvec_const(8, -315);
+        const bvec res      = bvec_sub(a, b);
+        AssertThat(res, Is().EqualTo(expected));
+        AssertThat(res.bitlen(), Is().EqualTo(bvec::variadic_bitlen));
+        AssertThat(res.size(), Is().EqualTo(8u));
+      });
     });
 
     describe("bvec_truncate", []() {
