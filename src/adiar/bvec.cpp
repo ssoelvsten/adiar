@@ -8,12 +8,34 @@
 
 namespace adiar
 {
+  /// \brief Find the most significant bit for an integer.
+  size_t
+  msb(size_t value)
+  {
+    // TODO: optimize based on operations available from the compiler.
+    return value > 0 ? std::floor(std::log2(value)) + 1 : 0;
+  }
+
+  /// \brief Derive the `bitlen` to be used when combining two `bvec`s.
+  size_t
+  join_bitlen(const bvec& x, const bvec& y)
+  {
+    const size_t upcasted = std::max(x.bitlen(), y.bitlen());
+
+    const size_t size     = std::max(x.size(), y.size());
+    const bool variadic_x = x.bitlen() == bvec::variadic_bitlen;
+    const bool variadic_y = y.bitlen() == bvec::variadic_bitlen;
+
+    if ((variadic_x || variadic_y) && upcasted < size) { return bvec::variadic_bitlen; }
+    return upcasted;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // `bvec` class
 
-  bvec::bvec(size_t bitlen)
+  bvec::bvec()
     : _bits(0)
-    , _bitlen(bitlen)
+    , _bitlen(bvec::variadic_bitlen)
   {}
 
   bvec::bvec(const bvec& fs)
@@ -26,24 +48,40 @@ namespace adiar
     , _bitlen(fs._bitlen)
   {}
 
-  bvec::bvec(const std::vector<bdd>& bits, size_t bitlen)
+  bvec::bvec(size_t value)
+    : bvec(bvec_const(bvec::variadic_bitlen, value))
+  {}
+
+  bvec::bvec(size_t bitlen, size_t value)
+    : bvec(bvec_const(bitlen, value))
+  {}
+
+  bvec::bvec(size_t bitlen, const bdd& f)
+    : _bits(bitlen, f)
+    , _bitlen(bitlen)
+  {}
+
+  bvec::bvec(const std::vector<bdd>& bits)
+    : bvec(bvec::variadic_bitlen, bits)
+  {}
+
+  bvec::bvec(size_t bitlen, const std::vector<bdd>& bits)
     : _bits(bits)
     , _bitlen(bitlen)
   {
     this->truncate(bitlen);
   }
 
-  bvec::bvec(std::vector<bdd>&& bits, size_t bitlen)
+  bvec::bvec(std::vector<bdd>&& bits)
+    : bvec(bvec::variadic_bitlen, std::move(bits))
+  {}
+
+  bvec::bvec(size_t bitlen, std::vector<bdd>&& bits)
     : _bits(std::move(bits))
     , _bitlen(bitlen)
   {
     this->truncate(bitlen);
   }
-
-  bvec::bvec(const size_t bitlen, const bdd& f)
-    : _bits(bitlen, f)
-    , _bitlen(bitlen)
-  {}
 
   const bdd&
   bvec::at(size_t index) const
@@ -99,8 +137,13 @@ namespace adiar
   bvec::truncate(size_t bitlen)
   {
     this->_bitlen = bitlen;
-    // Truncates to bitlen and removes any prefix of false
-    while (this->_bitlen < this->_bits.size()) { this->_bits.pop_back(); }
+
+    if (bitlen != bvec::variadic_bitlen) {
+      // Truncate to bitlen
+      while (bitlen < this->_bits.size()) { this->_bits.pop_back(); }
+    }
+
+    // Truncate only-false suffix
     while (this->_bits.size() > 0 && !this->_bits.back()) { this->_bits.pop_back(); }
   }
 
@@ -134,32 +177,40 @@ namespace adiar
   // Constructors
 
   bvec
-  bvec_false(size_t bitlen = bvec::MAX_BITLEN)
+  bvec_false(size_t bitlen)
   {
-    return bvec(std::vector<bdd>(0, bdd_false()), bitlen);
+    return bvec(bitlen, std::vector<bdd>(0, bdd_false()));
   }
 
   bvec
-  bvec_true(size_t bitlen = bvec::MAX_BITLEN)
+  bvec_true(size_t bits)
   {
-    return bvec(std::vector<bdd>(bitlen, bdd_true()), bitlen);
+    return bvec_true(bvec::variadic_bitlen, bits);
   }
 
   bvec
-  bvec_const(size_t value, size_t bitlen)
+  bvec_true(size_t bitlen, size_t bits)
   {
-    size_t max = std::ceil(std::log2(value)) + 1;
-    size_t msb = std::min(value != 0 ? max : 0, bitlen);
+    return bvec(bitlen,
+                std::vector<bdd>(bitlen == bvec::variadic_bitlen ? bits : std::min(bitlen, bits),
+                                 bdd_true()));
+  }
+
+  bvec
+  bvec_const(size_t bitlen, size_t value)
+  {
     std::vector<bdd> res;
-    res.reserve(msb);
-    // Should be able to compute the most significant bit position and stop after that
-    for (size_t i = 0; i < msb; i++) {
-      res.push_back(value & 1 ? bdd_true() : bdd_false());
+    res.reserve(msb(value));
 
-      value >>= 1;
-    }
+    for (; value != 0; value >>= 1) { res.push_back(value & 1 ? bdd_true() : bdd_false()); }
 
-    return bvec(res, bitlen);
+    return bvec(bitlen, res);
+  }
+
+  bvec
+  bvec_const(size_t value)
+  {
+    return bvec_const(bvec::variadic_bitlen, value);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +222,7 @@ namespace adiar
   _bvec_bitwise_op(size_t size, size_t bitlen, const BDD_OP& op)
   {
     std::vector<bdd> res;
+    res.reserve(size);
 
     for (size_t i = 0; i < size; i++) {
       const bdd bit = op(i);
@@ -180,7 +232,7 @@ namespace adiar
       }
     }
 
-    return bvec(res, bitlen);
+    return bvec(bitlen, res);
   }
 
   template <typename BDD_OP>
@@ -188,7 +240,7 @@ namespace adiar
   _bvec_bitwise_op(const bvec& x, const bvec& y, const BDD_OP& op)
   {
     const size_t size   = std::max(x.size(), y.size());
-    const size_t bitlen = std::max(x.bitlen(), y.bitlen());
+    const size_t bitlen = join_bitlen(x, y);
 
     return _bvec_bitwise_op(size, bitlen, op);
   }
@@ -214,7 +266,8 @@ namespace adiar
   bvec
   bvec_not(const bvec& x)
   {
-    return _bvec_bitwise_op(x.bitlen(), x.bitlen(), [&](size_t i) { return bdd_not(x.at(i)); });
+    return _bvec_bitwise_op(
+      std::max(x.bitlen(), x.size()), x.bitlen(), [&](size_t i) { return ~x.at(i); });
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,8 +276,8 @@ namespace adiar
   bvec
   bvec_add(const bvec& x, const bvec& y)
   {
-    const size_t bitlen = std::max(x.bitlen(), y.bitlen());
     const size_t size   = std::max(x.size(), y.size()) + 1;
+    const size_t bitlen = join_bitlen(x, y);
 
     bdd carry = bdd_false();
 
@@ -243,7 +296,7 @@ namespace adiar
     // This assumes that the vector constructor truncates size above bitlen and false prefix.
     res.push_back(carry);
 
-    return bvec(res, bitlen);
+    return bvec(bitlen, res);
   }
 
   bvec
@@ -269,12 +322,12 @@ namespace adiar
     // This assumes that the vector constructor truncates size above bitlen and false prefix.
     res.push_back(carry);
 
-    return bvec(res, bitlen);
+    return bvec(bitlen, res);
   }
 
   // Helper
   bvec
-  bvec_truncate(const bvec& x, const size_t bitlen)
+  bvec_truncate(size_t bitlen, const bvec& x)
   {
     bvec y = x;
     y.truncate(bitlen);
