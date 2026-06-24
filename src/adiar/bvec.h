@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <adiar/bdd.h>
+#include <adiar/type_traits.h>
 
 namespace adiar
 {
@@ -106,6 +107,24 @@ namespace adiar
     ///        bit) and a certain bit length.
     ////////////////////////////////////////////////////////////////////////////////////////////////
     bvec(size_t bitlen, std::vector<bdd>&& bits);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Construct variable-sized bitvector from a pair of iterators from least to most
+    ///        significant bit.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename ForwardIt, typename = enable_if<!is_convertible<ForwardIt, size_t>>>
+    bvec(ForwardIt begin, ForwardIt end)
+      : bvec(std::vector<bdd>(begin, end))
+    {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /// \brief Construct a fixed-size bitvector with a certain bit length and an iterator pair from
+    ///        least to most significant bit.
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename ForwardIt, typename = enable_if<!is_convertible<ForwardIt, size_t>>>
+    bvec(size_t bitlen, ForwardIt begin, ForwardIt end)
+      : bvec(bitlen, std::vector<bdd>(begin, end))
+    {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// \brief Width of the symbolic bit vector.
@@ -225,6 +244,28 @@ namespace adiar
   ////////////////////////////////////////////////////////////////////////////////////////////////
   bvec
   bvec_const(size_t bitlen, size_t value);
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Construct variable-sized bitvector from a pair of iterators from least to most
+  ///        significant bit.
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename ForwardIt, typename = enable_if<!is_convertible<ForwardIt, size_t>>>
+  bvec
+  bvec_vars(ForwardIt begin, ForwardIt end)
+  {
+    return bvec(std::vector<bdd>(begin, end));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  /// \brief Construct fixed-size bitvector with a certain bit length and an iterator pair from
+  ///        least to most significant bit.
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  template <typename ForwardIt, typename = enable_if<!is_convertible<ForwardIt, size_t>>>
+  bvec
+  bvec_vars(size_t bitlen, ForwardIt begin, ForwardIt end)
+  {
+    return bvec(bitlen, std::vector<bdd>(begin, end));
+  }
 
   /// \}
   /// \}

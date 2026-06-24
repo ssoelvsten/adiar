@@ -379,6 +379,59 @@ go_bandit([]() {
           AssertThat(x.at(7), Is().EqualTo(bdd_false()));
         });
       });
+
+      describe("bvec::bvec(begin, end)", []() {
+        it("copies over bits from iterator of (010101)", [&]() {
+          const std::vector<bdd> vec(
+            { bdd_false(), bdd_true(), bdd_false(), bdd_true(), bdd_false(), bdd_true() });
+          const bvec x(vec.begin(), vec.end());
+
+          AssertThat(x.size(), Is().EqualTo(6u));
+          AssertThat(x.bitlen(), Is().EqualTo(bvec::variadic_bitlen));
+
+          AssertThat(x.at(0), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(1), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(2), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(3), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(4), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(5), Is().EqualTo(bdd_true()));
+        });
+      });
+
+      describe("bvec::bvec(bitlen, begin, end)", []() {
+        it("copies over bits from iterator of (010101) with 8 bits", [&]() {
+          const std::vector<bdd> vec(
+            { bdd_false(), bdd_true(), bdd_false(), bdd_true(), bdd_false(), bdd_true() });
+          const bvec x(8, vec.begin(), vec.end());
+
+          AssertThat(x.size(), Is().EqualTo(6u));
+          AssertThat(x.bitlen(), Is().EqualTo(8u));
+
+          AssertThat(x.at(0), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(1), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(2), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(3), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(4), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(5), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(6), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(7), Is().EqualTo(bdd_false()));
+        });
+
+        it("truncates bits from iterator of (010101) with 5 bits", [&]() {
+          const std::vector<bdd> vec(
+            { bdd_false(), bdd_true(), bdd_false(), bdd_true(), bdd_false(), bdd_true() });
+          const bvec x(5, vec.begin(), vec.end());
+
+          AssertThat(x.size(), Is().EqualTo(4u));
+          AssertThat(x.bitlen(), Is().EqualTo(5u));
+
+          AssertThat(x.at(0), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(1), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(2), Is().EqualTo(bdd_false()));
+          AssertThat(x.at(3), Is().EqualTo(bdd_true()));
+          AssertThat(x.at(4), Is().EqualTo(bdd_false()));
+        });
+      });
     });
 
     describe("bvec_equal", []() {
