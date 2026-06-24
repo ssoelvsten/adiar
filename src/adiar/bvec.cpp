@@ -303,7 +303,7 @@ namespace adiar
   bvec_sub(const bvec& x, const bvec& y)
   {
     const size_t bitlen = std::max(x.bitlen(), y.bitlen());
-    const size_t size   = std::max(x.size(), bvec_not(y).size()) + 1;
+    const size_t size   = bitlen;
 
     bdd carry = bdd_true();
 

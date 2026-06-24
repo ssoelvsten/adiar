@@ -713,6 +713,17 @@ go_bandit([]() {
         AssertThat(res.size(), Is().EqualTo(8u));
       });
 
+      it("underflows bvec[8](0) - bvec[8](1)", [&]() {
+        const bvec x = bvec_const(8, 0);
+        const bvec y = bvec_const(8, 1);
+
+        const bvec expected = bvec_const(8, -1);
+        const bvec res      = bvec_sub(x, y);
+        AssertThat(res, Is().EqualTo(expected));
+        AssertThat(res.bitlen(), Is().EqualTo(8u));
+        AssertThat(res.size(), Is().EqualTo(8u));
+      });
+
       it("underflows bvec[8](4) - bvec[8](7)", [&]() {
         const bvec x = bvec_const(8, 4);
         const bvec y = bvec_const(8, 7);
@@ -731,8 +742,19 @@ go_bandit([]() {
         const bvec expected = bvec_const(16, -21);
         const bvec res      = bvec_sub(x, y);
         AssertThat(res, Is().EqualTo(expected));
-        AssertThat(res.bitlen(), Is().EqualTo(32u));
-        AssertThat(res.size(), Is().EqualTo(32u));
+        AssertThat(res.bitlen(), Is().EqualTo(16u));
+        AssertThat(res.size(), Is().EqualTo(16u));
+      });
+
+      it("underflows bvec[8](4) - bvec[16](7)", [&]() {
+        const bvec x = bvec_const(8, 3);
+        const bvec y = bvec_const(16, 9);
+
+        const bvec expected = bvec_const(16, -6);
+        const bvec res      = bvec_sub(x, y);
+        AssertThat(res, Is().EqualTo(expected));
+        AssertThat(res.bitlen(), Is().EqualTo(16u));
+        AssertThat(res.size(), Is().EqualTo(16u));
       });
     });
 
