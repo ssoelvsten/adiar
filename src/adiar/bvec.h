@@ -51,7 +51,7 @@ namespace adiar
     size_t _bitlen;
 
     /// \brief The default BDD to be returned if asking out of bounds.
-    const bdd default_value = bdd();
+    const bdd _default_value = bdd();
 
   public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
