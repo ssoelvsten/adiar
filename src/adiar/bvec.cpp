@@ -8,33 +8,24 @@
 
 namespace adiar
 {
-  /////////////////////////////////////////////////////////////////////////
-  /// \brief Zero-length bvec constructor, effectively a "safe nullpointer"
-  /////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // `bvec` class
+
   bvec::bvec(size_t bitlen)
     : _bits(0)
     , _bitlen(bitlen)
   {}
 
-  /////////////////////////////////////////////////////////////////////////
-  /// \brief Copy constructor
-  /////////////////////////////////////////////////////////////////////////
   bvec::bvec(const bvec& fs)
     : _bits(fs._bits)
     , _bitlen(fs._bitlen)
   {}
 
-  /////////////////////////////////////////////////////////////////////////
-  /// \brief Move constructor for right-hand values
-  /////////////////////////////////////////////////////////////////////////
   bvec::bvec(bvec&& fs)
     : _bits(std::move(fs._bits))
     , _bitlen(fs._bitlen)
   {}
 
-  /////////////////////////////////////////////////////////////////////////
-  /// \brief Conversion constructor from a raw bit-vector
-  /////////////////////////////////////////////////////////////////////////
   bvec::bvec(const std::vector<bdd>& bits, size_t bitlen)
     : _bits(bits)
     , _bitlen(bitlen)
@@ -42,9 +33,6 @@ namespace adiar
     this->truncate(bitlen);
   }
 
-  /////////////////////////////////////////////////////////////////////////
-  /// \brief Conversion constructor from a raw bit-vector for right-hand values
-  /////////////////////////////////////////////////////////////////////////
   bvec::bvec(std::vector<bdd>&& bits, size_t bitlen)
     : _bits(std::move(bits))
     , _bitlen(bitlen)
@@ -52,20 +40,17 @@ namespace adiar
     this->truncate(bitlen);
   }
 
-  /////////////////////////////////////////////////////////////////////////
-  /// \brief Parameterized constructor with length `bitlen` and given initial value `f`
-  /////////////////////////////////////////////////////////////////////////
   bvec::bvec(const size_t bitlen, const bdd& f)
     : _bits(bitlen, f)
     , _bitlen(bitlen)
   {}
 
-  const bdd&                   // return type
-  bvec::at(size_t index) const // name(...) context
+  const bdd&
+  bvec::at(size_t index) const
   {
     if (_bits.size() <= index) {
-      return default_value;
-    } // TODO: This warns that we are returning a local temp. Can we move it?
+      return this->default_value;
+    }
     return _bits.at(index);
   }
 
@@ -121,6 +106,7 @@ namespace adiar
     while (this->_bits.size() > 0 && !this->_bits.back()) { this->_bits.pop_back(); }
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Comparators
 
   std::ostream&
@@ -146,7 +132,9 @@ namespace adiar
     return true;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Constructors
+
   bvec
   bvec_false(size_t bitlen = bvec::MAX_BITLEN)
   {
@@ -176,6 +164,7 @@ namespace adiar
     return bvec(res, bitlen);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Bitwise operations
 
   // Helper function for bitwise operations
@@ -230,6 +219,7 @@ namespace adiar
     return _bvec_bitwise_op(x.bitlen(), x.bitlen(), [&](size_t i) { return bdd_not(x.at(i)); });
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   // Arithmetic operations
 
   bvec
