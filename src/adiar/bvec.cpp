@@ -56,11 +56,6 @@ namespace adiar
     : bvec(bvec_const(bitlen, value))
   {}
 
-  bvec::bvec(size_t bitlen, const bdd& f)
-    : _bits(bitlen, f)
-    , _bitlen(bitlen)
-  {}
-
   bvec::bvec(const std::vector<bdd>& bits)
     : bvec(bvec::variadic_bitlen, bits)
   {}
