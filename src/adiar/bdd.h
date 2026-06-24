@@ -21,12 +21,12 @@
 
 #include <iostream>
 #include <string>
-#include <type_traits>
 
 #include <adiar/bdd/bdd.h>
 #include <adiar/bool_op.h>
 #include <adiar/exec_policy.h>
 #include <adiar/functional.h>
+#include <adiar/type_traits.h>
 #include <adiar/types.h>
 #include <adiar/zdd/zdd.h>
 
