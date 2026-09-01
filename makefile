@@ -67,6 +67,9 @@ tests/adiar/bool_op:
 tests/adiar/builder:
 	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/ TEST_NAME=builder
 
+tests/adiar/bvec:
+	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/ TEST_NAME=bvec
+
 tests/adiar/domain:
 	$(MAKE) $(MAKE_FLAGS) tests TEST_SUBFOLDER=adiar/ TEST_NAME=domain
 

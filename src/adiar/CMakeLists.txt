@@ -10,6 +10,7 @@ set(HEADERS
   adiar.h
   bool_op.h
   builder.h
+  bvec.h
   deprecated.h
   domain.h
   exception.h
@@ -106,6 +107,7 @@ set(HEADERS
 set(SOURCES
   # adiar/
   adiar.cpp
+  bvec.cpp
   domain.cpp
   statistics.cpp
 

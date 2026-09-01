@@ -26,6 +26,7 @@
 #include <adiar/bool_op.h>
 #include <adiar/exec_policy.h>
 #include <adiar/functional.h>
+#include <adiar/type_traits.h>
 #include <adiar/zdd/zdd.h>
 
 namespace adiar
